@@ -1,0 +1,2 @@
+CPPFLAGS	+= -DNDEBUG
+CFLAGS		+= -O3
