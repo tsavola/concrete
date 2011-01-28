@@ -1,0 +1,12 @@
+Dependencies:
+
+  g++ 4.4
+  libboost-dev
+  libgtest
+
+
+Build instructions:
+
+  git submodule update --init
+  make
+
