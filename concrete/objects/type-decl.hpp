@@ -41,7 +41,6 @@ public:
 
 	using object<Ops>::operator==;
 	using object<Ops>::operator!=;
-	using object<Ops>::id;
 
 	template <typename OtherOps>
 	type_object(const type_object<OtherOps> &other): object<Ops>(other)

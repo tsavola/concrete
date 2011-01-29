@@ -60,7 +60,6 @@ public:
 
 	using object<Ops>::operator==;
 	using object<Ops>::operator!=;
-	using object<Ops>::id;
 
 	template <typename OtherOps>
 	tuple_object(const tuple_object<OtherOps> &other): object<Ops>(other)

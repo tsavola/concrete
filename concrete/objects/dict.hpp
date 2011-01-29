@@ -71,7 +71,6 @@ public:
 
 	using object<Ops>::operator==;
 	using object<Ops>::operator!=;
-	using object<Ops>::id;
 
 	template <typename OtherOps>
 	dict_object(const dict_object<OtherOps> &other): object<Ops>(other)

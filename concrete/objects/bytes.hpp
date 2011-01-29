@@ -55,7 +55,6 @@ public:
 
 	using object<Ops>::operator==;
 	using object<Ops>::operator!=;
-	using object<Ops>::id;
 
 	template <typename OtherOps>
 	bytes_object(const bytes_object<OtherOps> &other): object<Ops>(other)

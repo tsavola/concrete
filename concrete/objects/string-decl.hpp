@@ -40,7 +40,6 @@ public:
 
 	using object<Ops>::operator==;
 	using object<Ops>::operator!=;
-	using object<Ops>::id;
 
 	template <typename OtherOps>
 	string_object(const string_object<OtherOps> &other): object<Ops>(other)
