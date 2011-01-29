@@ -142,7 +142,7 @@ private:
 		return *m_active;
 	}
 
-	static CONCRETE_THREAD_LOCAL(Context *) m_active;
+	static CONCRETE_THREAD_LOCAL Context *m_active;
 
 	Arena m_arena;
 	BlockId m_builtins;

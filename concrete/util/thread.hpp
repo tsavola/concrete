@@ -8,5 +8,5 @@
  */
 
 #ifndef CONCRETE_THREAD_LOCAL
-#define CONCRETE_THREAD_LOCAL(type) __thread type
+#define CONCRETE_THREAD_LOCAL __thread
 #endif

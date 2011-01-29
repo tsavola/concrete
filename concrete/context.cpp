@@ -71,6 +71,6 @@ Context::Context() throw (AllocError)
 	module_type  .init_builtin(StringObject::New("module"));
 }
 
-CONCRETE_THREAD_LOCAL(Context *) Context::m_active;
+CONCRETE_THREAD_LOCAL Context *Context::m_active;
 
 } // namespace
