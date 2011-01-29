@@ -23,7 +23,6 @@ todo::
 		-e "s,[[:space:]]*\*+/[[:space:]]*,,"
 
 GIT_VERSION	= $(shell git describe --dirty --tags --always)
-GIT_COMMIT	= $(shell git rev-parse HEAD)
 GIT_BRANCH	= $(shell git rev-parse --symbolic-full-name --abbrev-ref HEAD)
 GIT_REMOTE	= $(shell git config branch.$(GIT_BRANCH).remote)
 GIT_URL		= $(shell git config remote.$(GIT_REMOTE).url)
@@ -46,7 +45,7 @@ doc-github:: doc
 		rm -rf .git && \
 		git init && \
 		git add . && \
-		git commit -m $(GIT_COMMIT) && \
+		git commit -m $(GIT_VERSION) && \
 		git push -f $(GIT_URL) $(GIT_BRANCH):gh-pages && \
 		rm -rf .git \
 	)
