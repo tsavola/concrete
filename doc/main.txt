@@ -1,0 +1,7 @@
+/** @mainpage
+
+- <a href="annotated.html">API documentation</a>
+- <a href="http://github.com/tsavola/concrete" target="_top">Source code</a>
+- <a href="http://tsavola.blogspot.com/search/label/Concrete" target="_top">Blog posts</a>
+
+*/
