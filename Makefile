@@ -22,7 +22,7 @@ todo::
 		-e "s,[[:space:]]*/?\*+,," \
 		-e "s,[[:space:]]*\*+/[[:space:]]*,,"
 
-GIT_VERSION	= $(shell git describe --tags --always)
+GIT_VERSION	= $(shell git describe --dirty --tags --always)
 GIT_COMMIT	= $(shell git rev-parse HEAD)
 GIT_BRANCH	= $(shell git rev-parse --symbolic-full-name --abbrev-ref HEAD)
 GIT_REMOTE	= $(shell git config branch.$(GIT_BRANCH).remote)
