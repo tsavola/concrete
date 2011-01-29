@@ -2,7 +2,8 @@ Dependencies:
 
   g++ 4.4
   libboost-dev
-  libgtest
+  python 3.1    (for compiling to bytecode)
+  libgtest      (for unit tests)
 
 
 Build instructions:
