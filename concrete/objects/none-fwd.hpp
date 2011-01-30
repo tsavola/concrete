@@ -10,9 +10,14 @@
 #ifndef CONCRETE_OBJECTS_NONE_FWD_HPP
 #define CONCRETE_OBJECTS_NONE_FWD_HPP
 
+#include <concrete/objects/object-fwd.hpp>
+
 namespace concrete {
 
-class NoneObject;
+template <typename Ops> class none_object;
+
+typedef none_object<ObjectOps>         NoneObject;
+typedef none_object<PortableObjectOps> PortableNoneObject;
 
 } // namespace
 

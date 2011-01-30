@@ -16,9 +16,9 @@
 #include <cstdint>
 #include <cstring>
 
-#include <concrete/block.hpp>
 #include <concrete/context.hpp>
 #include <concrete/objects/object.hpp>
+#include <concrete/objects/type-decl.hpp>
 #include <concrete/util/packed.hpp>
 
 namespace concrete {

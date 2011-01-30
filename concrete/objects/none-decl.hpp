@@ -14,37 +14,42 @@
 
 #include <concrete/objects/object-decl.hpp>
 #include <concrete/objects/type-fwd.hpp>
+#include <concrete/util/packed.hpp>
 
 namespace concrete {
 
-struct NoneBlock;
+template <typename Ops>
+class none_object: public object<Ops> {
+	friend class object<ObjectOps>;
+	friend class object<PortableObjectOps>;
 
-class NoneObject: public object<ObjectOps> {
 public:
 	static TypeObject Type();
-	static NoneObject NewBuiltin() throw (AllocError);
+	static none_object NewBuiltin() throw (AllocError);
 
-	NoneObject()
+	using object<Ops>::operator==;
+	using object<Ops>::operator!=;
+
+	template <typename OtherOps>
+	none_object(const none_object<OtherOps> &other): object<Ops>(other)
 	{
 	}
 
-	NoneObject(const NoneObject &other): object<ObjectOps>(other)
+	template <typename OtherOps>
+	none_object &operator=(const none_object<OtherOps> &other)
 	{
-	}
-
-	NoneObject &operator=(NoneObject &other)
-	{
-		object<ObjectOps>::operator=(other);
+		object<Ops>::operator=(other);
 		return *this;
 	}
 
 	void init_builtin(const TypeObject &type);
 
-private:
-	NoneObject(BlockId id): object<ObjectOps>(id)
+protected:
+	none_object(BlockId id): object<Ops>(id)
 	{
 	}
-};
+
+} CONCRETE_PACKED;
 
 } // namespace
 

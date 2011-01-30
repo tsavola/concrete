@@ -10,10 +10,9 @@
 #ifndef CONCRETE_CONTEXT_HPP
 #define CONCRETE_CONTEXT_HPP
 
-#include <tuple>
-
 #include <concrete/arena.hpp>
 #include <concrete/block.hpp>
+#include <concrete/objects/none-decl.hpp>
 #include <concrete/objects/object-decl.hpp>
 #include <concrete/objects/type-decl.hpp>
 #include <concrete/util/noncopyable.hpp>
@@ -25,7 +24,7 @@ namespace concrete {
 class Context: noncopyable {
 public:
 	struct BuiltinsBlock: Block {
-		PortableObject none;
+		PortableNoneObject none;
 		PortableTypeObject type_type;
 		PortableTypeObject object_type;
 		PortableTypeObject none_type;
@@ -39,7 +38,7 @@ public:
 		PortableTypeObject internal_type;
 		PortableTypeObject module_type;
 
-		BuiltinsBlock(const Object &none,
+		BuiltinsBlock(const NoneObject &none,
 		              const TypeObject &type_type,
 		              const TypeObject &object_type,
 		              const TypeObject &none_type,
