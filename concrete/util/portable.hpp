@@ -12,7 +12,7 @@
 
 #include <cstddef>
 
-#include <endian.h>
+#include <sys/types.h>
 
 #include <concrete/util/packed.hpp>
 

@@ -3,3 +3,4 @@ optimize/
 doc/Doxyfile.version
 doc/html/
 *.py[co]
+config.mk

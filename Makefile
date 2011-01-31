@@ -1,3 +1,5 @@
+-include config.mk
+
 CPPFLAGS	+= -I.
 CFLAGS		+= -g -Wall
 CXXFLAGS	+= -std=gnu++0x
