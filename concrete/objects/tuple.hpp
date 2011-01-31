@@ -69,7 +69,7 @@ public:
 	template <typename OtherOps>
 	tuple_object &operator=(const tuple_object<OtherOps> &other)
 	{
-		object<Ops>::assign(other);
+		object<Ops>::operator=(other);
 		return *this;
 	}
 
