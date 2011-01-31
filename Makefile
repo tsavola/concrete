@@ -7,6 +7,8 @@ CXXFLAGS	+= -std=gnu++0x
 LIBRARIES	:= concrete
 TESTS		:= example test
 
+.DEFAULT_GOAL := build
+
 build: concrete
 
 concrete: concrete-static
