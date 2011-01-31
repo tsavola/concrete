@@ -19,6 +19,11 @@
 
 namespace concrete {
 
+struct ObjectProtocol {
+	PortableObject add;
+
+} CONCRETE_PACKED;
+
 struct TypeBlock;
 
 template <typename Ops>
@@ -30,14 +35,9 @@ class type_object: public object<Ops> {
 public:
 	static TypeObject Type();
 
-	static type_object NewBuiltin(const NoneObject &none)
-		throw (AllocError);
-
-	static type_object NewBuiltin(const TypeObject &type, const NoneObject &none)
-		throw (AllocError);
-
-	static type_object New(const StringObject &name)
-		throw (AllocError);
+	static type_object NewBuiltin() throw (AllocError);
+	static type_object NewBuiltin(const TypeObject &type) throw (AllocError);
+	static type_object New(const StringObject &name) throw (AllocError);
 
 	using object<Ops>::operator==;
 	using object<Ops>::operator!=;
@@ -54,9 +54,10 @@ public:
 		return *this;
 	}
 
-	void init_builtin(const StringObject &name);
+	void init_builtin(const StringObject &name) const;
 
 	StringObject name() const;
+	ObjectProtocol &protocol() const;
 
 protected:
 	type_object(BlockId id): object<Ops>(id)

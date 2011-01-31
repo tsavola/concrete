@@ -10,16 +10,15 @@
 #include "execute.hpp"
 
 #include <cstdint>
-#include <cstring>    // TODO: not needed after proper import_name implementation
 #include <stdexcept>
 
 #include <concrete/block.hpp>
-#include <concrete/modules/concrete.hpp>  // TODO: not needed after proper import_name implementation
 #include <concrete/objects/code.hpp>
 #include <concrete/objects/dict.hpp>
 #include <concrete/objects/function.hpp>
 #include <concrete/objects/internal.hpp>
-#include <concrete/objects/long.hpp>      // TODO: not needed after implementing virtual methods
+#include <concrete/objects/long.hpp>
+#include <concrete/objects/module.hpp>
 #include <concrete/objects/none.hpp>
 #include <concrete/objects/object.hpp>
 #include <concrete/objects/string.hpp>
@@ -280,14 +279,17 @@ private:
 
 	void op_binary_add()
 	{
-		// TODO: virtual add method
+		auto b = m_state.pop();
+		auto a = m_state.pop();
 
-		auto b = m_state.pop().require<LongObject>("only long objects supported");
-		auto a = m_state.pop().require<LongObject>("only long objects supported");
-		auto r = LongObject::New(a.value() + b.value());
-		m_state.push(r);
+		auto args = TupleObject::New(2);
+		args.init_item(0, a);
+		args.init_item(1, b);
 
-		concrete_trace(("binary_add: %d + %d = %d") % a.value() % b.value() % r.value());
+		// TODO: support user functions
+		auto func = a.type().protocol().add.require<InternalObject>("internal object expected");
+
+		m_state.push(func.call(args, DictObject::New(0)));
 	}
 
 	void op_return_value()
@@ -334,14 +336,7 @@ private:
 		auto from = m_state.pop();
 		auto level = m_state.pop().require<LongObject>("long object expected");
 		auto name = m_state.code().names().get_item(load<uint16_t>());
-
-		// TODO
-		Object module;
-		if (std::strcmp(name.require<StringObject>("string object expected").data(),
-		                "concrete") == 0)
-			module = ConcreteModule::New();
-		else
-			throw std::runtime_error("unknown module");
+		auto module = Context::ImportBuiltin(name);
 
 		if (!from.check<NoneObject>()) {
 			auto fromlist = from.require<TupleObject>("tuple object expected");

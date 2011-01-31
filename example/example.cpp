@@ -6,6 +6,8 @@ using namespace concrete;
 
 int main()
 {
+	Context::Init();
+
 	Context context;
 	ContextScope scope(context);
 	CodeObject code = load_code_file(EXAMPLE_BYTECODE);

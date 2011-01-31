@@ -89,7 +89,7 @@ public:
 		return dict_block()->size;
 	}
 
-	void set_item(const Object &key, const Object &value)
+	void set_item(const Object &key, const Object &value) const
 	{
 		key.require<StringObject>("only string keys supported for now");
 

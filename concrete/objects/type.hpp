@@ -25,14 +25,15 @@ namespace concrete {
 
 struct TypeBlock: ObjectBlock {
 	PortableObject name;
+	ObjectProtocol protocol;
 
-	TypeBlock(NoRefcountInit no_init, BlockId type_id, const NoneObject &none):
-		ObjectBlock(no_init, type_id), name(none)
+	TypeBlock(NoRefcountInit no_init, BlockId type_id):
+		ObjectBlock(no_init, type_id)
 	{
 	}
 
-	TypeBlock(const TypeObject &type, const NoneObject &none):
-		ObjectBlock(type), name(none)
+	TypeBlock(const TypeObject &type):
+		ObjectBlock(type)
 	{
 	}
 
@@ -50,24 +51,24 @@ TypeObject type_object<Ops>::Type()
 }
 
 template <typename Ops>
-type_object<Ops> type_object<Ops>::NewBuiltin(const NoneObject &none)
+type_object<Ops> type_object<Ops>::NewBuiltin()
 	throw (AllocError)
 {
 	auto id = Context::Alloc(sizeof (TypeBlock));
 	concrete_trace(("type: id=%d") % id);
 	auto block = static_cast<TypeBlock *> (Context::Pointer(id));
 	block->refcount = 0;
-	new (block) TypeBlock(ObjectBlock::no_refcount_init, id, none);
+	new (block) TypeBlock(ObjectBlock::no_refcount_init, id);
 	return id;
 }
 
 template <typename Ops>
-type_object<Ops> type_object<Ops>::NewBuiltin(const TypeObject &type, const NoneObject &none)
+type_object<Ops> type_object<Ops>::NewBuiltin(const TypeObject &type)
 	throw (AllocError)
 {
 	auto id = Context::Alloc(sizeof (TypeBlock));
 	concrete_trace(("type: id=%d") % id);
-	new (Context::Pointer(id)) TypeBlock(type, none);
+	new (Context::Pointer(id)) TypeBlock(type);
 	return id;
 }
 
@@ -81,7 +82,7 @@ type_object<Ops> type_object<Ops>::New(const StringObject &name) throw (AllocErr
 }
 
 template <typename Ops>
-void type_object<Ops>::init_builtin(const StringObject &name)
+void type_object<Ops>::init_builtin(const StringObject &name) const
 {
 	type_block()->name = name;
 }
@@ -91,6 +92,12 @@ StringObject type_object<Ops>::name() const
 {
 	return static_cast<PortableStringObject &> (type_block()->name);
 	// TODO: return type_block()->name.cast<StringObject>();
+}
+
+template <typename Ops>
+ObjectProtocol &type_object<Ops>::protocol() const
+{
+	return type_block()->protocol;
 }
 
 template <typename Ops>

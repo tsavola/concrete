@@ -13,9 +13,7 @@
 
 #include <boost/format.hpp>
 
-#include <concrete/context.hpp>
 #include <concrete/internals.hpp>
-#include <concrete/objects/dict.hpp>
 #include <concrete/objects/internal.hpp>
 #include <concrete/objects/object.hpp>
 #include <concrete/objects/string.hpp>
@@ -30,15 +28,20 @@ static Object test(const TupleObject &args, const DictObject &kwargs)
 	return args.get_item(0);
 }
 
-ModuleObject ConcreteModule::New() throw (AllocError)
+void ConcreteModule::RegisterInternals()
+{
+	InternalObject::Register(internals::ConcreteModule_test, test);
+}
+
+void ConcreteModule::Init(const DictObject &modules) throw (AllocError)
 {
 	auto dict = DictObject::New(1);
 
 	dict.set_item(
 		StringObject::New("test"),
-		InternalObject::New(internals::Concrete_Test, test));
+		InternalObject::New(internals::ConcreteModule_test));
 
-	return ModuleObject::New(dict);
+	modules.set_item(StringObject::New("concrete"), ModuleObject::New(dict));
 }
 
 } // namespace

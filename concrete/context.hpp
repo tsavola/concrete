@@ -21,25 +21,41 @@
 
 namespace concrete {
 
+struct ContextSnapshot {
+	void *base;
+	size_t size;
+	BlockId builtin_none;
+	BlockId builtins;
+};
+
 class Context: noncopyable {
+	struct BuiltinNoneBlock: Block {
+		const PortableNoneObject none;
+
+		BuiltinNoneBlock(const NoneObject &none): none(none)
+		{
+		}
+
+	} CONCRETE_PACKED;
+
 public:
 	struct BuiltinsBlock: Block {
-		PortableNoneObject none;
-		PortableTypeObject type_type;
-		PortableTypeObject object_type;
-		PortableTypeObject none_type;
-		PortableTypeObject string_type;
-		PortableTypeObject long_type;
-		PortableTypeObject bytes_type;
-		PortableTypeObject tuple_type;
-		PortableTypeObject dict_type;
-		PortableTypeObject code_type;
-		PortableTypeObject function_type;
-		PortableTypeObject internal_type;
-		PortableTypeObject module_type;
+		const PortableTypeObject type_type;
+		const PortableTypeObject object_type;
+		const PortableTypeObject none_type;
+		const PortableTypeObject string_type;
+		const PortableTypeObject long_type;
+		const PortableTypeObject bytes_type;
+		const PortableTypeObject tuple_type;
+		const PortableTypeObject dict_type;
+		const PortableTypeObject code_type;
+		const PortableTypeObject function_type;
+		const PortableTypeObject internal_type;
+		const PortableTypeObject module_type;
 
-		BuiltinsBlock(const NoneObject &none,
-		              const TypeObject &type_type,
+		PortableObject modules;
+
+		BuiltinsBlock(const TypeObject &type_type,
 		              const TypeObject &object_type,
 		              const TypeObject &none_type,
 		              const TypeObject &string_type,
@@ -51,7 +67,6 @@ public:
 		              const TypeObject &function_type,
 		              const TypeObject &internal_type,
 		              const TypeObject &module_type):
-			none(none),
 			type_type(type_type),
 			object_type(object_type),
 			none_type(none_type),
@@ -69,11 +84,7 @@ public:
 
 	} CONCRETE_PACKED;
 
-	struct Snapshot {
-		void *base;
-		size_t size;
-		BlockId builtins;
-	};
+	static void Init();
 
 	static BlockId Alloc(size_t size)
 	{
@@ -105,15 +116,24 @@ public:
 		return Active().m_arena.pointer(id);
 	}
 
+	static const PortableNoneObject &None()
+	{
+		return Active().builtin_none().none;
+	}
+
 	static const BuiltinsBlock &Builtins()
 	{
-		return *static_cast<BuiltinsBlock *> (Pointer(Active().m_builtins));
+		return Active().builtins();
 	}
+
+	static Object ImportBuiltin(const Object &name);
 
 	Context() throw (AllocError);
 
-	Context(const Snapshot &snapshot):
-		m_arena(snapshot.base, snapshot.size), m_builtins(snapshot.builtins)
+	Context(const ContextSnapshot &snapshot):
+		m_arena(snapshot.base, snapshot.size),
+		m_builtin_none(snapshot.builtin_none),
+		m_builtins(snapshot.builtins)
 	{
 	}
 
@@ -129,9 +149,14 @@ public:
 		m_active = NULL;
 	}
 
-	Snapshot snapshot() const
+	ContextSnapshot snapshot() const
 	{
-		return Snapshot { m_arena.base(), m_arena.size(), m_builtins };
+		return ContextSnapshot {
+			m_arena.base(),
+			m_arena.size(),
+			m_builtin_none,
+			m_builtins,
+		};
 	}
 
 private:
@@ -141,9 +166,20 @@ private:
 		return *m_active;
 	}
 
+	BuiltinNoneBlock &builtin_none()
+	{
+		return *static_cast<BuiltinNoneBlock *> (m_arena.pointer(m_builtin_none));
+	}
+
+	BuiltinsBlock &builtins()
+	{
+		return *static_cast<BuiltinsBlock *> (m_arena.pointer(m_builtins));
+	}
+
 	static CONCRETE_THREAD_LOCAL Context *m_active;
 
 	Arena m_arena;
+	BlockId m_builtin_none;
 	BlockId m_builtins;
 };
 

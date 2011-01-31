@@ -11,19 +11,13 @@
 
 #include <map>
 
-#include <concrete/context.hpp>
-
 namespace concrete {
 
 static std::map<InternalSerial, InternalFunction> internal_functions;
 
-BlockId InternalBlock::New(InternalSerial serial, InternalFunction function) throw (AllocError)
+void InternalBlock::Register(InternalSerial serial, InternalFunction function)
 {
 	internal_functions[serial] = function;
-
-	auto id = Context::Alloc(sizeof (InternalBlock));
-	new (Context::Pointer(id)) InternalBlock(InternalObject::Type(), serial);
-	return id;
 }
 
 Object InternalBlock::call(const TupleObject &args, const DictObject &kwargs)

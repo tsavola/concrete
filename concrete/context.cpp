@@ -9,6 +9,7 @@
 
 #include "context.hpp"
 
+#include <concrete/modules/concrete.hpp>
 #include <concrete/objects/bytes.hpp>
 #include <concrete/objects/code.hpp>
 #include <concrete/objects/dict.hpp>
@@ -22,27 +23,37 @@
 
 namespace concrete {
 
+void Context::Init()
+{
+	LongType::RegisterInternals();
+
+	ConcreteModule::RegisterInternals();
+}
+
 Context::Context() throw (AllocError)
 {
 	ContextScope scope(*this);
 
 	auto none          = NoneObject::NewBuiltin();
-	auto type_type     = TypeObject::NewBuiltin(none);
-	auto object_type   = TypeObject::NewBuiltin(type_type, none);
-	auto none_type     = TypeObject::NewBuiltin(type_type, none);
-	auto string_type   = TypeObject::NewBuiltin(type_type, none);
-	auto long_type     = TypeObject::NewBuiltin(type_type, none);
-	auto bytes_type    = TypeObject::NewBuiltin(type_type, none);
-	auto tuple_type    = TypeObject::NewBuiltin(type_type, none);
-	auto dict_type     = TypeObject::NewBuiltin(type_type, none);
-	auto code_type     = TypeObject::NewBuiltin(type_type, none);
-	auto function_type = TypeObject::NewBuiltin(type_type, none);
-	auto internal_type = TypeObject::NewBuiltin(type_type, none);
-	auto module_type   = TypeObject::NewBuiltin(type_type, none);
+
+	m_builtin_none = Alloc(sizeof (BuiltinNoneBlock));
+	new (Pointer(m_builtin_none)) BuiltinNoneBlock(none);
+
+	auto type_type     = TypeObject::NewBuiltin();
+	auto object_type   = TypeObject::NewBuiltin(type_type);
+	auto none_type     = TypeObject::NewBuiltin(type_type);
+	auto string_type   = TypeObject::NewBuiltin(type_type);
+	auto long_type     = TypeObject::NewBuiltin(type_type);
+	auto bytes_type    = TypeObject::NewBuiltin(type_type);
+	auto tuple_type    = TypeObject::NewBuiltin(type_type);
+	auto dict_type     = TypeObject::NewBuiltin(type_type);
+	auto code_type     = TypeObject::NewBuiltin(type_type);
+	auto function_type = TypeObject::NewBuiltin(type_type);
+	auto internal_type = TypeObject::NewBuiltin(type_type);
+	auto module_type   = TypeObject::NewBuiltin(type_type);
 
 	m_builtins = Alloc(sizeof (BuiltinsBlock));
 	new (Pointer(m_builtins)) BuiltinsBlock(
-		none,
 		type_type,
 		object_type,
 		none_type,
@@ -57,11 +68,12 @@ Context::Context() throw (AllocError)
 		module_type);
 
 	none         .init_builtin(none_type);
+
 	type_type    .init_builtin(StringObject::New("type"));
 	object_type  .init_builtin(StringObject::New("object"));
 	none_type    .init_builtin(StringObject::New("none"));
 	string_type  .init_builtin(StringObject::New("string"));
-	long_type    .init_builtin(StringObject::New("long"));
+	LongType::Init(long_type);
 	bytes_type   .init_builtin(StringObject::New("bytes"));
 	tuple_type   .init_builtin(StringObject::New("tuple"));
 	dict_type    .init_builtin(StringObject::New("dict"));
@@ -69,6 +81,17 @@ Context::Context() throw (AllocError)
 	function_type.init_builtin(StringObject::New("function"));
 	internal_type.init_builtin(StringObject::New("internal"));
 	module_type  .init_builtin(StringObject::New("module"));
+
+	auto modules = DictObject::New(1);
+
+	ConcreteModule::Init(modules);
+
+	builtins().modules = modules;
+}
+
+Object Context::ImportBuiltin(const Object &name)
+{
+	return Builtins().modules.cast<DictObject>().get_item(name);
 }
 
 CONCRETE_THREAD_LOCAL Context *Context::m_active;

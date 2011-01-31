@@ -71,7 +71,7 @@ object<Ops> object<Ops>::New() throw (AllocError)
 }
 
 template <typename Ops>
-object<Ops>::object(): m_raw_id(Ops::store(Context::Builtins().none.id()))
+object<Ops>::object(): m_raw_id(Ops::store(Context::None().id()))
 {
 	ref();
 }

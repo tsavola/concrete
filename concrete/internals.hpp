@@ -13,7 +13,9 @@
 namespace concrete { namespace internals {
 
 enum Serial {
-	Concrete_Test,
+	LongObject_add,
+
+	ConcreteModule_test,
 };
 
 } } // namespace

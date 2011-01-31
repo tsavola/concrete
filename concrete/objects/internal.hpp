@@ -27,7 +27,7 @@ typedef internals::Serial InternalSerial;
 typedef Object (*InternalFunction)(const TupleObject &args, const DictObject &kwargs);
 
 struct InternalBlock: ObjectBlock {
-	static BlockId New(InternalSerial serial, InternalFunction function) throw (AllocError);
+	static void Register(InternalSerial serial, InternalFunction function);
 
 	const portable<uint16_t> serial;
 
@@ -50,9 +50,16 @@ public:
 		return Context::Builtins().internal_type;
 	}
 
-	static internal_object New(InternalSerial serial, InternalFunction function) throw (AllocError)
+	static void Register(InternalSerial serial, InternalFunction function)
 	{
-		return InternalBlock::New(serial, function);
+		InternalBlock::Register(serial, function);
+	}
+
+	static internal_object New(InternalSerial serial) throw (AllocError)
+	{
+		auto id = Context::Alloc(sizeof (InternalBlock));
+		new (Context::Pointer(id)) InternalBlock(Type(), serial);
+		return id;
 	}
 
 	using object<Ops>::operator==;

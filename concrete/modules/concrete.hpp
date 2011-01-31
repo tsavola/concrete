@@ -11,13 +11,15 @@
 #define CONCRETE_MODULES_CONCRETE_HPP
 
 #include <concrete/block.hpp>
+#include <concrete/context.hpp>
+#include <concrete/objects/dict.hpp>
 #include <concrete/objects/module.hpp>
 
 namespace concrete {
 
 struct ConcreteModule {
-	static void Init();
-	static ModuleObject New() throw (AllocError);
+	static void RegisterInternals();
+	static void Init(const DictObject &modules) throw (AllocError);
 };
 
 } // namespace
