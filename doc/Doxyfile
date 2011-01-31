@@ -12,58 +12,35 @@ EXTRACT_LOCAL_CLASSES  = NO
 HIDE_UNDOC_MEMBERS     = NO
 HIDE_UNDOC_CLASSES     = NO
 HIDE_FRIEND_COMPOUNDS  = YES
-HIDE_SCOPE_NAMES       = NO
-SHOW_INCLUDE_FILES     = YES
+HIDE_SCOPE_NAMES       = YES
+SHOW_INCLUDE_FILES     = NO
 INLINE_INFO            = NO
 SORT_MEMBERS_CTORS_1ST = YES
 GENERATE_TODOLIST      = NO
 MAX_INITIALIZER_LINES  = 0
 SHOW_USED_FILES        = NO
 SHOW_FILES             = YES
-SHOW_NAMESPACES        = NO
+SHOW_NAMESPACES        = YES
 QUIET                  = YES
 WARN_IF_UNDOCUMENTED   = NO
 INPUT                  = doc/main.txt concrete
 RECURSIVE              = YES
 VERBATIM_HEADERS       = NO
-
-# The HTML_COLORSTYLE_HUE tag controls the color of the HTML output.
-# Doxygen will adjust the colors in the stylesheet and background images
-# according to this color. Hue is specified as an angle on a colorwheel,
-# see http://en.wikipedia.org/wiki/Hue for more information.
-# For instance the value 0 represents red, 60 is yellow, 120 is green,
-# 180 is cyan, 240 is blue, 300 purple, and 360 is red again.
-# The allowed range is 0 to 359.
-
-HTML_COLORSTYLE_HUE    = 220
-
-# The HTML_COLORSTYLE_SAT tag controls the purity (or saturation) of
-# the colors in the HTML output. For a value of 0 the output will use
-# grayscales only. A value of 255 will produce the most vivid colors.
-
-HTML_COLORSTYLE_SAT    = 100
-
-# The HTML_COLORSTYLE_GAMMA tag controls the gamma correction applied to
-# the luminance component of the colors in the HTML output. Values below
-# 100 gradually make the output lighter, whereas values above 100 make
-# the output darker. The value divided by 100 is the actual gamma applied,
-# so 80 represents a gamma of 0.8, The value 220 represents a gamma of 2.2,
-# and 100 does not change the gamma.
-
-HTML_COLORSTYLE_GAMMA  = 80
-
 HTML_DYNAMIC_SECTIONS  = YES
 DISABLE_INDEX          = NO
 ENUM_VALUES_PER_LINE   = 1
-GENERATE_TREEVIEW      = YES
+GENERATE_TREEVIEW      = NO
 USE_INLINE_TREES       = YES
-TREEVIEW_WIDTH         = 250
 SEARCHENGINE           = NO
 GENERATE_LATEX         = NO
 CLASS_DIAGRAMS         = NO
 HIDE_UNDOC_RELATIONS   = YES
 HAVE_DOT               = YES
-DOT_FONTSIZE           = 10
+DOT_FONTSIZE           = 8
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = YES
+EXPAND_ONLY_PREDEF     = YES
+PREDEFINED             = CONCRETE_PACKED=
 CLASS_GRAPH            = YES
 COLLABORATION_GRAPH    = YES
 UML_LOOK               = NO
