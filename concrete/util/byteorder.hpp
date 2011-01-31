@@ -1,0 +1,50 @@
+/*
+ * Copyright (c) 2011  Timo Savola
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ */
+
+#ifndef CONCRETE_UTIL_BYTEORDER_HPP
+#define CONCRETE_UTIL_BYTEORDER_HPP
+
+#include <sys/types.h>
+
+namespace concrete {
+
+#if defined(__BYTE_ORDER)
+# if __BYTE_ORDER == __LITTLE_ENDIAN
+#  define CONCRETE_LITTLE_ENDIAN
+# else
+#  define CONCRETE_BIG_ENDIAN
+# endif
+#elif defined(__APPLE__)
+# if defined(__LITTLE_ENDIAN__)
+#  define CONCRETE_LITTLE_ENDIAN
+# else
+#  define CONCRETE_BIG_ENDIAN
+# endif
+#else
+# error cannot figure out byteorder
+#endif
+
+template <typename T, unsigned int N> struct byteorder;
+
+template <typename T> struct byteorder<T, 1> {
+	static inline T swap(const T &x) { return x; }
+};
+template <typename T> struct byteorder<T, 2> {
+	static inline T swap(const T &x) { return bswap_16(x); }
+};
+template <typename T> struct byteorder<T, 4> {
+	static inline T swap(const T &x) { return bswap_32(x); }
+};
+template <typename T> struct byteorder<T, 8> {
+	static inline T swap(const T &x) { return bswap_64(x); }
+};
+
+} // namespace
+
+#endif

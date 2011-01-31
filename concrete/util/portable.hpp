@@ -10,39 +10,24 @@
 #ifndef CONCRETE_UTIL_PORTABLE_HPP
 #define CONCRETE_UTIL_PORTABLE_HPP
 
-#include <cstddef>
-
-#include <sys/types.h>
-
+#include <concrete/util/byteorder.hpp>
 #include <concrete/util/packed.hpp>
 
 namespace concrete {
 
-template <typename T, size_t N> struct portable_ops;
-
-template <typename T>
-struct portable_ops<T, 1> {
-	static T load(const T &x)  { return x; }
-	static T store(const T &x) { return x; }
+#ifdef CONCRETE_LITTLE_ENDIAN
+template <typename T, unsigned int N>
+struct portable_ops {
+	static inline T load(const T &x)  { return x; }
+	static inline T store(const T &x) { return x; }
 };
-
-template <typename T>
-struct portable_ops<T, 2> {
-	static T load(const T &x)  { return le16toh(x); }
-	static T store(const T &x) { return htole16(x); }
+#else
+template <typename T, unsigned int N>
+struct portable_ops {
+	static inline T load(const T &x)  { return byteorder<T, N>::swap(x); }
+	static inline T store(const T &x) { return byteorder<T, N>::swap(x); }
 };
-
-template <typename T>
-struct portable_ops<T, 4> {
-	static T load(const T &x)  { return le32toh(x); }
-	static T store(const T &x) { return htole32(x); }
-};
-
-template <typename T>
-struct portable_ops<T, 8> {
-	static T load(const T &x)  { return le64toh(x); }
-	static T store(const T &x) { return htole64(x); }
-};
+#endif
 
 template <typename T>
 class portable {
