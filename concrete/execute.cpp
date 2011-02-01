@@ -287,7 +287,7 @@ private:
 		args.init_item(1, b);
 
 		// TODO: support user functions
-		auto func = a.type().protocol().add.require<InternalObject>("internal object expected");
+		auto func = a.type().protocol().add.require<InternalObject>();
 
 		m_state.push(func.call(args, DictObject::New(0)));
 	}
@@ -323,9 +323,8 @@ private:
 	{
 		auto object = m_state.pop();
 
-		// TODO
-		auto module = object.require<ModuleObject>("only module objects supported for now");
-		auto dict = module.dict();
+		// TODO: support all object types
+		auto dict = object.require<ModuleObject>().dict();
 
 		auto name = m_state.code().names().get_item(load<uint16_t>());
 		m_state.push(dict.get_item(name));
@@ -334,12 +333,12 @@ private:
 	void op_import_name()
 	{
 		auto from = m_state.pop();
-		auto level = m_state.pop().require<LongObject>("long object expected");
+		auto level = m_state.pop().require<LongObject>();
 		auto name = m_state.code().names().get_item(load<uint16_t>());
 		auto module = Context::ImportBuiltin(name);
 
 		if (!from.check<NoneObject>()) {
-			auto fromlist = from.require<TupleObject>("tuple object expected");
+			auto fromlist = from.require<TupleObject>();
 			assert(fromlist.size() == 1);
 			m_state.push(module.cast<ModuleObject>().dict().get_item(fromlist.get_item(0)));
 		}
@@ -349,7 +348,7 @@ private:
 
 	void op_import_from()
 	{
-		auto module = m_state.pop().require<ModuleObject>("module object expected");
+		auto module = m_state.pop().require<ModuleObject>();
 		auto name = m_state.code().names().get_item(load<uint16_t>());
 		m_state.push(module.dict().get_item(name));
 	}
@@ -423,7 +422,7 @@ private:
 		if (load<uint16_t>() > 0)
 			throw std::runtime_error("default function arguments not supported");
 
-		auto code = m_state.pop().require<CodeObject>("code object expected");
+		auto code = m_state.pop().require<CodeObject>();
 		m_state.push(FunctionObject::New(code));
 	}
 

@@ -58,14 +58,9 @@ public:
 	}
 
 	template <typename T>
-	T load_object(const char *error)
+	T load_object()
 	{
-		Object object = load_object();
-
-		if (!object.check<T>())
-			throw std::runtime_error(error);
-
-		return object.cast<T>();
+		return load_object().require<T>();
 	}
 
 private:
@@ -104,10 +99,10 @@ private:
 		/* nlocals = */ load<uint32_t>();
 		auto stacksize = load<uint32_t>();
 		/* flags = */ load<uint32_t>();
-		auto code = load_object<BytesObject>("code must be a bytes object");
-		auto consts = load_object<TupleObject>("consts must be a tuple object");
-		auto names = load_object<TupleObject>("names must be a tuple object");
-		auto varnames = load_object<TupleObject>("varnames must be a tuple object");
+		auto code = load_object<BytesObject>();
+		auto consts = load_object<TupleObject>();
+		auto names = load_object<TupleObject>();
+		auto varnames = load_object<TupleObject>();
 		/* freevars = */ load_object();
 		/* cellvars = */ load_object();
 		/* filename = */ load_object();
@@ -122,7 +117,7 @@ private:
 CodeObject load_code(const void *data, size_t size)
 {
 	ObjectLoader loader(reinterpret_cast<const uint8_t *> (data), size);
-	return loader.load_object<CodeObject>("code object expected");
+	return loader.load_object<CodeObject>();
 }
 
 CodeObject load_code_file(const char *filename)

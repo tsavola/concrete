@@ -7,21 +7,21 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#ifndef CONCRETE_ERROR_HPP
-#define CONCRETE_ERROR_HPP
+#include "exception.hpp"
 
-#include <exception>
+#include <concrete/objects/object.hpp>
+#include <concrete/objects/type.hpp>
 
 namespace concrete {
 
-class KeyError: public std::exception {
-public:
-	const char *what() const throw ()
-	{
-		return "key not found";
-	}
-};
+const char *Exception::what() const throw ()
+{
+	return m_args.repr().data();
+}
+
+const char *TypeError::what() const throw ()
+{
+	return m_args.cast<TypeObject>().name().data();
+}
 
 } // namespace
-
-#endif

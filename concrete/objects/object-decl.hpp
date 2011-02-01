@@ -94,7 +94,7 @@ public:
 
 	template <typename T> bool check() const;
 	template <typename T> T cast() const;
-	template <typename T> T require(const char *error) const throw (std::runtime_error);
+	template <typename T> T require() const;
 
 	BlockId id() const
 	{

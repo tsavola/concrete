@@ -16,6 +16,7 @@
 
 #include <concrete/block.hpp>
 #include <concrete/context.hpp>
+#include <concrete/exception.hpp>
 #include <concrete/objects/none-fwd.hpp>
 #include <concrete/objects/string-decl.hpp>
 #include <concrete/objects/type-decl.hpp>
@@ -90,10 +91,10 @@ T object<Ops>::cast() const
 }
 
 template <typename Ops> template <typename T>
-T object<Ops>::require(const char *error) const throw (std::runtime_error)
+T object<Ops>::require() const
 {
 	if (!check<T>())
-		throw std::runtime_error(error);
+		throw TypeError(type());
 
 	return T(id());
 }

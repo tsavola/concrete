@@ -25,9 +25,9 @@ struct LongType {
 };
 
 struct LongBlock: ObjectBlock {
-	portable<int32_t> value;
+	portable<int64_t> value;
 
-	LongBlock(const TypeObject &type, int value): ObjectBlock(type), value(value)
+	LongBlock(const TypeObject &type, int64_t value): ObjectBlock(type), value(value)
 	{
 	}
 
@@ -44,7 +44,7 @@ public:
 		return Context::Builtins().long_type;
 	}
 
-	static long_object New(int value) throw (AllocError)
+	static long_object New(int64_t value) throw (AllocError)
 	{
 		auto id = Context::Alloc(sizeof (LongBlock));
 		new (Context::Pointer(id)) LongBlock(Type(), value);
@@ -66,7 +66,7 @@ public:
 		return *this;
 	}
 
-	int value() const
+	int64_t value() const
 	{
 		return long_block()->value;
 	}

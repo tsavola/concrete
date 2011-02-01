@@ -20,20 +20,12 @@ namespace concrete {
 
 static Object add(const TupleObject &args, const DictObject &kwargs)
 {
-	if (kwargs.size() > 0)
-		throw std::runtime_error("unexpected keyword arguments");
+	int64_t value = 0;
 
-	if (args.size() != 2)
-		throw std::runtime_error("two arguments expected");
+	for (unsigned int i = args.size(); i-- > 0; )
+		value += args.get_item(i).require<LongObject>().value();
 
-	auto a = args.get_item(0).require<LongObject>("long object expected");
-	auto b = args.get_item(1).require<LongObject>("long object expected");
-
-	auto r = LongObject::New(a.value() + b.value());
-
-	concrete_trace(("LongObject.add: %d + %d = %d") % a.value() % b.value() % r.value());
-
-	return r;
+	return LongObject::New(value);
 }
 
 void LongType::RegisterInternals()

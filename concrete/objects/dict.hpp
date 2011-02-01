@@ -13,7 +13,7 @@
 #include <stdexcept>
 
 #include <concrete/block.hpp>
-#include <concrete/error.hpp>
+#include <concrete/exception.hpp>
 #include <concrete/objects/object.hpp>
 #include <concrete/objects/string.hpp>
 #include <concrete/util/packed.hpp>
@@ -91,7 +91,7 @@ public:
 
 	void set_item(const Object &key, const Object &value) const
 	{
-		key.require<StringObject>("only string keys supported for now");
+		key.require<StringObject>();
 
 		auto block = dict_block();
 		auto i = find_item(block, key);
@@ -108,16 +108,16 @@ public:
 		block->size = i + 1;
 	}
 
-	Object get_item(const Object &key) const throw (KeyError)
+	Object get_item(const Object &key) const
 	{
 		if (!key.check<StringObject>())
-			throw KeyError();
+			throw KeyError(key);
 
 		auto block = dict_block();
 		auto i = find_item(block, key);
 
 		if (i == block->size)
-			throw KeyError();
+			throw KeyError(key);
 
 		return block->items[i].value;
 	}
@@ -133,7 +133,7 @@ protected:
 	}
 
 private:
-	static unsigned int find_item(DictBlock *block, const Object &key) throw (KeyError)
+	static unsigned int find_item(DictBlock *block, const Object &key)
 	{
 		unsigned int i;
 
