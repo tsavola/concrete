@@ -23,13 +23,6 @@
 
 namespace concrete {
 
-void Context::Init()
-{
-	LongType::RegisterInternals();
-
-	ConcreteModule::RegisterInternals();
-}
-
 Context::Context() throw (AllocError)
 {
 	ContextScope scope(*this);

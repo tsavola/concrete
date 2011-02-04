@@ -20,7 +20,6 @@
 namespace concrete {
 
 struct LongType {
-	static void RegisterInternals();
 	static void Init(const TypeObject &type);
 };
 

@@ -18,7 +18,6 @@
 namespace concrete {
 
 struct ConcreteModule {
-	static void RegisterInternals();
 	static void Init(const DictObject &modules) throw (AllocError);
 };
 

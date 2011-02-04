@@ -17,6 +17,8 @@ namespace internals {
 		LongObject_add,
 
 		ConcreteModule_test,
+
+		count,
 	};
 }
 

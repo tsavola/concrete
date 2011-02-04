@@ -18,7 +18,7 @@
 
 namespace concrete {
 
-static Object add(const TupleObject &args, const DictObject &kwargs)
+static Object CONCRETE_INTERNAL(LongObject_add)(const TupleObject &args, const DictObject &kwargs)
 {
 	int64_t value = 0;
 
@@ -26,11 +26,6 @@ static Object add(const TupleObject &args, const DictObject &kwargs)
 		value += args.get_item(i).require<LongObject>().value();
 
 	return LongObject::New(value);
-}
-
-void LongType::RegisterInternals()
-{
-	InternalObject::Register(internals::LongObject_add, add);
 }
 
 void LongType::Init(const TypeObject &type)

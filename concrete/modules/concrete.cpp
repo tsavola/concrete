@@ -20,17 +20,12 @@
 
 namespace concrete {
 
-static Object test(const TupleObject &args, const DictObject &kwargs)
+static Object CONCRETE_INTERNAL(ConcreteModule_test)(const TupleObject &args, const DictObject &kwargs)
 {
 	std::cout << boost::format("concrete.test: args=%d kwargs=%d")
 		% args.size() % kwargs.size() << std::endl;
 
 	return args.get_item(0);
-}
-
-void ConcreteModule::RegisterInternals()
-{
-	InternalObject::Register(internals::ConcreteModule_test, test);
 }
 
 void ConcreteModule::Init(const DictObject &modules) throw (AllocError)

@@ -82,8 +82,6 @@ public:
 		}
 	} CONCRETE_PACKED;
 
-	static void Init();
-
 	static BlockId Alloc(size_t size)
 	{
 		return Active().m_arena.alloc(size);

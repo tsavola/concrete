@@ -9,22 +9,18 @@
 
 #include "internal.hpp"
 
-#include <map>
-
 namespace concrete {
 
-static std::map<InternalSerial, InternalFunction> internal_functions;
+static InternalFunction functions[internals::count];
 
 void InternalBlock::Register(InternalSerial serial, InternalFunction function)
 {
-	internal_functions[serial] = function;
+	functions[serial] = function;
 }
 
 Object InternalBlock::call(const TupleObject &args, const DictObject &kwargs)
 {
-	auto i = internal_functions.find(InternalSerial(uint16_t(serial)));
-	assert(i != internal_functions.end());
-	return i->second(args, kwargs);
+	return functions[serial](args, kwargs);
 }
 
 } // namespace

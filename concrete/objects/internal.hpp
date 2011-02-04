@@ -23,6 +23,12 @@
 
 namespace concrete {
 
+#define CONCRETE_INTERNAL(name) \
+	name(const TupleObject &, const DictObject &); \
+	static void name##_register() __attribute__ ((constructor)); \
+	void name##_register() { InternalObject::Register(internals::name, name); } \
+	Object name
+
 typedef internals::Serial InternalSerial;
 typedef Object (*InternalFunction)(const TupleObject &args, const DictObject &kwargs);
 
