@@ -26,7 +26,7 @@ namespace concrete {
 #define CONCRETE_INTERNAL(name) \
 	name(const TupleObject &, const DictObject &); \
 	static void name##_register() __attribute__ ((constructor)); \
-	void name##_register() { InternalObject::Register(internals::name, name); } \
+	void name##_register() { InternalBlock::Register(internals::name, name); } \
 	Object name
 
 typedef internals::Serial InternalSerial;
@@ -54,11 +54,6 @@ public:
 	static TypeObject Type()
 	{
 		return Context::Builtins().internal_type;
-	}
-
-	static void Register(InternalSerial serial, InternalFunction function)
-	{
-		InternalBlock::Register(serial, function);
 	}
 
 	static internal_object New(InternalSerial serial) throw (AllocError)
