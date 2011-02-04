@@ -30,7 +30,6 @@ struct LongBlock: ObjectBlock {
 	LongBlock(const TypeObject &type, int64_t value): ObjectBlock(type), value(value)
 	{
 	}
-
 } CONCRETE_PACKED;
 
 template <typename Ops>
@@ -80,7 +79,6 @@ protected:
 	{
 		return static_cast<LongBlock *> (object<Ops>::object_block());
 	}
-
 } CONCRETE_PACKED;
 
 typedef long_object<ObjectOps>         LongObject;

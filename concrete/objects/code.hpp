@@ -40,7 +40,6 @@ struct CodeBlock: ObjectBlock {
 		varnames(varnames)
 	{
 	}
-
 } CONCRETE_PACKED;
 
 template <typename Ops>
@@ -96,7 +95,6 @@ protected:
 	{
 		return static_cast<CodeBlock *> (object<Ops>::object_block());
 	}
-
 } CONCRETE_PACKED;
 
 typedef code_object<ObjectOps>         CodeObject;

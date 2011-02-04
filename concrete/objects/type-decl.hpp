@@ -21,7 +21,6 @@ namespace concrete {
 
 struct ObjectProtocol {
 	PortableObject add;
-
 } CONCRETE_PACKED;
 
 struct TypeBlock;

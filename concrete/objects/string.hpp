@@ -33,7 +33,6 @@ struct StringBlock: ObjectBlock {
 	{
 		return block_size() - sizeof (StringBlock) - 1;
 	}
-
 } CONCRETE_PACKED;
 
 template <typename Ops>

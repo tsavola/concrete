@@ -27,8 +27,6 @@ typedef internals::Serial InternalSerial;
 typedef Object (*InternalFunction)(const TupleObject &args, const DictObject &kwargs);
 
 struct InternalBlock: ObjectBlock {
-	static void Register(InternalSerial serial, InternalFunction function);
-
 	const portable<uint16_t> serial;
 
 	InternalBlock(const TypeObject &type, InternalSerial serial): ObjectBlock(type), serial(serial)
@@ -36,6 +34,8 @@ struct InternalBlock: ObjectBlock {
 	}
 
 	Object call(const TupleObject &args, const DictObject &kwargs);
+
+	static void Register(InternalSerial serial, InternalFunction function);
 
 } CONCRETE_PACKED;
 
@@ -91,7 +91,6 @@ protected:
 	{
 		return static_cast<InternalBlock *> (object<Ops>::object_block());
 	}
-
 } CONCRETE_PACKED;
 
 typedef internal_object<ObjectOps>         InternalObject;

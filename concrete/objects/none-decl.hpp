@@ -48,7 +48,6 @@ protected:
 	none_object(BlockId id): object<Ops>(id)
 	{
 	}
-
 } CONCRETE_PACKED;
 
 } // namespace

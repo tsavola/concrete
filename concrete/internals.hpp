@@ -10,14 +10,16 @@
 #ifndef CONCRETE_INTERNALS_HPP
 #define CONCRETE_INTERNALS_HPP
 
-namespace concrete { namespace internals {
+namespace concrete {
 
-enum Serial {
-	LongObject_add,
+namespace internals {
+	enum Serial {
+		LongObject_add,
 
-	ConcreteModule_test,
-};
+		ConcreteModule_test,
+	};
+}
 
-} } // namespace
+} // namespace
 
 #endif

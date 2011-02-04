@@ -10,6 +10,7 @@
 #include "exception.hpp"
 
 #include <concrete/objects/object.hpp>
+#include <concrete/objects/string.hpp>
 #include <concrete/objects/type.hpp>
 
 namespace concrete {

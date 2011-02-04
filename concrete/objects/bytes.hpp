@@ -32,7 +32,6 @@ struct BytesBlock: ObjectBlock {
 	{
 		return block_size() - sizeof (BytesBlock);
 	}
-
 } CONCRETE_PACKED;
 
 template <typename Ops>
@@ -87,7 +86,6 @@ protected:
 	{
 		return static_cast<BytesBlock *> (object<Ops>::object_block());
 	}
-
 } CONCRETE_PACKED;
 
 typedef bytes_object<ObjectOps>         BytesObject;

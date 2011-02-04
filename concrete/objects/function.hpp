@@ -23,7 +23,6 @@ struct FunctionBlock: ObjectBlock {
 	FunctionBlock(const TypeObject &type, const CodeObject &code): ObjectBlock(type), code(code)
 	{
 	}
-
 } CONCRETE_PACKED;
 
 template <typename Ops>
@@ -73,7 +72,6 @@ protected:
 	{
 		return static_cast<FunctionBlock *> (object<Ops>::object_block());
 	}
-
 } CONCRETE_PACKED;
 
 typedef function_object<ObjectOps>         FunctionObject;

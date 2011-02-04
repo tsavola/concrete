@@ -19,10 +19,9 @@
 namespace concrete {
 
 struct NoneBlock: ObjectBlock {
-	NoneBlock(BlockId none_id): ObjectBlock(no_refcount_init, none_id)
+	NoneBlock(BlockId none_id): ObjectBlock(none_id, NoRefcountInit())
 	{
 	}
-
 } CONCRETE_PACKED;
 
 template <typename Ops>

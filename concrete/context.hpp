@@ -35,7 +35,6 @@ class Context: noncopyable {
 		BuiltinNoneBlock(const NoneObject &none): none(none)
 		{
 		}
-
 	} CONCRETE_PACKED;
 
 public:
@@ -81,7 +80,6 @@ public:
 			module_type(module_type)
 		{
 		}
-
 	} CONCRETE_PACKED;
 
 	static void Init();

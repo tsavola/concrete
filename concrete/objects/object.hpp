@@ -25,10 +25,14 @@
 namespace concrete {
 
 struct ObjectBlock: Block {
-	enum NoRefcountInit { no_refcount_init };
+	struct NoRefcountInit {};
 
 	PortableObject type_object;
 	portable<int32_t> refcount;
+
+	ObjectBlock(BlockId type_id, NoRefcountInit): type_object(type_id)
+	{
+	}
 
 	ObjectBlock(const TypeObject &type): type_object(type), refcount(0)
 	{
@@ -42,18 +46,7 @@ struct ObjectBlock: Block {
 
 	StringObject repr(BlockId id) const;
 
-private:
-	friend struct object<ObjectOps>;
-	friend struct object<PortableObjectOps>;
-
 	static void Destroy(ObjectBlock *block) throw ();
-
-	friend struct NoneBlock;
-	friend struct TypeBlock;
-
-	ObjectBlock(NoRefcountInit, BlockId type_id): type_object(type_id)
-	{
-	}
 
 } CONCRETE_PACKED;
 

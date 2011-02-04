@@ -13,14 +13,18 @@
 namespace concrete {
 
 class noncopyable {
-public:
+protected:
 	noncopyable()
+	{
+	}
+
+	~noncopyable()
 	{
 	}
 
 private:
 	noncopyable(const noncopyable &);
-	noncopyable &operator=(const noncopyable &);
+	const noncopyable &operator=(const noncopyable &);
 };
 
 } // namespace

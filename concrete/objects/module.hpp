@@ -24,7 +24,6 @@ struct ModuleBlock: ObjectBlock {
 	ModuleBlock(const TypeObject &type, const DictObject &dict): ObjectBlock(type), dict(dict)
 	{
 	}
-
 } CONCRETE_PACKED;
 
 template <typename Ops>
@@ -74,7 +73,6 @@ protected:
 	{
 		return static_cast<ModuleBlock *> (object<Ops>::object_block());
 	}
-
 } CONCRETE_PACKED;
 
 typedef module_object<ObjectOps>         ModuleObject;

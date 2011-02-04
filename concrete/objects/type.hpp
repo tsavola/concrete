@@ -27,21 +27,17 @@ struct TypeBlock: ObjectBlock {
 	PortableObject name;
 	ObjectProtocol protocol;
 
-	TypeBlock(NoRefcountInit no_init, BlockId type_id):
-		ObjectBlock(no_init, type_id)
+	TypeBlock(BlockId type_id, NoRefcountInit): ObjectBlock(type_id, NoRefcountInit())
 	{
 	}
 
-	TypeBlock(const TypeObject &type):
-		ObjectBlock(type)
+	TypeBlock(const TypeObject &type): ObjectBlock(type)
 	{
 	}
 
-	TypeBlock(const TypeObject &type, const StringObject &name):
-		ObjectBlock(type), name(name)
+	TypeBlock(const TypeObject &type, const StringObject &name): ObjectBlock(type), name(name)
 	{
 	}
-
 } CONCRETE_PACKED;
 
 template <typename Ops>
@@ -51,20 +47,18 @@ TypeObject type_object<Ops>::Type()
 }
 
 template <typename Ops>
-type_object<Ops> type_object<Ops>::NewBuiltin()
-	throw (AllocError)
+type_object<Ops> type_object<Ops>::NewBuiltin() throw (AllocError)
 {
 	auto id = Context::Alloc(sizeof (TypeBlock));
 	concrete_trace(("type: id=%d") % id);
 	auto block = static_cast<TypeBlock *> (Context::Pointer(id));
 	block->refcount = 0;
-	new (block) TypeBlock(ObjectBlock::no_refcount_init, id);
+	new (block) TypeBlock(id, ObjectBlock::NoRefcountInit());
 	return id;
 }
 
 template <typename Ops>
-type_object<Ops> type_object<Ops>::NewBuiltin(const TypeObject &type)
-	throw (AllocError)
+type_object<Ops> type_object<Ops>::NewBuiltin(const TypeObject &type) throw (AllocError)
 {
 	auto id = Context::Alloc(sizeof (TypeBlock));
 	concrete_trace(("type: id=%d") % id);

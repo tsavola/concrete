@@ -28,7 +28,6 @@ struct DictBlock: ObjectBlock {
 		Item(const Object &key, const Object &value): key(key), value(value)
 		{
 		}
-
 	} CONCRETE_PACKED;
 
 	portable<uint32_t> size;
@@ -48,7 +47,6 @@ struct DictBlock: ObjectBlock {
 	{
 		return (block_size() - sizeof (DictBlock)) / sizeof (Item);
 	}
-
 } CONCRETE_PACKED;
 
 template <typename Ops>
@@ -143,7 +141,6 @@ private:
 
 		return i;
 	}
-
 } CONCRETE_PACKED;
 
 typedef dict_object<ObjectOps>         DictObject;

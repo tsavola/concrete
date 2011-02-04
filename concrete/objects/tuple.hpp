@@ -37,7 +37,6 @@ struct TupleBlock: ObjectBlock {
 	{
 		return (block_size() - sizeof (TupleBlock)) / sizeof (PortableObject);
 	}
-
 } CONCRETE_PACKED;
 
 template <typename Ops>
@@ -102,7 +101,6 @@ protected:
 	{
 		return static_cast<TupleBlock *> (object<Ops>::object_block());
 	}
-
 } CONCRETE_PACKED;
 
 typedef tuple_object<ObjectOps>         TupleObject;
