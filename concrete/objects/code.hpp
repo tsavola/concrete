@@ -10,6 +10,8 @@
 #ifndef CONCRETE_OBJECTS_CODE_HPP
 #define CONCRETE_OBJECTS_CODE_HPP
 
+#include <cstddef>
+
 #include <concrete/block.hpp>
 #include <concrete/objects/bytes.hpp>
 #include <concrete/objects/object.hpp>
@@ -40,6 +42,9 @@ struct CodeBlock: ObjectBlock {
 		varnames(varnames)
 	{
 	}
+
+	static CodeObject Load(const void *data, size_t size) throw (AllocError);
+
 } CONCRETE_PACKED;
 
 template <typename Ops>
@@ -63,6 +68,11 @@ public:
 		auto id = Context::Alloc(sizeof (CodeBlock));
 		new (Context::Pointer(id)) CodeBlock(Type(), stacksize, code, consts, names, varnames);
 		return id;
+	}
+
+	static code_object Load(const void *data, size_t size) throw (AllocError)
+	{
+		return CodeBlock::Load(data, size);
 	}
 
 	using object<Ops>::operator==;

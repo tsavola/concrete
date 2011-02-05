@@ -7,18 +7,11 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#include "load.hpp"
+#include "code.hpp"
 
-#include <cstddef>
 #include <cstdint>
-#include <fstream>
-#include <iostream>
-#include <stdexcept>
 
-#include <boost/scoped_array.hpp>
-
-#include <concrete/block.hpp>
-#include <concrete/execute.hpp>
+#include <concrete/exception.hpp>
 #include <concrete/objects/bytes.hpp>
 #include <concrete/objects/code.hpp>
 #include <concrete/objects/long.hpp>
@@ -29,8 +22,7 @@
 
 namespace concrete {
 
-class ObjectLoader: Loader
-{
+class ObjectLoader: Loader {
 public:
 	ObjectLoader(const uint8_t *data, size_t size): Loader(data + 8, size - 8)
 	{
@@ -51,7 +43,7 @@ public:
 		case '(': object = load_tuple(); break;
 		case 'c': object = load_code(); break;
 		case 'u': object = load_unicode(); break;
-		default: throw std::runtime_error("unsupported object type");
+		default: throw Exception(StringObject::New(&type, 1));
 		}
 
 		return object;
@@ -114,29 +106,10 @@ private:
 	}
 };
 
-CodeObject load_code(const void *data, size_t size)
+CodeObject CodeBlock::Load(const void *data, size_t size) throw (AllocError)
 {
-	ObjectLoader loader(reinterpret_cast<const uint8_t *> (data), size);
-	return loader.load_object<CodeObject>();
-}
-
-CodeObject load_code_file(const char *filename)
-{
-	std::ifstream stream;
-
-	stream.exceptions(std::ios::failbit | std::ios::badbit);
-	stream.open(filename);
-
-	stream.seekg(0, std::ios::end);
-	auto size = stream.tellg();
-	stream.seekg(0, std::ios::beg);
-
-	boost::scoped_array<char> buf(new char[size]);
-
-	stream.read(buf.get(), size);
-	stream.close();
-
-	return load_code(buf.get(), size);
+	const uint8_t *bytedata = data;
+	return ObjectLoader(bytedata, size).load_object<CodeObject>();
 }
 
 } // namespace
