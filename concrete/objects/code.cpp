@@ -108,7 +108,7 @@ private:
 
 CodeObject CodeBlock::Load(const void *data, size_t size) throw (AllocError)
 {
-	const uint8_t *bytedata = data;
+	auto bytedata = reinterpret_cast<const uint8_t *> (data);
 	return ObjectLoader(bytedata, size).load_object<CodeObject>();
 }
 

@@ -20,6 +20,11 @@
 
 namespace concrete {
 
+template <typename Ops> class code_object;
+
+typedef code_object<ObjectOps>         CodeObject;
+typedef code_object<PortableObjectOps> PortableCodeObject;
+
 struct CodeBlock: ObjectBlock {
 	portable<uint32_t> stacksize;
 	PortableBytesObject code;
@@ -106,9 +111,6 @@ protected:
 		return static_cast<CodeBlock *> (object<Ops>::object_block());
 	}
 } CONCRETE_PACKED;
-
-typedef code_object<ObjectOps>         CodeObject;
-typedef code_object<PortableObjectOps> PortableCodeObject;
 
 } // namespace
 

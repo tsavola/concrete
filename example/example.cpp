@@ -1,10 +1,11 @@
 #include <fstream>
 #include <iostream>
-#include <memory>
+
+#include <boost/scoped_array.hpp>
 
 #include <concrete/context.hpp>
 #include <concrete/execute.hpp>
-#include <concrete/load.hpp>
+#include <concrete/objects/code.hpp>
 
 using namespace concrete;
 
@@ -19,7 +20,7 @@ static CodeObject load_example_code()
 	auto size = stream.tellg();
 	stream.seekg(0, std::ios::beg);
 
-	std::scoped_array<char> buf(new char[size]);
+	boost::scoped_array<char> buf(new char[size]);
 
 	stream.read(buf.get(), size);
 	stream.close();
