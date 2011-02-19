@@ -10,9 +10,11 @@
 #ifndef CONCRETE_UTIL_BYTEORDER_HPP
 #define CONCRETE_UTIL_BYTEORDER_HPP
 
-#include <sys/types.h>
-
-namespace concrete {
+#ifdef __linux__
+# include <endian.h>
+#else
+# include <sys/types.h>
+#endif
 
 #if defined(__BYTE_ORDER)
 # if __BYTE_ORDER == __LITTLE_ENDIAN
@@ -29,6 +31,8 @@ namespace concrete {
 #else
 # error cannot figure out byteorder
 #endif
+
+namespace concrete {
 
 template <typename T, unsigned int N> struct byteorder;
 
