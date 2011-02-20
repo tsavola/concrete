@@ -19,6 +19,7 @@ namespace concrete {
 
 struct ConcreteModule {
 	static void Init(const DictObject &modules) throw (AllocError);
+	static int GetTestValue();
 };
 
 } // namespace
