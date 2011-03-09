@@ -5,7 +5,7 @@ O_PY_SOURCE	:= $(O)/obj/$(PY_SOURCE)
 O_PY_BYTECODE	:= $(O_PY_SOURCE)c
 
 NAME		:= example
-SOURCES		:= $(wildcard example/*.cpp)
+SOURCES		:= $(wildcard example/*.cpp example/*/*.cpp)
 CPPFLAGS	+= -DEXAMPLE_BYTECODE="\""$(O_PY_BYTECODE)"\""
 
 CONCRETE	:= $(O)/lib/libconcrete.a
