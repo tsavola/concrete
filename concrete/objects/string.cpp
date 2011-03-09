@@ -11,7 +11,8 @@
 
 #include <cstdint>
 #include <cstring>
-#include <stdexcept>
+
+#include <concrete/exception.hpp>
 
 namespace concrete {
 
@@ -38,17 +39,17 @@ StringBlock::StringBlock(const TypeObject &type, const char *data_): ObjectBlock
 			else if ((byte & 0xf8) == 0xf0)
 				skip = 3;
 			else
-				throw std::runtime_error("invalid UTF-8 string");
+				throw RuntimeError("invalid UTF-8 string");
 
 			next = i + skip;
 			if (next > data_length)
-				throw std::runtime_error("invalid UTF-8 string");
+				throw RuntimeError("invalid UTF-8 string");
 
 			for (; i < next; i++) {
 				byte = data[i];
 
 				if ((byte & 0xc0) != 0x80)
-					throw std::runtime_error("invalid UTF-8 string");
+					throw RuntimeError("invalid UTF-8 string");
 			}
 		}
 	}
