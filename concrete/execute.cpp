@@ -13,16 +13,7 @@
 #include <stdexcept>
 
 #include <concrete/block.hpp>
-#include <concrete/objects/code.hpp>
-#include <concrete/objects/dict.hpp>
-#include <concrete/objects/function.hpp>
-#include <concrete/objects/internal.hpp>
-#include <concrete/objects/long.hpp>
-#include <concrete/objects/module.hpp>
-#include <concrete/objects/none.hpp>
-#include <concrete/objects/object.hpp>
-#include <concrete/objects/string.hpp>
-#include <concrete/objects/type.hpp>
+#include <concrete/objects.hpp>
 #include <concrete/util/loader.hpp>
 #include <concrete/util/noncopyable.hpp>
 #include <concrete/util/packed.hpp>

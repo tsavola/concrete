@@ -12,12 +12,7 @@
 #include <cstdint>
 
 #include <concrete/exception.hpp>
-#include <concrete/objects/bytes.hpp>
-#include <concrete/objects/code.hpp>
-#include <concrete/objects/long.hpp>
-#include <concrete/objects/object.hpp>
-#include <concrete/objects/string.hpp>
-#include <concrete/objects/tuple.hpp>
+#include <concrete/objects.hpp>
 #include <concrete/util/loader.hpp>
 
 namespace concrete {
