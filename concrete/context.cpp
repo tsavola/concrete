@@ -78,6 +78,4 @@ Object Context::ImportBuiltin(const Object &name)
 	return Builtins().modules.cast<DictObject>().get_item(name);
 }
 
-CONCRETE_THREAD_LOCAL Context *Context::m_active;
-
 } // namespace

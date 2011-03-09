@@ -15,9 +15,9 @@
 #include <concrete/objects/none-decl.hpp>
 #include <concrete/objects/object-decl.hpp>
 #include <concrete/objects/type-decl.hpp>
+#include <concrete/util/activatable.hpp>
 #include <concrete/util/noncopyable.hpp>
 #include <concrete/util/packed.hpp>
-#include <concrete/util/thread.hpp>
 
 namespace concrete {
 
@@ -28,7 +28,7 @@ struct ContextSnapshot {
 	BlockId builtins;
 };
 
-class Context: noncopyable {
+class Context: public activatable<Context>, noncopyable {
 	struct BuiltinNoneBlock: Block {
 		const PortableNoneObject none;
 
@@ -133,18 +133,6 @@ public:
 	{
 	}
 
-	void activate()
-	{
-		assert(m_active == NULL);
-		m_active = this;
-	}
-
-	void deactivate()
-	{
-		assert(m_active == this);
-		m_active = NULL;
-	}
-
 	ContextSnapshot snapshot() const
 	{
 		return ContextSnapshot {
@@ -156,12 +144,6 @@ public:
 	}
 
 private:
-	static Context &Active()
-	{
-		assert(m_active);
-		return *m_active;
-	}
-
 	BuiltinNoneBlock &builtin_none()
 	{
 		return *static_cast<BuiltinNoneBlock *> (m_arena.pointer(m_builtin_none));
@@ -172,28 +154,12 @@ private:
 		return *static_cast<BuiltinsBlock *> (m_arena.pointer(m_builtins));
 	}
 
-	static CONCRETE_THREAD_LOCAL Context *m_active;
-
 	Arena m_arena;
 	BlockId m_builtin_none;
 	BlockId m_builtins;
 };
 
-class ContextScope: noncopyable {
-public:
-	explicit ContextScope(Context &context): m_context(context)
-	{
-		m_context.activate();
-	}
-
-	~ContextScope()
-	{
-		m_context.deactivate();
-	}
-
-private:
-	Context &m_context;
-};
+typedef active_scope<Context> ContextScope;
 
 } // namespace
 
