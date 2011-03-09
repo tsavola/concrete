@@ -438,6 +438,8 @@ Executor::~Executor()
 
 bool Executor::execute()
 {
+	active_scope<Executor> scope(*this);
+
 	return m_impl->execute();
 }
 

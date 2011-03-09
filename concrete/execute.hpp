@@ -11,14 +11,22 @@
 #define CONCRETE_EXECUTE_HPP
 
 #include <concrete/objects/code.hpp>
+#include <concrete/util/activatable.hpp>
 #include <concrete/util/noncopyable.hpp>
 
 namespace concrete {
 
 class CodeExecutor;
 
-class Executor: noncopyable {
+class Executor: activatable<Executor>, noncopyable {
+	friend class activatable<Executor>;
+	friend class active_scope<Executor>;
 public:
+	static Executor &Active()
+	{
+		return activatable<Executor>::Active();
+	}
+
 	explicit Executor(const CodeObject &code);
 	~Executor();
 
