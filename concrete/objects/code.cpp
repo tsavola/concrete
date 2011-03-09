@@ -14,18 +14,55 @@
 #include <concrete/exception.hpp>
 #include <concrete/objects.hpp>
 #include <concrete/util/loader.hpp>
+#include <concrete/util/noncopyable.hpp>
 
 namespace concrete {
 
-class ObjectLoader: Loader {
+class ObjectLoaderState: noncopyable {
 public:
-	ObjectLoader(const uint8_t *data, size_t size): Loader(data + 8, size - 8)
+	ObjectLoaderState(const uint8_t *data, size_t size): m_data(data), m_size(size), m_position(0)
 	{
-		// TODO: magic = reinterpret_cast<const uint32_t *> (data)[0];
-		// TODO: mtime = reinterpret_cast<const uint32_t *> (data)[1];
 	}
 
-	Object load_object()
+	const uint8_t *data() const
+	{
+		return m_data;
+	}
+
+	size_t size() const
+	{
+		return m_size;
+	}
+
+	size_t position() const
+	{
+		return m_position;
+	}
+
+	void advance(size_t offset)
+	{
+		m_position += offset;
+	}
+
+private:
+	const uint8_t *const m_data;
+	const size_t m_size;
+	size_t m_position;
+};
+
+class ObjectLoader: loader<ObjectLoaderState> {
+public:
+	explicit ObjectLoader(ObjectLoaderState &state): loader<ObjectLoaderState>(state)
+	{
+	}
+
+	template <typename T>
+	T load_next()
+	{
+		return load_next().require<T>();
+	}
+
+	Object load_next()
 	{
 		Object object;
 
@@ -42,12 +79,6 @@ public:
 		}
 
 		return object;
-	}
-
-	template <typename T>
-	T load_object()
-	{
-		return load_object().require<T>();
 	}
 
 private:
@@ -74,7 +105,7 @@ private:
 		auto tuple = TupleObject::New(length);
 
 		for (unsigned int i = 0; i < length; i++)
-			tuple.init_item(i, load_object());
+			tuple.init_item(i, load_next());
 
 		return tuple;
 	}
@@ -86,16 +117,16 @@ private:
 		/* nlocals = */ load<uint32_t>();
 		auto stacksize = load<uint32_t>();
 		/* flags = */ load<uint32_t>();
-		auto code = load_object<BytesObject>();
-		auto consts = load_object<TupleObject>();
-		auto names = load_object<TupleObject>();
-		auto varnames = load_object<TupleObject>();
-		/* freevars = */ load_object();
-		/* cellvars = */ load_object();
-		/* filename = */ load_object();
-		/* name = */ load_object();
+		auto code = load_next<BytesObject>();
+		auto consts = load_next<TupleObject>();
+		auto names = load_next<TupleObject>();
+		auto varnames = load_next<TupleObject>();
+		/* freevars = */ load_next();
+		/* cellvars = */ load_next();
+		/* filename = */ load_next();
+		/* name = */ load_next();
 		/* firstlineno = */ load<uint32_t>();
-		/* lnotab = */ load_object();
+		/* lnotab = */ load_next();
 
 		return CodeObject::New(stacksize, code, consts, names, varnames);
 	}
@@ -104,7 +135,12 @@ private:
 CodeObject CodeBlock::Load(const void *data, size_t size) throw (AllocError)
 {
 	auto bytedata = reinterpret_cast<const uint8_t *> (data);
-	return ObjectLoader(bytedata, size).load_object<CodeObject>();
+
+	// TODO: check magic and mtime
+
+	ObjectLoaderState state(bytedata + 8, size - 8);
+	ObjectLoader loader(state);
+	return loader.load_next<CodeObject>();
 }
 
 } // namespace

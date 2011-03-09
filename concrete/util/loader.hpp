@@ -11,37 +11,27 @@
 #define CONCRETE_UTIL_LOADER_HPP
 
 #include <cstdint>
-#include <stdexcept>
 
+#include <concrete/exception.hpp>
 #include <concrete/util/noncopyable.hpp>
 #include <concrete/util/portable.hpp>
 
 namespace concrete {
 
-class Loader: noncopyable {
+template <typename State>
+class loader: noncopyable {
 public:
-	Loader(const uint8_t *data = NULL, size_t size = 0): m_data(data), m_size(size), m_position(0)
+	loader(State &state): m_state(state)
 	{
-	}
-
-	void reset(const uint8_t *data, size_t size, size_t position = 0)
-	{
-		m_data = data;
-		m_size = size;
-		m_position = position;
-	}
-
-	size_t position() const
-	{
-		return m_position;
 	}
 
 	bool empty() const
 	{
-		return m_position >= m_size;
+		return m_state.position() >= m_state.size();
 	}
 
-	template <typename T> T load()
+	template <typename T>
+	T load()
 	{
 		return portable_ops<T, sizeof (T)>::load(*load_raw<T>(1));
 	}
@@ -51,21 +41,22 @@ public:
 		return load_raw<char>(count);
 	}
 
-	template <typename T> const T *load_raw(size_t count)
+	template <typename T>
+	const T *load_raw(size_t count)
 	{
-		if (m_position + sizeof (T) * count > m_size)
-			throw std::runtime_error("loader ran out of data");
+		auto pos = m_state.position();
 
-		auto data = m_data + m_position;
-		m_position += sizeof (T) * count;
+		if (pos + sizeof (T) * count > m_state.size())
+			throw RuntimeError("loader ran out of data");
+
+		auto data = m_state.data() + pos;
+		m_state.advance(sizeof (T) * count);
 
 		return reinterpret_cast<const T *> (data);
 	}
 
 private:
-	const uint8_t *m_data;
-	size_t m_size;
-	size_t m_position;
+	State &m_state;
 };
 
 } // namespace

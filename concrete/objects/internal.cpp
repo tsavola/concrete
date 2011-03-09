@@ -18,17 +18,12 @@ Object InternalBlock::call(ContinuationOp op,
                            const TupleObject *args,
                            const DictObject *kwargs) const
 {
-	return Object();
+	return functions[serial](op, continuation, args, kwargs);
 }
 
-void InternalBlock::Register(InternalSerial serial, InternalFunction function)
+void register_internal(InternalSerial serial, InternalFunction function)
 {
 	functions[serial] = function;
-}
-
-Object InternalBlock::call(const TupleObject &args, const DictObject &kwargs)
-{
-	return functions[serial](args, kwargs);
 }
 
 } // namespace

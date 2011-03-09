@@ -67,11 +67,6 @@ public:
 		return *this;
 	}
 
-	CodeObject code() const
-	{
-		return function_block()->code;
-	}
-
 protected:
 	function_object(BlockId id): callable_object<Ops>(id)
 	{

@@ -9,10 +9,11 @@
 
 #include "execute.hpp"
 
+#include <cassert>
 #include <cstdint>
-#include <stdexcept>
 
 #include <concrete/block.hpp>
+#include <concrete/exception.hpp>
 #include <concrete/objects.hpp>
 #include <concrete/opcodes.hpp>
 #include <concrete/util/loader.hpp>
@@ -23,209 +24,301 @@
 
 namespace concrete {
 
-class ExecutionState: noncopyable {
-	struct FrameBlock: Block {
-		const portable<BlockId> parent_id;
-		const PortableCodeObject code;
-		portable<uint32_t> code_position;
-		const PortableDictObject dict;
-		portable<uint32_t> stack_pointer;
-		PortableObject stack_objects[0];
+struct ExecutionFrame: Block {
+	const PortableCodeObject code;
+	portable<uint32_t> code_position;
 
-		FrameBlock(BlockId parent_id, const CodeObject &code, const DictObject &dict):
-			parent_id(parent_id),
-			code(code),
-			code_position(0),
-			dict(dict),
-			stack_pointer(0)
-		{
+	const PortableDictObject dict;
+
+	const portable<BlockId> parent_frame_id;
+
+	portable<BlockId> call_continuation;
+	PortableObject call_callable;
+
+	portable<uint32_t> stack_pointer;
+	PortableObject stack_objects[0];      // must be last
+
+	ExecutionFrame(const CodeObject &code,
+	               const DictObject &dict,
+	               BlockId parent_frame_id = NoBlockId):
+		code(code),
+		code_position(0),
+		dict(dict),
+		parent_frame_id(parent_frame_id),
+		call_continuation(NoBlockId),
+		stack_pointer(0)
+	{
+	}
+
+	~ExecutionFrame()
+	{
+		if (call_continuation != NoBlockId) {
+			concrete_trace(("call cleanup enter: callable=%d") % call_callable.id());
+
+			call_callable.require<CallableObject>().cleanup_call(call_continuation);
+
+			concrete_trace(("call cleanup leave: callable=%d") % call_callable.id());
 		}
 
-	} CONCRETE_PACKED;
-
-public:
-	ExecutionState(): m_current_frame_id(NoBlockId)
-	{
+		for (unsigned int i = stack_pointer; i-- > 0; )
+			stack_objects[i].~PortableObject();
 	}
 
-	~ExecutionState()
+	void push_stack(const Object &object)
 	{
-		while (m_current_frame_id != NoBlockId)
-			delete_frame();
+		unsigned int i = stack_pointer;
+		if (i >= code.stacksize())
+			throw RuntimeError("stack overflow");
+
+		new (&stack_objects[i]) PortableObject(object);
+		stack_pointer = ++i;
 	}
 
-	void new_frame(const CodeObject &code, const DictObject &dict)
+	Object pop_stack()
 	{
-		concrete_trace(("new frame: code=%d") % code.id());
-
-		auto id = Context::Alloc(
-			sizeof (FrameBlock) + sizeof (PortableObject) * code.stacksize());
-		new (Context::Pointer(id)) FrameBlock(m_current_frame_id, code, dict);
-
-		m_current_frame_id = id;
-	}
-
-	Object delete_frame()
-	{
-		Object value;
-
-		if (m_current_frame_id != NoBlockId && current_frame()->stack_pointer > 0)
-			value = pop();
-
-		concrete_trace(("delete frame: return object=%d type=%d")
-		               % value.id() % value.type().id());
-
-		auto id = m_current_frame_id;
-		m_current_frame_id = frame(id)->parent_id;
-
-		unsigned int top = frame(id)->stack_pointer;
-		for (unsigned int i = top; i-- > 0; )
-			frame(id)->stack_objects[i].~PortableObject();
-
-		Context::Delete<FrameBlock>(id);
-
-		return value;
-	}
-
-	CodeObject code() const
-	{
-		return current_frame()->code;
-	}
-
-	bool restore(Loader &loader)
-	{
-		// TODO: properly
-		if (m_current_frame_id == NoBlockId)
-			return false;
-
-		auto frame = current_frame();
-		auto bytecode = frame->code.code();
-
-		loader.reset(bytecode.data(), bytecode.size(), frame->code_position);
-		return !loader.empty();
-	}
-
-	bool save(Loader &loader)
-	{
-		// TODO: properly
-		if (m_current_frame_id == NoBlockId)
-			return false;
-
-		auto frame = current_frame();
-
-		frame->code_position = loader.position();
-		return !loader.empty();
-	}
-
-	void push(const Object &object)
-	{
-		// TODO: properly
-		if (m_current_frame_id == NoBlockId)
-			return;
-
-		auto frame = current_frame();
-		unsigned int i = frame->stack_pointer;
-
-		if (i >= frame->code.stacksize())
-			throw std::runtime_error("stack overflow");
-
-		new (&frame->stack_objects[i]) PortableObject(object);
-		frame->stack_pointer = ++i;
-	}
-
-	Object peek(unsigned int offset = 0)
-	{
-		auto frame = current_frame();
-		unsigned int i = frame->stack_pointer;
-
-		if (i <= offset)
-			throw std::runtime_error("stack underflow");
-
-		return Object(frame->stack_objects[i - offset - 1]);
-	}
-
-	Object pop()
-	{
-		// TODO: properly
-		if (m_current_frame_id == NoBlockId)
-			return Object();
-
-		auto frame = current_frame();
-		unsigned int i = frame->stack_pointer;
-
+		unsigned int i = stack_pointer;
 		if (i == 0)
-			throw std::runtime_error("stack underflow");
+			throw RuntimeError("stack underflow");
 
-		frame->stack_pointer = --i;
-		Object object(frame->stack_objects[i]);
-
-		frame->stack_objects[i].~PortableObject();
+		stack_pointer = --i;
+		Object object(stack_objects[i]);
+		stack_objects[i].~PortableObject();
 
 		return object;
 	}
 
-	void pop(unsigned int count)
+	static size_t AllocSize(const CodeObject &code)
 	{
-		auto frame = current_frame();
-		unsigned int i = frame->stack_pointer;
+		return sizeof (ExecutionFrame) + sizeof (PortableObject) * code.stacksize();
+	}
+} CONCRETE_PACKED;
 
-		if (i < count)
-			throw std::runtime_error("stack underflow");
+class ExecutionState: noncopyable {
+public:
+	explicit ExecutionState(const CodeObject &code)
+	{
+		auto dict = DictObject::New();
 
-		frame->stack_pointer = i - count;
+		auto frame_id = Context::Alloc(ExecutionFrame::AllocSize(code));
+		new (Context::Pointer(frame_id)) ExecutionFrame(code, dict);
 
-		for (unsigned int n = 1; n <= count; n++)
-			frame->stack_objects[i - n].~PortableObject();
+		m_initial_frame_id = frame_id;
+		m_current_frame_id = frame_id;
+
+		concrete_trace(("frame new initial %d") % m_initial_frame_id);
 	}
 
-	DictObject dict()
+	~ExecutionState()
+	{
+		concrete_trace(("frame destroy initial %d") % m_initial_frame_id);
+
+		Context::Delete<ExecutionFrame>(m_initial_frame_id);
+	}
+
+	/*
+	 * Frame management
+	 */
+
+	BlockId new_frame(const CodeObject &code, const DictObject &dict)
+	{
+		auto old_frame_id = m_current_frame_id;
+
+		auto new_frame_id = Context::Alloc(ExecutionFrame::AllocSize(code));
+		new (Context::Pointer(new_frame_id)) ExecutionFrame(code, dict, old_frame_id);
+
+		m_current_frame_id = new_frame_id;
+
+		concrete_trace(("frame new %d: code=%d") % new_frame_id % code.id());
+
+		return new_frame_id;
+	}
+
+	void exit_frame()
+	{
+		concrete_trace(("frame exit %d") % m_current_frame_id);
+
+		m_current_frame_id = current_frame()->parent_frame_id;
+	}
+
+	Object destroy_frame(BlockId frame_id)
+	{
+		concrete_trace(("frame destroy %d") % frame_id);
+
+		auto return_value = Frame(frame_id)->pop_stack();
+		Context::Delete<ExecutionFrame>(frame_id);
+
+		return return_value;
+	}
+
+	bool have_frame()
+	{
+		return m_current_frame_id != NoBlockId;
+	}
+
+	/*
+	 * Properties
+	 */
+
+	CodeObject frame_code() const
+	{
+		return current_frame()->code;
+	}
+
+	portable<uint32_t> &frame_position()
+	{
+		return current_frame()->code_position;
+	}
+
+	DictObject frame_dict() const
 	{
 		return current_frame()->dict;
 	}
 
-private:
-	static FrameBlock *frame(BlockId id)
+	/*
+	 * Stack operations
+	 */
+
+	void push_stack(const Object &object)
 	{
-		return static_cast<FrameBlock *> (Context::Pointer(id));
+		current_frame()->push_stack(object);
 	}
 
-	FrameBlock *current_frame() const
+	Object pop_stack()
 	{
-		return frame(m_current_frame_id);
+		return current_frame()->pop_stack();
 	}
 
-	BlockId m_current_frame_id;
-};
+	/*
+	 * Continuation operations
+	 */
 
-class CodeExecutor: noncopyable {
-public:
-	CodeExecutor(const CodeObject &code)
+	void init_call(const Object &callable, const TupleObject &args, const DictObject &kwargs)
 	{
-		m_state.new_frame(code, DictObject::New());
+		BlockId frame_id = m_current_frame_id;
+		BlockId continuation = NoBlockId;
+
+		concrete_trace(("call init enter: callable=%d frame=%d") % callable.id() % frame_id);
+
+		auto return_value = callable.require<CallableObject>().init_call(continuation, args, kwargs);
+
+		concrete_trace(("call init leave: callable=%d frame=%d done=%d return=%d") % callable.id() % frame_id % (continuation == NoBlockId) % return_value.id());
+
+		auto frame = Frame(frame_id);
+
+		if (continuation == NoBlockId) {
+			frame->push_stack(return_value);
+		} else {
+			frame->call_continuation = continuation;
+			frame->call_callable = callable;
+		}
 	}
 
-	bool execute()
+	bool resume_call()
 	{
-		if (!m_state.restore(m_loader))
+		BlockId frame_id = m_current_frame_id;
+		ExecutionFrame *frame;
+		BlockId continuation;
+
+		frame = Frame(frame_id);
+		continuation = frame->call_continuation;
+
+		if (continuation == NoBlockId)
 			return false;
 
-		execute_op();
+		auto callable = frame->call_callable;
 
-		if (!m_state.save(m_loader))
-			return false;
+		concrete_trace(("call resume enter: callable=%d frame=%d") % callable.id() % frame_id);
+
+		auto return_value = callable.require<CallableObject>().resume_call(continuation);
+
+		concrete_trace(("call resume leave: callable=%d frame=%d done=%d return=%d") % callable.id() % frame_id % (continuation == NoBlockId) % return_value.id());
+
+		frame = Frame(frame_id);
+		frame->call_continuation = continuation;
+
+		if (continuation == NoBlockId) {
+			frame->call_callable = Object();
+			frame->push_stack(return_value);
+		}
 
 		return true;
 	}
 
 private:
-	void execute_op()
+	static ExecutionFrame *Frame(BlockId id)
+	{
+		assert(id != NoBlockId);
+		return static_cast<ExecutionFrame *> (Context::Pointer(id));
+	}
+
+	ExecutionFrame *current_frame() const
+	{
+		return Frame(m_current_frame_id);
+	}
+
+	BlockId m_initial_frame_id;
+	BlockId m_current_frame_id;
+};
+
+class BytecodeLoader: public loader<BytecodeLoader> {
+public:
+	BytecodeLoader(ExecutionState &execution):
+		loader<BytecodeLoader>(*this),
+		m_execution(execution)
+	{
+	}
+
+	const uint8_t *data() const
+	{
+		return m_execution.frame_code().code().data();
+	}
+
+	size_t size() const
+	{
+		return m_execution.frame_code().code().size();
+	}
+
+	size_t position() const
+	{
+		return m_execution.frame_position();
+	}
+
+	void advance(size_t offset)
+	{
+		auto &position = m_execution.frame_position();
+		position = position + offset;
+	}
+
+private:
+	ExecutionState &m_execution;
+};
+
+class Executor::Impl: public ExecutionState {
+public:
+	explicit Impl(const CodeObject &code): ExecutionState(code), m_loader(*this)
+	{
+	}
+
+	bool execute()
+	{
+		if (resume_call() || execute_opcode())
+			return have_frame();
+		else
+			return false;
+	}
+
+private:
+	bool execute_opcode()
 	{
 		using namespace opcodes;
 
-		unsigned int pos = m_loader.position();
-		unsigned int op = load<uint8_t>();
+		if (m_loader.empty())
+			return false;
 
-		concrete_trace(("position=%d opcode=%u") % pos % op);
+		auto pos = m_loader.position();
+		unsigned int op = load_bytecode<uint8_t>();
+
+		concrete_trace(("execute %4u: opcode=%u") % pos % op);
 
 		switch (Opcode(op)) {
 		case PopTop:              op_pop_top(); break;
@@ -244,175 +337,133 @@ private:
 
 		default:
 			concrete_trace(("unsupported opcode: %u") % op);
-			throw std::runtime_error("unsupported opcode");
+			throw RuntimeError("unsupported opcode");
 		}
+
+		return true;
 	}
 
 	void op_pop_top()
 	{
-		m_state.pop();
+		pop_stack();
 	}
 
 	void op_binary_add()
 	{
-		auto b = m_state.pop();
-		auto a = m_state.pop();
+		auto b = pop_stack();
+		auto a = pop_stack();
 
 		auto args = TupleObject::New(2);
 		args.init_item(0, a);
 		args.init_item(1, b);
 
-		// TODO: support user functions
-		auto func = a.type().protocol().add.require<InternalObject>();
-
-		m_state.push(func.call(args, DictObject::New(0)));
+		auto callable = a.type().protocol().add.require<CallableObject>();
+		init_call(callable, args, DictObject::New(0));
 	}
 
 	void op_return_value()
 	{
-		auto value = m_state.delete_frame();
-		m_state.push(value);
-		m_state.restore(m_loader);
-
-		concrete_trace(("return_value: %s") % value.repr().data());
+		exit_frame();
 	}
 
 	void op_store_name()
 	{
-		auto name = m_state.code().names().get_item(load<uint16_t>());
-		auto value = m_state.pop();
-		m_state.dict().set_item(name, value);
+		auto name = frame_code().names().get_item(load_bytecode<uint16_t>());
+		auto value = pop_stack();
+		frame_dict().set_item(name, value);
 	}
 
 	void op_load_const()
 	{
-		m_state.push(m_state.code().consts().get_item(load<uint16_t>()));
+		push_stack(frame_code().consts().get_item(load_bytecode<uint16_t>()));
 	}
 
 	void op_load_name()
 	{
-		auto name = m_state.code().names().get_item(load<uint16_t>());
-		m_state.push(m_state.dict().get_item(name));
+		auto name = frame_code().names().get_item(load_bytecode<uint16_t>());
+		push_stack(frame_dict().get_item(name));
 	}
 
 	void op_load_attr()
 	{
-		auto object = m_state.pop();
+		auto object = pop_stack();
 
 		// TODO: support all object types
 		auto dict = object.require<ModuleObject>().dict();
 
-		auto name = m_state.code().names().get_item(load<uint16_t>());
-		m_state.push(dict.get_item(name));
+		auto name = frame_code().names().get_item(load_bytecode<uint16_t>());
+		push_stack(dict.get_item(name));
 	}
 
 	void op_import_name()
 	{
-		auto from = m_state.pop();
-		auto level = m_state.pop().require<LongObject>();
-		auto name = m_state.code().names().get_item(load<uint16_t>());
+		auto from = pop_stack();
+		auto level = pop_stack().require<LongObject>();
+		auto name = frame_code().names().get_item(load_bytecode<uint16_t>());
 		auto module = Context::ImportBuiltin(name);
 
 		if (!from.check<NoneObject>()) {
 			auto fromlist = from.require<TupleObject>();
 			assert(fromlist.size() == 1);
-			m_state.push(module.cast<ModuleObject>().dict().get_item(fromlist.get_item(0)));
+			push_stack(module.cast<ModuleObject>().dict().get_item(fromlist.get_item(0)));
 		}
 
-		m_state.push(module);
+		push_stack(module);
 	}
 
 	void op_import_from()
 	{
-		auto module = m_state.pop().require<ModuleObject>();
-		auto name = m_state.code().names().get_item(load<uint16_t>());
-		m_state.push(module.dict().get_item(name));
+		auto module = pop_stack().require<ModuleObject>();
+		auto name = frame_code().names().get_item(load_bytecode<uint16_t>());
+		push_stack(module.dict().get_item(name));
 	}
 
 	void op_load_fast()
 	{
-		auto varname = m_state.code().varnames().get_item(load<uint16_t>());
-		m_state.push(m_state.dict().get_item(varname));
+		auto varname = frame_code().varnames().get_item(load_bytecode<uint16_t>());
+		push_stack(frame_dict().get_item(varname));
 	}
 
 	void op_call_function()
 	{
-		unsigned int argc = load<uint8_t>();
-		unsigned int kwargc = load<uint8_t>();
+		unsigned int argc = load_bytecode<uint8_t>();
+		unsigned int kwargc = load_bytecode<uint8_t>();
 
-		auto object = m_state.peek(argc + kwargc * 2);
+		auto args = TupleObject::New(argc);
+		auto kwargs = DictObject::New(kwargc);
 
-		if (object.check<FunctionObject>()) {
-			auto function = object.cast<FunctionObject>();
+		for (unsigned int i = 0; i < kwargc; i++) {
+			auto value = pop_stack();
+			auto key = pop_stack();
 
-			auto dict = DictObject::New(argc + kwargc);
-
-			for (unsigned int i = 0; i < kwargc; i++) {
-				auto value = m_state.pop();
-				auto key = m_state.pop();
-
-				dict.set_item(key, value);
-			}
-
-			for (unsigned int i = argc; i-- > 0; ) {
-				auto value = m_state.pop();
-				auto key = function.code().varnames().get_item(i);
-
-				dict.set_item(key, value);
-			}
-
-			m_state.pop(1); // function
-
-			m_state.save(m_loader);
-			m_state.new_frame(function.code(), dict);
-			m_loader.reset(function.code().code().data(), function.code().code().size());
-			return;
+			kwargs.set_item(key, value);
 		}
 
-		if (object.check<InternalObject>()) {
-			auto internal = object.cast<InternalObject>();
+		for (unsigned int i = argc; i-- > 0; )
+			args.init_item(i, pop_stack());
 
-			auto kwargs = DictObject::New(kwargc);
-			for (unsigned int i = 0; i < kwargc; i++) {
-				auto value = m_state.pop();
-				auto key = m_state.pop();
-
-				kwargs.set_item(key, value);
-			}
-
-			auto args = TupleObject::New(argc);
-			for (unsigned int i = argc; i-- > 0; )
-				args.init_item(i, m_state.pop());
-
-			m_state.pop(1); // internal
-
-			m_state.push(internal.call(args, kwargs));
-			return;
-		}
-
-		throw std::runtime_error("function or internal object expected");
+		init_call(pop_stack(), args, kwargs);
 	}
 
 	void op_make_function()
 	{
-		if (load<uint16_t>() > 0)
-			throw std::runtime_error("default function arguments not supported");
+		if (load_bytecode<uint16_t>() > 0)
+			throw RuntimeError("default function arguments not supported");
 
-		auto code = m_state.pop().require<CodeObject>();
-		m_state.push(FunctionObject::New(code));
+		auto code = pop_stack().require<CodeObject>();
+		push_stack(FunctionObject::New(code));
 	}
 
 	template <typename T>
-	T load()
+	T load_bytecode()
 	{
 		return m_loader.load<T>();
 	}
 
-	ExecutionState m_state;
-	Loader m_loader;
+	BytecodeLoader m_loader;
 };
 
-Executor::Executor(const CodeObject &code): m_impl(new CodeExecutor(code))
+Executor::Executor(const CodeObject &code): m_impl(new Impl(code))
 {
 }
 
@@ -426,6 +477,16 @@ bool Executor::execute()
 	active_scope<Executor> scope(*this);
 
 	return m_impl->execute();
+}
+
+BlockId Executor::new_frame(const CodeObject &code, const DictObject &dict)
+{
+	return m_impl->new_frame(code, dict);
+}
+
+Object Executor::destroy_frame(BlockId id)
+{
+	return m_impl->destroy_frame(id);
 }
 
 } // namespace

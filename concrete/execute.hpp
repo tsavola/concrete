@@ -10,17 +10,21 @@
 #ifndef CONCRETE_EXECUTE_HPP
 #define CONCRETE_EXECUTE_HPP
 
+#include <concrete/block.hpp>
 #include <concrete/objects/code.hpp>
+#include <concrete/objects/dict.hpp>
+#include <concrete/objects/object.hpp>
 #include <concrete/util/activatable.hpp>
 #include <concrete/util/noncopyable.hpp>
 
 namespace concrete {
 
-class CodeExecutor;
-
 class Executor: activatable<Executor>, noncopyable {
 	friend class activatable<Executor>;
 	friend class active_scope<Executor>;
+
+	class Impl;
+
 public:
 	static Executor &Active()
 	{
@@ -32,8 +36,11 @@ public:
 
 	bool execute();
 
+	BlockId new_frame(const CodeObject &code, const DictObject &dict);
+	Object destroy_frame(BlockId frame);
+
 private:
-	CodeExecutor *m_impl;
+	Impl *m_impl;
 };
 
 } // namespace

@@ -10,6 +10,7 @@
 #ifndef CONCRETE_OBJECTS_INTERNAL_HPP
 #define CONCRETE_OBJECTS_INTERNAL_HPP
 
+#include <cassert>
 #include <cstdint>
 
 #include <concrete/block.hpp>
@@ -24,14 +25,58 @@
 
 namespace concrete {
 
-#define CONCRETE_INTERNAL(name) \
-	static Object name(const TupleObject &, const DictObject &); \
-	static void name##_register() __attribute__ ((constructor)); \
-	void name##_register() { InternalBlock::Register(internals::name, name); } \
-	Object name
-
 typedef internals::Serial InternalSerial;
-typedef Object (*InternalFunction)(const TupleObject &args, const DictObject &kwargs);
+
+typedef Object (*InternalFunction)(ContinuationOp op,
+                                   BlockId &continuation,
+                                   const TupleObject *args,
+                                   const DictObject *kwargs);
+
+#define CONCRETE_INTERNAL(function)                                           \
+	static Object function(const TupleObject &, const DictObject &);      \
+	                                                                      \
+	static Object function##__entry(                                      \
+		ContinuationOp op,                                            \
+		BlockId &,                                                    \
+		const TupleObject *args,                                      \
+		const DictObject *kwargs)                                     \
+	{                                                                     \
+		assert(op == InitContinuation);                               \
+		return function(*args, *kwargs);                              \
+	}                                                                     \
+	                                                                      \
+	static void function##__register() __attribute__ ((constructor));     \
+	                                                                      \
+	void function##__register()                                           \
+	{                                                                     \
+		register_internal(internals::function, function##__entry);    \
+	}                                                                     \
+	                                                                      \
+	Object function
+
+#define CONCRETE_INTERNAL_CONTINUABLE(Continuable, Continuation)              \
+	struct Continuable;                                                   \
+	                                                                      \
+	static Object Continuable##__entry(                                   \
+		ContinuationOp op,                                            \
+		BlockId &id,                                                  \
+		const TupleObject *args,                                      \
+		const DictObject *kwargs)                                     \
+	{                                                                     \
+		return continuable_call<Continuation>(                        \
+			op, id, Continuable(), args, kwargs);                 \
+	}                                                                     \
+	                                                                      \
+	static void Continuable##__register() __attribute__ ((constructor));  \
+	                                                                      \
+	void Continuable##__register()                                        \
+	{                                                                     \
+		register_internal(                                            \
+			internals::Continuable,                               \
+			Continuable##__entry);                                \
+	}                                                                     \
+	                                                                      \
+	struct Continuable
 
 struct InternalBlock: CallableBlock {
 	const portable<uint16_t> serial;
@@ -46,10 +91,6 @@ struct InternalBlock: CallableBlock {
 	            BlockId &continuation,
 	            const TupleObject *args,
 	            const DictObject *kwargs) const;
-	Object call(const TupleObject &args, const DictObject &kwargs);
-
-	static void Register(InternalSerial serial, InternalFunction function);
-
 } CONCRETE_PACKED;
 
 template <typename Ops>
@@ -85,11 +126,6 @@ public:
 		return *this;
 	}
 
-	Object call(const TupleObject &args, const DictObject &kwargs) const
-	{
-		return internal_block()->call(args, kwargs);
-	}
-
 protected:
 	internal_object(BlockId id): callable_object<Ops>(id)
 	{
@@ -103,6 +139,8 @@ protected:
 
 typedef internal_object<ObjectOps>         InternalObject;
 typedef internal_object<PortableObjectOps> PortableInternalObject;
+
+void register_internal(InternalSerial serial, InternalFunction function);
 
 } // namespace
 
