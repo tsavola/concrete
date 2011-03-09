@@ -33,7 +33,12 @@ static Object CONCRETE_INTERNAL(ConcreteModule_test)(const TupleObject &args, co
 	return args.get_item(0);
 }
 
-void ConcreteModule::Init(const DictObject &modules) throw (AllocError)
+int ConcreteModule::GetTestValue()
+{
+	return test_value;
+}
+
+void concrete_module_init(const DictObject &modules)
 {
 	auto dict = DictObject::New(1);
 
@@ -42,11 +47,6 @@ void ConcreteModule::Init(const DictObject &modules) throw (AllocError)
 		InternalObject::New(internals::ConcreteModule_test));
 
 	modules.set_item(StringObject::New("concrete"), ModuleObject::New(dict));
-}
-
-int ConcreteModule::GetTestValue()
-{
-	return test_value;
 }
 
 } // namespace

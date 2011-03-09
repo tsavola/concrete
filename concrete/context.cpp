@@ -57,7 +57,7 @@ Context::Context() throw (AllocError)
 	object_type  .init_builtin(StringObject::New("object"));
 	none_type    .init_builtin(StringObject::New("none"));
 	string_type  .init_builtin(StringObject::New("string"));
-	LongType::Init(long_type);
+	long_object_init(long_type);
 	bytes_type   .init_builtin(StringObject::New("bytes"));
 	tuple_type   .init_builtin(StringObject::New("tuple"));
 	dict_type    .init_builtin(StringObject::New("dict"));
@@ -68,7 +68,7 @@ Context::Context() throw (AllocError)
 
 	auto modules = DictObject::New(1);
 
-	ConcreteModule::Init(modules);
+	concrete_module_init(modules);
 
 	builtins().modules = modules;
 }

@@ -19,10 +19,6 @@
 
 namespace concrete {
 
-struct LongType {
-	static void Init(const TypeObject &type);
-};
-
 struct LongBlock: ObjectBlock {
 	portable<int64_t> value;
 
@@ -82,6 +78,8 @@ protected:
 
 typedef long_object<ObjectOps>         LongObject;
 typedef long_object<PortableObjectOps> PortableLongObject;
+
+void long_object_init(const TypeObject &type);
 
 } // namespace
 
