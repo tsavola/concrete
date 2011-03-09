@@ -14,6 +14,7 @@
 
 #include <concrete/block.hpp>
 #include <concrete/objects.hpp>
+#include <concrete/opcodes.hpp>
 #include <concrete/util/loader.hpp>
 #include <concrete/util/noncopyable.hpp>
 #include <concrete/util/packed.hpp>
@@ -21,24 +22,6 @@
 #include <concrete/util/trace.hpp>
 
 namespace concrete {
-
-struct Op {
-	enum Code {
-		PopTop              = 1,
-		Nop                 = 9,
-		BinaryAdd           = 23,
-		ReturnValue         = 83,
-		StoreName           = 90,
-		LoadConst           = 100,
-		LoadName            = 101,
-		LoadAttr            = 106,
-		ImportName          = 108,
-		ImportFrom          = 109,
-		LoadFast            = 124,
-		CallFunction        = 131,
-		MakeFunction        = 132,
-	};
-};
 
 class ExecutionState: noncopyable {
 	struct FrameBlock: Block {
@@ -237,25 +220,27 @@ public:
 private:
 	void execute_op()
 	{
+		using namespace opcodes;
+
 		unsigned int pos = m_loader.position();
 		unsigned int op = load<uint8_t>();
 
 		concrete_trace(("position=%d opcode=%u") % pos % op);
 
-		switch (Op::Code(op)) {
-		case Op::PopTop:              op_pop_top(); break;
-		case Op::Nop:                 break;
-		case Op::BinaryAdd:           op_binary_add(); break;
-		case Op::ReturnValue:         op_return_value(); break;
-		case Op::StoreName:           op_store_name(); break;
-		case Op::LoadConst:           op_load_const(); break;
-		case Op::LoadName:            op_load_name(); break;
-		case Op::LoadAttr:            op_load_attr(); break;
-		case Op::ImportName:          op_import_name(); break;
-		case Op::ImportFrom:          op_import_from(); break;
-		case Op::LoadFast:            op_load_fast(); break;
-		case Op::CallFunction:        op_call_function(); break;
-		case Op::MakeFunction:        op_make_function(); break;
+		switch (Opcode(op)) {
+		case PopTop:              op_pop_top(); break;
+		case Nop:                 break;
+		case BinaryAdd:           op_binary_add(); break;
+		case ReturnValue:         op_return_value(); break;
+		case StoreName:           op_store_name(); break;
+		case LoadConst:           op_load_const(); break;
+		case LoadName:            op_load_name(); break;
+		case LoadAttr:            op_load_attr(); break;
+		case ImportName:          op_import_name(); break;
+		case ImportFrom:          op_import_from(); break;
+		case LoadFast:            op_load_fast(); break;
+		case CallFunction:        op_call_function(); break;
+		case MakeFunction:        op_make_function(); break;
 
 		default:
 			concrete_trace(("unsupported opcode: %u") % op);
