@@ -19,6 +19,7 @@
 #include <concrete/internals.hpp>
 #include <concrete/objects/callable.hpp>
 #include <concrete/objects/dict.hpp>
+#include <concrete/objects/object.hpp>
 #include <concrete/objects/tuple.hpp>
 #include <concrete/util/packed.hpp>
 #include <concrete/util/portable.hpp>
@@ -33,15 +34,17 @@ typedef Object (*InternalFunction)(ContinuationOp op,
                                    const DictObject *kwargs);
 
 #define CONCRETE_INTERNAL(function)                                           \
-	static Object function(const TupleObject &, const DictObject &);      \
+	static ::concrete::Object function(                                   \
+		const ::concrete::TupleObject &,                              \
+		const ::concrete::DictObject &);                              \
 	                                                                      \
-	static Object function##__entry(                                      \
-		ContinuationOp op,                                            \
-		BlockId &,                                                    \
-		const TupleObject *args,                                      \
-		const DictObject *kwargs)                                     \
+	static ::concrete::Object function##__entry(                          \
+		::concrete::ContinuationOp op,                                \
+		::concrete::BlockId &,                                        \
+		const ::concrete::TupleObject *args,                          \
+		const ::concrete::DictObject *kwargs)                         \
 	{                                                                     \
-		assert(op == InitContinuation);                               \
+		assert(op == ::concrete::InitContinuation);                   \
 		return function(*args, *kwargs);                              \
 	}                                                                     \
 	                                                                      \
@@ -49,30 +52,32 @@ typedef Object (*InternalFunction)(ContinuationOp op,
 	                                                                      \
 	void function##__register()                                           \
 	{                                                                     \
-		register_internal(internals::function, function##__entry);    \
+		::concrete::register_internal(                                \
+			::concrete::internals::function,                      \
+			function##__entry);                                   \
 	}                                                                     \
 	                                                                      \
-	Object function
+	::concrete::Object function
 
 #define CONCRETE_INTERNAL_CONTINUABLE(Continuable, Continuation)              \
 	struct Continuable;                                                   \
 	                                                                      \
-	static Object Continuable##__entry(                                   \
-		ContinuationOp op,                                            \
-		BlockId &id,                                                  \
-		const TupleObject *args,                                      \
-		const DictObject *kwargs)                                     \
+	static ::concrete::Object Continuable##__entry(                       \
+		::concrete::ContinuationOp op,                                \
+		::concrete::BlockId &id,                                      \
+		const ::concrete::TupleObject *args,                          \
+		const ::concrete::DictObject *kwargs)                         \
 	{                                                                     \
-		return continuable_call<Continuation>(                        \
-			op, id, Continuable(), args, kwargs);                 \
+		return ::concrete::continuable_call<Continuation>(            \
+			op, id, ::concrete::Continuable(), args, kwargs);     \
 	}                                                                     \
 	                                                                      \
 	static void Continuable##__register() __attribute__ ((constructor));  \
 	                                                                      \
 	void Continuable##__register()                                        \
 	{                                                                     \
-		register_internal(                                            \
-			internals::Continuable,                               \
+		::concrete::register_internal(                                \
+			::concrete::internals::Continuable,                   \
 			Continuable##__entry);                                \
 	}                                                                     \
 	                                                                      \
