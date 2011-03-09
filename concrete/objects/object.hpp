@@ -73,7 +73,8 @@ object<Ops>::object(): m_raw_id(Ops::store(Context::None().id()))
 template <typename Ops> template <typename T>
 bool object<Ops>::check() const
 {
-	return type() == T::Type();
+	type_check<T> impl;
+	return impl(type());
 }
 
 template <typename Ops> template <typename T>
