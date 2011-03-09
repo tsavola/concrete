@@ -1,4 +1,5 @@
 #include <concrete/objects/bytes.hpp>
+#include <concrete/objects/callable.hpp>
 #include <concrete/objects/code.hpp>
 #include <concrete/objects/dict.hpp>
 #include <concrete/objects/function.hpp>
