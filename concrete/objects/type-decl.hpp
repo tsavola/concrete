@@ -67,6 +67,14 @@ protected:
 
 } CONCRETE_PACKED;
 
+template <typename T>
+struct type_check {
+	bool operator()(const TypeObject &type)
+	{
+		return type == T::Type();
+	}
+};
+
 } // namespace
 
 #endif
