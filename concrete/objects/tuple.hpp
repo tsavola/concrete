@@ -10,9 +10,8 @@
 #ifndef CONCRETE_OBJECTS_TUPLE_HPP
 #define CONCRETE_OBJECTS_TUPLE_HPP
 
-#include <stdexcept>
-
 #include <concrete/block.hpp>
+#include <concrete/exception.hpp>
 #include <concrete/objects/object.hpp>
 #include <concrete/util/packed.hpp>
 
@@ -88,7 +87,7 @@ public:
 	{
 		auto block = tuple_block();
 		if (index >= block->size())
-			throw std::range_error("tuple index out of bounds");
+			throw RuntimeError("tuple index out of bounds");
 		return block->items[index];
 	}
 
