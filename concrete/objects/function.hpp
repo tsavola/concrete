@@ -11,22 +11,31 @@
 #define CONCRETE_OBJECTS_FUNCTION_HPP
 
 #include <concrete/block.hpp>
+#include <concrete/continuation.hpp>
+#include <concrete/objects/callable.hpp>
 #include <concrete/objects/code.hpp>
 #include <concrete/objects/object.hpp>
 #include <concrete/util/packed.hpp>
 
 namespace concrete {
 
-struct FunctionBlock: ObjectBlock {
+struct FunctionBlock: CallableBlock {
 	const PortableCodeObject code;
 
-	FunctionBlock(const TypeObject &type, const CodeObject &code): ObjectBlock(type), code(code)
+	FunctionBlock(const TypeObject &type, const CodeObject &code):
+		CallableBlock(type),
+		code(code)
 	{
 	}
+
+	Object call(ContinuationOp op,
+	            BlockId &continuation,
+	            const TupleObject *args,
+	            const DictObject *kwargs) const;
 } CONCRETE_PACKED;
 
 template <typename Ops>
-class function_object: public object<Ops> {
+class function_object: public callable_object<Ops> {
 	friend class object<ObjectOps>;
 	friend class object<PortableObjectOps>;
 
@@ -43,18 +52,18 @@ public:
 		return id;
 	}
 
-	using object<Ops>::operator==;
-	using object<Ops>::operator!=;
+	using callable_object<Ops>::operator==;
+	using callable_object<Ops>::operator!=;
 
 	template <typename OtherOps>
-	function_object(const function_object<OtherOps> &other): object<Ops>(other)
+	function_object(const function_object<OtherOps> &other): callable_object<Ops>(other)
 	{
 	}
 
 	template <typename OtherOps>
 	function_object &operator=(const function_object<OtherOps> &other)
 	{
-		object<Ops>::operator=(other);
+		callable_object<Ops>::operator=(other);
 		return *this;
 	}
 
@@ -64,13 +73,13 @@ public:
 	}
 
 protected:
-	function_object(BlockId id): object<Ops>(id)
+	function_object(BlockId id): callable_object<Ops>(id)
 	{
 	}
 
 	FunctionBlock *function_block() const
 	{
-		return static_cast<FunctionBlock *> (object<Ops>::object_block());
+		return static_cast<FunctionBlock *> (callable_object<Ops>::callable_block());
 	}
 } CONCRETE_PACKED;
 
