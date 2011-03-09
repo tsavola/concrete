@@ -118,6 +118,14 @@ public:
 		return block->items[i].value;
 	}
 
+	void copy_to(const dict_object &target) const
+	{
+		for (unsigned int i = 0; i < size(); i++) {
+			auto block = dict_block();
+			target.set_item(block->items[i].key, block->items[i].value);
+		}
+	}
+
 protected:
 	dict_object(BlockId id): object<Ops>(id)
 	{
