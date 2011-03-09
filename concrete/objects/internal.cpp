@@ -9,6 +9,8 @@
 
 #include "internal.hpp"
 
+#include <cassert>
+
 namespace concrete {
 
 static InternalFunction functions[internals::count];
@@ -18,6 +20,7 @@ Object InternalBlock::call(ContinuationOp op,
                            const TupleObject *args,
                            const DictObject *kwargs) const
 {
+	assert(functions[serial]);
 	return functions[serial](op, continuation, args, kwargs);
 }
 
