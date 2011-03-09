@@ -15,7 +15,9 @@
 
 using namespace concrete;
 
-static CodeObject load_example_code()
+namespace example {
+
+static CodeObject load_code()
 {
 	std::ifstream stream;
 
@@ -43,13 +45,13 @@ static std::string type_name(const T &object)
 	return str;
 }
 
-int main()
+static int main()
 {
 	Context context;
 	ContextScope scope(context);
 
 	try {
-		Executor executor(load_example_code());
+		Executor executor(load_code());
 		while (executor.execute())
 			;
 	} catch (const Exception &e) {
@@ -58,4 +60,11 @@ int main()
 	}
 
 	return 0;
+}
+
+} // namespace
+
+int main()
+{
+	return example::main();
 }
