@@ -15,6 +15,7 @@
 #include <concrete/objects/object-decl.hpp>
 #include <concrete/objects/string-decl.hpp>
 #include <concrete/objects/type-decl.hpp>
+#include <concrete/util/backtrace.hpp>
 
 namespace concrete {
 
@@ -23,6 +24,7 @@ public:
 	// TODO
 	explicit Exception(const Object &args) throw (): m_repr(args.repr())
 	{
+		print_backtrace();
 	}
 
 	Exception(const Exception &other) throw (): m_repr(other.m_repr)
@@ -47,6 +49,7 @@ public:
 protected:
 	Exception(const StringObject &repr, int) throw (): m_repr(repr)
 	{
+		print_backtrace();
 	}
 
 private:
