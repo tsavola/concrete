@@ -129,6 +129,8 @@ ObjectBlock *object<Ops>::object_block() const
 	return static_cast<ObjectBlock *> (Context::Pointer(id()));
 }
 
+void object_init(const TypeObject &type);
+
 } // namespace
 
 #endif

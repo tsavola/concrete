@@ -54,7 +54,7 @@ Context::Context() throw (AllocError)
 	none         .init_builtin(none_type);
 
 	type_type    .init_builtin(StringObject::New("type"));
-	object_type  .init_builtin(StringObject::New("object"));
+	object_init(object_type);
 	none_type    .init_builtin(StringObject::New("none"));
 	string_type  .init_builtin(StringObject::New("string"));
 	long_object_init(long_type);

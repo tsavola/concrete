@@ -16,6 +16,11 @@
 
 namespace concrete {
 
+static Object CONCRETE_INTERNAL(Object_repr)(const TupleObject &args, const DictObject &kwargs)
+{
+	return args.get_item(0).repr();
+}
+
 template <typename T>
 static void destruct(ObjectBlock *block)
 {
@@ -48,6 +53,13 @@ StringObject ObjectBlock::repr(BlockId id) const
 {
 	auto str = (boost::format("<%s object at 0x%lx>") % type().name().data() % id).str();
 	return StringObject::New(str.data(), str.size());
+}
+
+void object_init(const TypeObject &type)
+{
+	type.init_builtin(StringObject::New("object"));
+
+	type.protocol().repr = InternalObject::New(internals::Object_repr);
 }
 
 } // namespace

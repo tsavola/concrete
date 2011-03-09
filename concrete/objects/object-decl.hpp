@@ -115,6 +115,11 @@ private:
 
 } CONCRETE_PACKED;
 
+struct ObjectProtocol {
+	PortableObject repr;
+	PortableObject add;
+} CONCRETE_PACKED;
+
 } // namespace
 
 #endif
