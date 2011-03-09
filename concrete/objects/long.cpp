@@ -16,7 +16,7 @@
 
 namespace concrete {
 
-static Object CONCRETE_INTERNAL(LongObject_add)(const TupleObject &args, const DictObject &kwargs)
+CONCRETE_INTERNAL(LongObject_add)(const TupleObject &args, const DictObject &kwargs)
 {
 	int64_t value = 0;
 

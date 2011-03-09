@@ -16,7 +16,7 @@
 
 namespace concrete {
 
-static Object CONCRETE_INTERNAL(Object_repr)(const TupleObject &args, const DictObject &kwargs)
+CONCRETE_INTERNAL(Object_repr)(const TupleObject &args, const DictObject &kwargs)
 {
 	return args.get_item(0).repr();
 }

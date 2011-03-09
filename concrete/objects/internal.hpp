@@ -24,7 +24,7 @@
 namespace concrete {
 
 #define CONCRETE_INTERNAL(name) \
-	name(const TupleObject &, const DictObject &); \
+	static Object name(const TupleObject &, const DictObject &); \
 	static void name##_register() __attribute__ ((constructor)); \
 	void name##_register() { InternalBlock::Register(internals::name, name); } \
 	Object name

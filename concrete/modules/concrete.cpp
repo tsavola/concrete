@@ -23,7 +23,7 @@ namespace concrete {
 
 static int test_value;
 
-static Object CONCRETE_INTERNAL(ConcreteModule_test)(const TupleObject &args, const DictObject &kwargs)
+CONCRETE_INTERNAL(ConcreteModule_test)(const TupleObject &args, const DictObject &kwargs)
 {
 	std::cout << boost::format("concrete.test: args=%d kwargs=%d")
 		% args.size() % kwargs.size() << std::endl;
