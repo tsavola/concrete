@@ -14,12 +14,13 @@
 
 #include <concrete/block.hpp>
 #include <concrete/context.hpp>
+#include <concrete/continuation.hpp>
 #include <concrete/internals.hpp>
+#include <concrete/objects/callable.hpp>
 #include <concrete/objects/dict.hpp>
-#include <concrete/objects/object.hpp>
 #include <concrete/objects/tuple.hpp>
-#include <concrete/util/portable.hpp>
 #include <concrete/util/packed.hpp>
+#include <concrete/util/portable.hpp>
 
 namespace concrete {
 
@@ -32,13 +33,19 @@ namespace concrete {
 typedef internals::Serial InternalSerial;
 typedef Object (*InternalFunction)(const TupleObject &args, const DictObject &kwargs);
 
-struct InternalBlock: ObjectBlock {
+struct InternalBlock: CallableBlock {
 	const portable<uint16_t> serial;
 
-	InternalBlock(const TypeObject &type, InternalSerial serial): ObjectBlock(type), serial(serial)
+	InternalBlock(const TypeObject &type, InternalSerial serial):
+		CallableBlock(type),
+		serial(serial)
 	{
 	}
 
+	Object call(ContinuationOp op,
+	            BlockId &continuation,
+	            const TupleObject *args,
+	            const DictObject *kwargs) const;
 	Object call(const TupleObject &args, const DictObject &kwargs);
 
 	static void Register(InternalSerial serial, InternalFunction function);
@@ -46,7 +53,7 @@ struct InternalBlock: ObjectBlock {
 } CONCRETE_PACKED;
 
 template <typename Ops>
-class internal_object: public object<Ops> {
+class internal_object: public callable_object<Ops> {
 	friend class object<ObjectOps>;
 	friend class object<PortableObjectOps>;
 
@@ -63,18 +70,18 @@ public:
 		return id;
 	}
 
-	using object<Ops>::operator==;
-	using object<Ops>::operator!=;
+	using callable_object<Ops>::operator==;
+	using callable_object<Ops>::operator!=;
 
 	template <typename OtherOps>
-	internal_object(const internal_object<OtherOps> &other): object<Ops>(other)
+	internal_object(const internal_object<OtherOps> &other): callable_object<Ops>(other)
 	{
 	}
 
 	template <typename OtherOps>
 	internal_object &operator=(const internal_object<OtherOps> &other)
 	{
-		object<Ops>::operator=(other);
+		callable_object<Ops>::operator=(other);
 		return *this;
 	}
 
@@ -84,13 +91,13 @@ public:
 	}
 
 protected:
-	internal_object(BlockId id): object<Ops>(id)
+	internal_object(BlockId id): callable_object<Ops>(id)
 	{
 	}
 
 	InternalBlock *internal_block() const
 	{
-		return static_cast<InternalBlock *> (object<Ops>::object_block());
+		return static_cast<InternalBlock *> (callable_object<Ops>::callable_block());
 	}
 } CONCRETE_PACKED;
 

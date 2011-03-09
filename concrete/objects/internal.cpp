@@ -13,6 +13,14 @@ namespace concrete {
 
 static InternalFunction functions[internals::count];
 
+Object InternalBlock::call(ContinuationOp op,
+                           BlockId &continuation,
+                           const TupleObject *args,
+                           const DictObject *kwargs) const
+{
+	return Object();
+}
+
 void InternalBlock::Register(InternalSerial serial, InternalFunction function)
 {
 	functions[serial] = function;

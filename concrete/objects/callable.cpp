@@ -16,7 +16,7 @@ namespace concrete {
 
 bool CallableBlock::Check(const TypeObject &type)
 {
-	return type == FunctionObject::Type();
+	return type == FunctionObject::Type() || type == InternalObject::Type();
 }
 
 Object CallableBlock::call(ContinuationOp op,
@@ -29,6 +29,10 @@ Object CallableBlock::call(ContinuationOp op,
 
 	if (t == FunctionObject::Type())
 		value = static_cast<const FunctionBlock *> (this)->call(
+			op, continuation, args, kwargs);
+
+	else if (t == InternalObject::Type())
+		value = static_cast<const InternalBlock *> (this)->call(
 			op, continuation, args, kwargs);
 
 	return value;
