@@ -10,8 +10,6 @@
 #ifndef CONCRETE_OBJECTS_DICT_HPP
 #define CONCRETE_OBJECTS_DICT_HPP
 
-#include <stdexcept>
-
 #include <concrete/block.hpp>
 #include <concrete/exception.hpp>
 #include <concrete/objects/object.hpp>
@@ -100,7 +98,7 @@ public:
 		}
 
 		if (i == block->capacity())
-			throw std::runtime_error("dict capacity exceeded");
+			throw RuntimeError("dict capacity exceeded");
 
 		new (&block->items[i]) DictBlock::Item(key, value);
 		block->size = i + 1;
