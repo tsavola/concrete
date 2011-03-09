@@ -13,17 +13,19 @@
 #include <exception>
 
 #include <concrete/objects/object-decl.hpp>
+#include <concrete/objects/string-decl.hpp>
 #include <concrete/objects/type-decl.hpp>
 
 namespace concrete {
 
 class Exception: public std::exception {
 public:
-	explicit Exception(const Object &args) throw (): m_args(args)
+	// TODO
+	explicit Exception(const Object &args) throw (): m_repr(args.repr())
 	{
 	}
 
-	Exception(const Exception &other) throw (): m_args(other.m_args)
+	Exception(const Exception &other) throw (): m_repr(other.m_repr)
 	{
 	}
 
@@ -33,28 +35,41 @@ public:
 
 	Exception &operator=(const Exception &other) throw ()
 	{
-		m_args = other.m_args;
+		m_repr = other.m_repr;
 		return *this;
 	}
 
-	virtual const char *what() const throw ();
+	virtual const char *what() const throw ()
+	{
+		return m_repr.data();
+	}
 
 protected:
-	Object m_args;
+	Exception(const StringObject &repr, int) throw (): m_repr(repr)
+	{
+	}
+
+private:
+	StringObject m_repr;
 };
 
 class TypeError: public Exception {
 public:
-	explicit TypeError(const TypeObject &type) throw (): Exception(type)
+	explicit TypeError(const TypeObject &type) throw (): Exception(type.name(), 0)
 	{
 	}
-
-	virtual const char *what() const throw ();
 };
 
 class KeyError: public Exception {
 public:
 	explicit KeyError(const Object &key) throw (): Exception(key)
+	{
+	}
+};
+
+class RuntimeError: public Exception {
+public:
+	explicit RuntimeError(const char *message) throw (): Exception(StringObject::New(message), 0)
 	{
 	}
 };
