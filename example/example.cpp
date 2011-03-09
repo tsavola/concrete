@@ -4,6 +4,7 @@
 #include <boost/scoped_array.hpp>
 
 #include <concrete/context.hpp>
+#include <concrete/exception.hpp>
 #include <concrete/execute.hpp>
 #include <concrete/objects/code.hpp>
 
@@ -32,10 +33,15 @@ int main()
 {
 	Context context;
 	ContextScope scope(context);
-	Executor executor(load_example_code());
 
-	while (executor.execute())
-		;
+	try {
+		Executor executor(load_example_code());
+		while (executor.execute())
+			;
+	} catch (const Exception &e) {
+		std::cerr << e.what() << "\n";
+		return 1;
+	}
 
 	return 0;
 }
