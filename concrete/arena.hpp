@@ -18,6 +18,7 @@
 #include <exception>
 
 #include <concrete/block.hpp>
+#include <concrete/util/backtrace.hpp>
 #include <concrete/util/noncopyable.hpp>
 
 namespace concrete {
@@ -46,6 +47,31 @@ private:
 	const size_t m_size;
 };
 
+class AccessError: public std::exception {
+public:
+	explicit AccessError(BlockId block_id) throw (): m_block_id(block_id)
+	{
+		Backtrace();
+	}
+
+	virtual ~AccessError() throw ()
+	{
+	}
+
+	virtual const char *what() const throw ()
+	{
+		return "Bad block access";
+	}
+
+	BlockId block_id() const throw ()
+	{
+		return m_block_id;
+	}
+
+private:
+	const BlockId m_block_id;
+};
+
 class Arena: Noncopyable {
 public:
 	Arena(): m_base(NULL), m_size(0)
@@ -61,11 +87,24 @@ public:
 	BlockId alloc(size_t size);
 	void free(Block *block);
 
-	Block *pointer(BlockId id) const
+	// TODO: verify caller-supplied block type size against actual block size
+	Block *pointer(BlockId block_id) const
 	{
-		assert(id < m_size);
-		assert((id & (sizeof (uint32_t) - 1)) == 0);
-		return reinterpret_cast<Block *> (reinterpret_cast<char *> (m_base) + id);
+#ifndef NDEBUG
+		if (block_id & (sizeof (uint32_t) - 1))
+			throw AccessError(block_id);
+#endif
+
+		if (m_size < sizeof (Block) || block_id > m_size - sizeof (Block))
+			throw AccessError(block_id);
+
+		auto block = reinterpret_cast<Block *> (reinterpret_cast<char *> (m_base) + block_id);
+		auto aligned_size = AlignedSize(block_id, block->block_size());
+
+		if (m_size < aligned_size || block_id > m_size - aligned_size)
+			throw AccessError(block_id);
+
+		return block;
 	}
 
 	void *base() const
@@ -81,6 +120,21 @@ public:
 	void dump() const;
 
 private:
+	static size_t AlignedSize(BlockId block_id, BlockSize block_size)
+	{
+		size_t aligned_size = UnverifiedAlignedSize(block_size);
+
+		if (aligned_size < block_size)
+			throw AccessError(block_id);
+
+		return aligned_size;
+	}
+
+	static size_t UnverifiedAlignedSize(BlockSize block_size)
+	{
+		return (block_size + sizeof (uint32_t) - 1) & ~size_t(sizeof (uint32_t) - 1);
+	}
+
 	void *m_base;
 	size_t m_size;
 };
