@@ -10,16 +10,9 @@
 #ifndef CONCRETE_MODULES_CONCRETE_HPP
 #define CONCRETE_MODULES_CONCRETE_HPP
 
-#include <concrete/block.hpp>
-#include <concrete/context.hpp>
 #include <concrete/objects/dict.hpp>
-#include <concrete/objects/module.hpp>
 
 namespace concrete {
-
-struct ConcreteModule {
-	static int GetTestValue();
-};
 
 void concrete_module_init(const DictObject &modules);
 
