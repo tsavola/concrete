@@ -14,11 +14,11 @@ namespace concrete {
 
 class Noncopyable {
 protected:
-	Noncopyable()
+	Noncopyable() throw ()
 	{
 	}
 
-	~Noncopyable()
+	~Noncopyable() throw ()
 	{
 	}
 

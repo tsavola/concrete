@@ -41,7 +41,7 @@ struct DictBlock: ObjectBlock {
 			items[i].~Item();
 	}
 
-	unsigned int capacity() const
+	unsigned int capacity() const throw ()
 	{
 		return (block_size() - sizeof (DictBlock)) / sizeof (Item);
 	}

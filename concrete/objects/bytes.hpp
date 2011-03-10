@@ -28,7 +28,7 @@ struct BytesBlock: ObjectBlock {
 		std::memcpy(data, data_, size());
 	}
 
-	size_t size() const
+	size_t size() const throw ()
 	{
 		return block_size() - sizeof (BytesBlock);
 	}

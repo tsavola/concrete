@@ -126,14 +126,14 @@ public:
 
 	Context();
 
-	Context(const ContextSnapshot &snapshot):
+	Context(const ContextSnapshot &snapshot) throw ():
 		m_arena(snapshot.base, snapshot.size),
 		m_builtin_none(snapshot.builtin_none),
 		m_builtins(snapshot.builtins)
 	{
 	}
 
-	ContextSnapshot snapshot() const
+	ContextSnapshot snapshot() const throw ()
 	{
 		return ContextSnapshot {
 			m_arena.base(),

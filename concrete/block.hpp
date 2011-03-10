@@ -27,16 +27,16 @@ class Block {
 	friend class Arena;
 
 public:
-	Block()
+	Block() throw ()
 	{
 	}
 
-	Block &operator=(const Block &other)
+	Block &operator=(const Block &other) throw ()
 	{
 		return *this;
 	}
 
-	BlockSize block_size() const
+	BlockSize block_size() const throw ()
 	{
 		return m_size;
 	}

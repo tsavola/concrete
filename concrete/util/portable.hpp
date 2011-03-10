@@ -18,14 +18,14 @@ namespace concrete {
 #ifdef CONCRETE_LITTLE_ENDIAN
 template <typename T, unsigned int N>
 struct PortableOps {
-	static inline T Load(const T &x)  { return x; }
-	static inline T Store(const T &x) { return x; }
+	static inline T Load(const T &x) throw ()  { return x; }
+	static inline T Store(const T &x) throw () { return x; }
 };
 #else
 template <typename T, unsigned int N>
 struct PortableOps {
-	static inline T Load(const T &x)  { return Byteorder<T, N>::Swap(x); }
-	static inline T Store(const T &x) { return Byteorder<T, N>::Swap(x); }
+	static inline T Load(const T &x) throw ()  { return Byteorder<T, N>::Swap(x); }
+	static inline T Store(const T &x) throw () { return Byteorder<T, N>::Swap(x); }
 };
 #endif
 
@@ -34,51 +34,51 @@ class Portable {
 	typedef PortableOps<T, sizeof (T)> Ops;
 
 public:
-	Portable()
+	Portable() throw ()
 	{
 	}
 
-	Portable(const T &x): m_raw(Ops::Store(x))
+	Portable(const T &x) throw (): m_raw(Ops::Store(x))
 	{
 	}
 
-	Portable(const Portable &other): m_raw(other.m_raw)
+	Portable(const Portable &other) throw (): m_raw(other.m_raw)
 	{
 	}
 
-	Portable &operator=(const T &x)
+	Portable &operator=(const T &x) throw ()
 	{
 		m_raw = Ops::Store(x);
 		return *this;
 	}
 
-	Portable &operator=(const Portable &other)
+	Portable &operator=(const Portable &other) throw ()
 	{
 		m_raw = other.m_raw;
 		return *this;
 	}
 
-	operator T() const
+	operator T() const throw ()
 	{
 		return Ops::Load(m_raw);
 	}
 
-	bool operator==(const T &x) const
+	bool operator==(const T &x) const throw ()
 	{
 		return Ops::Load(m_raw) == x;
 	}
 
-	bool operator!=(const T &x) const
+	bool operator!=(const T &x) const throw ()
 	{
 		return Ops::Load(m_raw) != x;
 	}
 
-	bool operator==(const Portable &other) const
+	bool operator==(const Portable &other) const throw ()
 	{
 		return m_raw == other.m_raw;
 	}
 
-	bool operator!=(const Portable &other) const
+	bool operator!=(const Portable &other) const throw ()
 	{
 		return m_raw != other.m_raw;
 	}

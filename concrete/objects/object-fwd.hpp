@@ -18,13 +18,13 @@ namespace concrete {
 template <typename Ops> class ObjectLogic;
 
 struct ObjectOps {
-	static const BlockId &Load(const BlockId &x)  { return x; }
-	static const BlockId &Store(const BlockId &x) { return x; }
+	static const BlockId &Load(const BlockId &x) throw ()  { return x; }
+	static const BlockId &Store(const BlockId &x) throw () { return x; }
 };
 
 struct PortableObjectOps {
-	static BlockId Load(BlockId x)  { return PortableOps<BlockId, sizeof (x)>::Load(x); }
-	static BlockId Store(BlockId x) { return PortableOps<BlockId, sizeof (x)>::Store(x); }
+	static BlockId Load(BlockId x) throw ()  { return PortableOps<BlockId, sizeof (x)>::Load(x); }
+	static BlockId Store(BlockId x) throw () { return PortableOps<BlockId, sizeof (x)>::Store(x); }
 };
 
 typedef ObjectLogic<ObjectOps>         Object;

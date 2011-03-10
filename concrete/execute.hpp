@@ -26,7 +26,7 @@ class Executor: Activatable<Executor>, Noncopyable {
 	class Impl;
 
 public:
-	static Executor &Active()
+	static Executor &Active() throw ()
 	{
 		return Activatable<Executor>::Active();
 	}

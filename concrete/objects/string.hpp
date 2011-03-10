@@ -29,7 +29,7 @@ struct StringBlock: ObjectBlock {
 
 	StringBlock(const TypeObject &type, const char *data);
 
-	size_t size() const
+	size_t size() const throw ()
 	{
 		return block_size() - sizeof (StringBlock) - 1;
 	}

@@ -74,15 +74,15 @@ private:
 
 class Arena: Noncopyable {
 public:
-	Arena(): m_base(NULL), m_size(0)
+	Arena() throw (): m_base(NULL), m_size(0)
 	{
 	}
 
-	Arena(void *base, size_t size): m_base(base), m_size(size)
+	Arena(void *base, size_t size) throw (): m_base(base), m_size(size)
 	{
 	}
 
-	~Arena();
+	~Arena() throw ();
 
 	BlockId alloc(size_t size);
 	void free(Block *block);
@@ -107,12 +107,12 @@ public:
 		return block;
 	}
 
-	void *base() const
+	void *base() const throw ()
 	{
 		return m_base;
 	}
 
-	size_t size() const
+	size_t size() const throw ()
 	{
 		return m_size;
 	}
@@ -130,7 +130,7 @@ private:
 		return aligned_size;
 	}
 
-	static size_t UnverifiedAlignedSize(BlockSize block_size)
+	static size_t UnverifiedAlignedSize(BlockSize block_size) throw ()
 	{
 		return (block_size + sizeof (uint32_t) - 1) & ~size_t(sizeof (uint32_t) - 1);
 	}

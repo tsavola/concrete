@@ -37,16 +37,16 @@ namespace concrete {
 template <typename T, unsigned int N> struct Byteorder;
 
 template <typename T> struct Byteorder<T, 1> {
-	static inline T Swap(const T &x) { return x; }
+	static inline T Swap(const T &x) throw () { return x; }
 };
 template <typename T> struct Byteorder<T, 2> {
-	static inline T Swap(const T &x) { return bswap_16(x); }
+	static inline T Swap(const T &x) throw () { return bswap_16(x); }
 };
 template <typename T> struct Byteorder<T, 4> {
-	static inline T Swap(const T &x) { return bswap_32(x); }
+	static inline T Swap(const T &x) throw () { return bswap_32(x); }
 };
 template <typename T> struct Byteorder<T, 8> {
-	static inline T Swap(const T &x) { return bswap_64(x); }
+	static inline T Swap(const T &x) throw () { return bswap_64(x); }
 };
 
 } // namespace

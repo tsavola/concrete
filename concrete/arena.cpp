@@ -28,7 +28,7 @@ static void __attribute__ ((constructor)) block_magic_warning()
 }
 #endif
 
-Arena::~Arena()
+Arena::~Arena() throw ()
 {
 	std::free(m_base);
 }

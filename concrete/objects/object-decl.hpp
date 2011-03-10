@@ -70,24 +70,24 @@ public:
 		return *this;
 	}
 
-	bool operator==(const ObjectLogic &other) const
+	bool operator==(const ObjectLogic &other) const throw ()
 	{
 		return m_raw_id == other.m_raw_id;
 	}
 
 	template <typename OtherOps>
-	bool operator==(const ObjectLogic<OtherOps> &other) const
+	bool operator==(const ObjectLogic<OtherOps> &other) const throw ()
 	{
 		return id() == other.id();
 	}
 
-	bool operator!=(const ObjectLogic &other) const
+	bool operator!=(const ObjectLogic &other) const throw ()
 	{
 		return m_raw_id != other.m_raw_id;
 	}
 
 	template <typename OtherOps>
-	bool operator!=(const ObjectLogic<OtherOps> &other) const
+	bool operator!=(const ObjectLogic<OtherOps> &other) const throw ()
 	{
 		return id() != other.id();
 	}
@@ -96,7 +96,7 @@ public:
 	template <typename T> T cast() const;
 	template <typename T> T require() const;
 
-	BlockId id() const
+	BlockId id() const throw ()
 	{
 		return Ops::Load(m_raw_id);
 	}

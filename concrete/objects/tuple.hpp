@@ -32,7 +32,7 @@ struct TupleBlock: ObjectBlock {
 			items[i].~PortableObject();
 	}
 
-	unsigned int size() const
+	unsigned int size() const throw ()
 	{
 		return (block_size() - sizeof (TupleBlock)) / sizeof (PortableObject);
 	}

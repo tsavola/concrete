@@ -21,7 +21,7 @@ namespace concrete {
 template <typename State>
 class Loader: Noncopyable {
 public:
-	Loader(State &state): m_state(state)
+	Loader(State &state) throw (): m_state(state)
 	{
 	}
 

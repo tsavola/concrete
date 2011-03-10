@@ -21,19 +21,19 @@ namespace concrete {
 template <typename Impl>
 class Activatable {
 public:
-	static Impl &Active()
+	static Impl &Active() throw ()
 	{
 		assert(m_active);
 		return *m_active;
 	}
 
-	void activate()
+	void activate() throw ()
 	{
 		assert(m_active == NULL);
 		m_active = static_cast<Impl *> (this);
 	}
 
-	void deactivate()
+	void deactivate() throw ()
 	{
 		assert(m_active == this);
 		m_active = NULL;
@@ -49,12 +49,12 @@ CONCRETE_THREAD_LOCAL Impl *Activatable<Impl>::m_active;
 template <typename Activatable>
 class ActiveScope: Noncopyable {
 public:
-	explicit ActiveScope(Activatable &activatable): m_activatable(activatable)
+	explicit ActiveScope(Activatable &activatable) throw (): m_activatable(activatable)
 	{
 		m_activatable.activate();
 	}
 
-	~ActiveScope()
+	~ActiveScope() throw ()
 	{
 		m_activatable.deactivate();
 	}
