@@ -19,7 +19,7 @@ namespace internals {
 
 		ConcreteModule_test,
 
-		count,
+		InternalCount
 	};
 }
 

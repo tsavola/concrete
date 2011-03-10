@@ -46,7 +46,7 @@ public:
 	}
 
 private:
-	portable<BlockId> m_frame_id;
+	Portable<BlockId> m_frame_id;
 
 } CONCRETE_PACKED;
 
@@ -74,7 +74,7 @@ struct Call {
 		return_value = Continuation(continuation_id)->destroy_frame();
 
 		auto repr = return_value.repr();
-		concrete_trace(("Function: value=%s") % repr.data());
+		ConcreteTrace(("Function: value=%s") % repr.data());
 
 		return true;
 	}
@@ -91,7 +91,7 @@ Object FunctionBlock::call(ContinuationOp op,
                            const TupleObject *args,
                            const DictObject *kwargs) const
 {
-	return continuable_call<CallContinuation>(op, continuation_id, Call { code }, args, kwargs);
+	return ContinuableCall<CallContinuation>(op, continuation_id, Call { code }, args, kwargs);
 }
 
 } // namespace

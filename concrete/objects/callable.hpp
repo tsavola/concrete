@@ -35,23 +35,23 @@ struct CallableBlock: ObjectBlock {
 } CONCRETE_PACKED;
 
 template <typename Ops>
-class callable_object: public object<Ops> {
-	friend class object<ObjectOps>;
-	friend class object<PortableObjectOps>;
+class CallableLogic: public ObjectLogic<Ops> {
+	friend class ObjectLogic<ObjectOps>;
+	friend class ObjectLogic<PortableObjectOps>;
 
 public:
-	using object<Ops>::operator==;
-	using object<Ops>::operator!=;
+	using ObjectLogic<Ops>::operator==;
+	using ObjectLogic<Ops>::operator!=;
 
 	template <typename OtherOps>
-	callable_object(const callable_object<OtherOps> &other): object<Ops>(other)
+	CallableLogic(const CallableLogic<OtherOps> &other): ObjectLogic<Ops>(other)
 	{
 	}
 
 	template <typename OtherOps>
-	callable_object &operator=(const callable_object<OtherOps> &other)
+	CallableLogic &operator=(const CallableLogic<OtherOps> &other)
 	{
-		object<Ops>::operator=(other);
+		ObjectLogic<Ops>::operator=(other);
 		return *this;
 	}
 
@@ -73,21 +73,21 @@ public:
 	}
 
 protected:
-	callable_object(BlockId id): object<Ops>(id)
+	CallableLogic(BlockId id): ObjectLogic<Ops>(id)
 	{
 	}
 
 	CallableBlock *callable_block() const
 	{
-		return static_cast<CallableBlock *> (object<Ops>::object_block());
+		return static_cast<CallableBlock *> (ObjectLogic<Ops>::object_block());
 	}
 } CONCRETE_PACKED;
 
-typedef callable_object<ObjectOps>         CallableObject;
-typedef callable_object<PortableObjectOps> PortableCallableObject;
+typedef CallableLogic<ObjectOps>         CallableObject;
+typedef CallableLogic<PortableObjectOps> PortableCallableObject;
 
 template <>
-struct type_check<CallableObject> {
+struct TypeCheck<CallableObject> {
 	bool operator()(const TypeObject &type)
 	{
 		return CallableBlock::Check(type);
@@ -95,7 +95,7 @@ struct type_check<CallableObject> {
 };
 
 template <>
-struct type_check<PortableCallableObject> {
+struct TypeCheck<PortableCallableObject> {
 	bool operator()(const TypeObject &type)
 	{
 		return CallableBlock::Check(type);

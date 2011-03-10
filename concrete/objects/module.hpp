@@ -27,9 +27,9 @@ struct ModuleBlock: ObjectBlock {
 } CONCRETE_PACKED;
 
 template <typename Ops>
-class module_object: public object<Ops> {
-	friend class object<ObjectOps>;
-	friend class object<PortableObjectOps>;
+class ModuleLogic: public ObjectLogic<Ops> {
+	friend class ObjectLogic<ObjectOps>;
+	friend class ObjectLogic<PortableObjectOps>;
 
 public:
 	static TypeObject Type()
@@ -37,25 +37,25 @@ public:
 		return Context::Builtins().module_type;
 	}
 
-	static module_object New(const DictObject &dict) throw (AllocError)
+	static ModuleLogic New(const DictObject &dict)
 	{
 		auto id = Context::Alloc(sizeof (ModuleBlock));
 		new (Context::Pointer(id)) ModuleBlock(Type(), dict);
 		return id;
 	}
 
-	using object<Ops>::operator==;
-	using object<Ops>::operator!=;
+	using ObjectLogic<Ops>::operator==;
+	using ObjectLogic<Ops>::operator!=;
 
 	template <typename OtherOps>
-	module_object(const module_object<OtherOps> &other): object<Ops>(other)
+	ModuleLogic(const ModuleLogic<OtherOps> &other): ObjectLogic<Ops>(other)
 	{
 	}
 
 	template <typename OtherOps>
-	module_object &operator=(const module_object<OtherOps> &other)
+	ModuleLogic &operator=(const ModuleLogic<OtherOps> &other)
 	{
-		object<Ops>::operator=(other);
+		ObjectLogic<Ops>::operator=(other);
 		return *this;
 	}
 
@@ -65,18 +65,18 @@ public:
 	}
 
 protected:
-	module_object(BlockId id): object<Ops>(id)
+	ModuleLogic(BlockId id): ObjectLogic<Ops>(id)
 	{
 	}
 
 	ModuleBlock *module_block() const
 	{
-		return static_cast<ModuleBlock *> (object<Ops>::object_block());
+		return static_cast<ModuleBlock *> (ObjectLogic<Ops>::object_block());
 	}
 } CONCRETE_PACKED;
 
-typedef module_object<ObjectOps>         ModuleObject;
-typedef module_object<PortableObjectOps> PortableModuleObject;
+typedef ModuleLogic<ObjectOps>         ModuleObject;
+typedef ModuleLogic<PortableObjectOps> PortableModuleObject;
 
 } // namespace
 

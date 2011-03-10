@@ -35,9 +35,9 @@ struct BytesBlock: ObjectBlock {
 } CONCRETE_PACKED;
 
 template <typename Ops>
-class bytes_object: public object<Ops> {
-	friend class object<ObjectOps>;
-	friend class object<PortableObjectOps>;
+class BytesLogic: public ObjectLogic<Ops> {
+	friend class ObjectLogic<ObjectOps>;
+	friend class ObjectLogic<PortableObjectOps>;
 
 public:
 	static TypeObject Type()
@@ -45,25 +45,25 @@ public:
 		return Context::Builtins().bytes_type;
 	}
 
-	static bytes_object New(const uint8_t *data, size_t size) throw (AllocError)
+	static BytesLogic New(const uint8_t *data, size_t size)
 	{
 		auto id = Context::Alloc(sizeof (BytesBlock) + size);
 		new (Context::Pointer(id)) BytesBlock(Type(), data);
 		return id;
 	}
 
-	using object<Ops>::operator==;
-	using object<Ops>::operator!=;
+	using ObjectLogic<Ops>::operator==;
+	using ObjectLogic<Ops>::operator!=;
 
 	template <typename OtherOps>
-	bytes_object(const bytes_object<OtherOps> &other): object<Ops>(other)
+	BytesLogic(const BytesLogic<OtherOps> &other): ObjectLogic<Ops>(other)
 	{
 	}
 
 	template <typename OtherOps>
-	bytes_object &operator=(const bytes_object<OtherOps> &other)
+	BytesLogic &operator=(const BytesLogic<OtherOps> &other)
 	{
-		object<Ops>::operator=(other);
+		ObjectLogic<Ops>::operator=(other);
 		return *this;
 	}
 
@@ -78,18 +78,18 @@ public:
 	}
 
 protected:
-	bytes_object(BlockId id): object<Ops>(id)
+	BytesLogic(BlockId id): ObjectLogic<Ops>(id)
 	{
 	}
 
 	BytesBlock *bytes_block() const
 	{
-		return static_cast<BytesBlock *> (object<Ops>::object_block());
+		return static_cast<BytesBlock *> (ObjectLogic<Ops>::object_block());
 	}
 } CONCRETE_PACKED;
 
-typedef bytes_object<ObjectOps>         BytesObject;
-typedef bytes_object<PortableObjectOps> PortableBytesObject;
+typedef BytesLogic<ObjectOps>         BytesObject;
+typedef BytesLogic<PortableObjectOps> PortableBytesObject;
 
 } // namespace
 

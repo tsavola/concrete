@@ -25,35 +25,35 @@ namespace concrete {
 struct ObjectBlock;
 
 template <typename Ops>
-class object {
+class ObjectLogic {
 public:
 	static TypeObject Type();
-	static object New() throw (AllocError);
+	static ObjectLogic New();
 
-	object();
+	ObjectLogic();
 
-	explicit object(BlockId id): m_raw_id(Ops::store(id))
+	explicit ObjectLogic(BlockId id): m_raw_id(Ops::Store(id))
 	{
 		ref();
 	}
 
-	object(const object &other): m_raw_id(other.m_raw_id)
+	ObjectLogic(const ObjectLogic &other): m_raw_id(other.m_raw_id)
 	{
 		ref();
 	}
 
 	template <typename OtherOps>
-	object(const object<OtherOps> &other): m_raw_id(Ops::store(other.id()))
+	ObjectLogic(const ObjectLogic<OtherOps> &other): m_raw_id(Ops::Store(other.id()))
 	{
 		ref();
 	}
 
-	~object()
+	~ObjectLogic()
 	{
 		unref();
 	}
 
-	object &operator=(const object &other)
+	ObjectLogic &operator=(const ObjectLogic &other)
 	{
 		unref();
 		m_raw_id = other.m_raw_id;
@@ -62,32 +62,32 @@ public:
 	}
 
 	template <typename OtherOps>
-	object &operator=(const object<OtherOps> &other)
+	ObjectLogic &operator=(const ObjectLogic<OtherOps> &other)
 	{
 		unref();
-		m_raw_id = Ops::store(other.id());
+		m_raw_id = Ops::Store(other.id());
 		ref();
 		return *this;
 	}
 
-	bool operator==(const object &other) const
+	bool operator==(const ObjectLogic &other) const
 	{
 		return m_raw_id == other.m_raw_id;
 	}
 
 	template <typename OtherOps>
-	bool operator==(const object<OtherOps> &other) const
+	bool operator==(const ObjectLogic<OtherOps> &other) const
 	{
 		return id() == other.id();
 	}
 
-	bool operator!=(const object &other) const
+	bool operator!=(const ObjectLogic &other) const
 	{
 		return m_raw_id != other.m_raw_id;
 	}
 
 	template <typename OtherOps>
-	bool operator!=(const object<OtherOps> &other) const
+	bool operator!=(const ObjectLogic<OtherOps> &other) const
 	{
 		return id() != other.id();
 	}
@@ -98,7 +98,7 @@ public:
 
 	BlockId id() const
 	{
-		return Ops::load(m_raw_id);
+		return Ops::Load(m_raw_id);
 	}
 
 	TypeObject type() const;

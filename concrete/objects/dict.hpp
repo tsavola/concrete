@@ -28,7 +28,7 @@ struct DictBlock: ObjectBlock {
 		}
 	} CONCRETE_PACKED;
 
-	portable<uint32_t> size;
+	Portable<uint32_t> size;
 	Item items[0];
 
 	DictBlock(const TypeObject &type): ObjectBlock(type), size(0)
@@ -48,9 +48,9 @@ struct DictBlock: ObjectBlock {
 } CONCRETE_PACKED;
 
 template <typename Ops>
-class dict_object: public object<Ops> {
-	friend class object<ObjectOps>;
-	friend class object<PortableObjectOps>;
+class DictLogic: public ObjectLogic<Ops> {
+	friend class ObjectLogic<ObjectOps>;
+	friend class ObjectLogic<PortableObjectOps>;
 
 public:
 	static TypeObject Type()
@@ -58,25 +58,25 @@ public:
 		return Context::Builtins().dict_type;
 	}
 
-	static dict_object New(unsigned int capacity = 16) throw (AllocError)
+	static DictLogic New(unsigned int capacity = 16)
 	{
 		auto id = Context::Alloc(sizeof (DictBlock) + sizeof (DictBlock::Item) * capacity);
 		new (Context::Pointer(id)) DictBlock(Type());
 		return id;
 	}
 
-	using object<Ops>::operator==;
-	using object<Ops>::operator!=;
+	using ObjectLogic<Ops>::operator==;
+	using ObjectLogic<Ops>::operator!=;
 
 	template <typename OtherOps>
-	dict_object(const dict_object<OtherOps> &other): object<Ops>(other)
+	DictLogic(const DictLogic<OtherOps> &other): ObjectLogic<Ops>(other)
 	{
 	}
 
 	template <typename OtherOps>
-	dict_object &operator=(const dict_object<OtherOps> &other)
+	DictLogic &operator=(const DictLogic<OtherOps> &other)
 	{
-		object<Ops>::operator=(other);
+		ObjectLogic<Ops>::operator=(other);
 		return *this;
 	}
 
@@ -118,7 +118,7 @@ public:
 		return block->items[i].value;
 	}
 
-	void copy_to(const dict_object &target) const
+	void copy_to(const DictLogic &target) const
 	{
 		for (unsigned int i = 0; i < size(); i++) {
 			auto block = dict_block();
@@ -127,13 +127,13 @@ public:
 	}
 
 protected:
-	dict_object(BlockId id): object<Ops>(id)
+	DictLogic(BlockId id): ObjectLogic<Ops>(id)
 	{
 	}
 
 	DictBlock *dict_block() const
 	{
-		return static_cast<DictBlock *> (object<Ops>::object_block());
+		return static_cast<DictBlock *> (ObjectLogic<Ops>::object_block());
 	}
 
 private:
@@ -149,8 +149,8 @@ private:
 	}
 } CONCRETE_PACKED;
 
-typedef dict_object<ObjectOps>         DictObject;
-typedef dict_object<PortableObjectOps> PortableDictObject;
+typedef DictLogic<ObjectOps>         DictObject;
+typedef DictLogic<PortableObjectOps> PortableDictObject;
 
 } // namespace
 

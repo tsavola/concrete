@@ -19,9 +19,9 @@
 namespace concrete {
 
 template <typename State>
-class loader: noncopyable {
+class Loader: Noncopyable {
 public:
-	loader(State &state): m_state(state)
+	Loader(State &state): m_state(state)
 	{
 	}
 
@@ -33,7 +33,7 @@ public:
 	template <typename T>
 	T load()
 	{
-		return portable_ops<T, sizeof (T)>::load(*load_raw<T>(1));
+		return PortableOps<T, sizeof (T)>::Load(*load_raw<T>(1));
 	}
 
 	const char *load_chars(size_t count)
@@ -47,7 +47,7 @@ public:
 		auto pos = m_state.position();
 
 		if (pos + sizeof (T) * count > m_state.size())
-			throw RuntimeError("loader ran out of data");
+			throw RuntimeError("Loader ran out of data");
 
 		auto data = m_state.data() + pos;
 		m_state.advance(sizeof (T) * count);

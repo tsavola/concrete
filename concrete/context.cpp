@@ -14,7 +14,7 @@
 
 namespace concrete {
 
-Context::Context() throw (AllocError)
+Context::Context()
 {
 	ContextScope scope(*this);
 
@@ -54,10 +54,10 @@ Context::Context() throw (AllocError)
 	none         .init_builtin(none_type);
 
 	type_type    .init_builtin(StringObject::New("type"));
-	object_init(object_type);
+	ObjectInit(object_type);
 	none_type    .init_builtin(StringObject::New("none"));
 	string_type  .init_builtin(StringObject::New("string"));
-	long_object_init(long_type);
+	LongObjectInit(long_type);
 	bytes_type   .init_builtin(StringObject::New("bytes"));
 	tuple_type   .init_builtin(StringObject::New("tuple"));
 	dict_type    .init_builtin(StringObject::New("dict"));
@@ -68,7 +68,7 @@ Context::Context() throw (AllocError)
 
 	auto modules = DictObject::New(1);
 
-	concrete_module_init(modules);
+	ConcreteModuleInit(modules);
 
 	builtins().modules = modules;
 }

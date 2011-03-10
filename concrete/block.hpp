@@ -45,9 +45,9 @@ private:
 	Block(const Block &);
 
 #ifdef CONCRETE_BLOCK_MAGIC
-	portable<uint32_t> m_magic;
+	Portable<uint32_t> m_magic;
 #endif
-	portable<BlockSize> m_size;
+	Portable<BlockSize> m_size;
 
 } CONCRETE_PACKED;
 

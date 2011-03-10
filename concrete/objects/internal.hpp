@@ -33,50 +33,48 @@ typedef Object (*InternalFunction)(ContinuationOp op,
                                    const TupleObject *args,
                                    const DictObject *kwargs);
 
-#define CONCRETE_INTERNAL(function)                                           \
-	static ::concrete::Object function(                                   \
-		const ::concrete::TupleObject &,                              \
-		const ::concrete::DictObject &);                              \
+#define CONCRETE_INTERNAL(Function)                                           \
+	static ::concrete::Object Function(const ::concrete::TupleObject &,   \
+	                                   const ::concrete::DictObject &);   \
 	                                                                      \
-	static ::concrete::Object function##__entry(                          \
+	static ::concrete::Object Function##__entry(                          \
 		::concrete::ContinuationOp op,                                \
 		::concrete::BlockId &,                                        \
 		const ::concrete::TupleObject *args,                          \
 		const ::concrete::DictObject *kwargs)                         \
 	{                                                                     \
 		assert(op == ::concrete::InitContinuation);                   \
-		return function(*args, *kwargs);                              \
+		return Function(*args, *kwargs);                              \
 	}                                                                     \
 	                                                                      \
-	static void function##__register() __attribute__ ((constructor));     \
+	static void Function##__register() __attribute__ ((constructor));     \
 	                                                                      \
-	void function##__register()                                           \
+	void Function##__register()                                           \
 	{                                                                     \
-		::concrete::register_internal(                                \
-			::concrete::internals::function,                      \
-			function##__entry);                                   \
+		::concrete::InternalRegister(::concrete::internals::Function, \
+		                             Function##__entry);              \
 	}                                                                     \
 	                                                                      \
-	::concrete::Object function
+	::concrete::Object Function
 
 #define CONCRETE_INTERNAL_CONTINUABLE(Continuable, Continuation)              \
 	struct Continuable;                                                   \
 	                                                                      \
 	static ::concrete::Object Continuable##__entry(                       \
 		::concrete::ContinuationOp op,                                \
-		::concrete::BlockId &id,                                      \
+		::concrete::BlockId &continuation,                            \
 		const ::concrete::TupleObject *args,                          \
 		const ::concrete::DictObject *kwargs)                         \
 	{                                                                     \
-		return ::concrete::continuable_call<Continuation>(            \
-			op, id, ::concrete::Continuable(), args, kwargs);     \
+		return ::concrete::ContinuableCall<Continuation>(             \
+			op, continuation, Continuable(), args, kwargs);       \
 	}                                                                     \
 	                                                                      \
 	static void Continuable##__register() __attribute__ ((constructor));  \
 	                                                                      \
 	void Continuable##__register()                                        \
 	{                                                                     \
-		::concrete::register_internal(                                \
+		::concrete::InternalRegister(                                 \
 			::concrete::internals::Continuable,                   \
 			Continuable##__entry);                                \
 	}                                                                     \
@@ -84,7 +82,7 @@ typedef Object (*InternalFunction)(ContinuationOp op,
 	struct Continuable
 
 struct InternalBlock: CallableBlock {
-	const portable<uint16_t> serial;
+	const Portable<uint16_t> serial;
 
 	InternalBlock(const TypeObject &type, InternalSerial serial):
 		CallableBlock(type),
@@ -99,9 +97,9 @@ struct InternalBlock: CallableBlock {
 } CONCRETE_PACKED;
 
 template <typename Ops>
-class internal_object: public callable_object<Ops> {
-	friend class object<ObjectOps>;
-	friend class object<PortableObjectOps>;
+class InternalLogic: public CallableLogic<Ops> {
+	friend class ObjectLogic<ObjectOps>;
+	friend class ObjectLogic<PortableObjectOps>;
 
 public:
 	static TypeObject Type()
@@ -109,43 +107,43 @@ public:
 		return Context::Builtins().internal_type;
 	}
 
-	static internal_object New(InternalSerial serial) throw (AllocError)
+	static InternalLogic New(InternalSerial serial)
 	{
 		auto id = Context::Alloc(sizeof (InternalBlock));
 		new (Context::Pointer(id)) InternalBlock(Type(), serial);
 		return id;
 	}
 
-	using callable_object<Ops>::operator==;
-	using callable_object<Ops>::operator!=;
+	using CallableLogic<Ops>::operator==;
+	using CallableLogic<Ops>::operator!=;
 
 	template <typename OtherOps>
-	internal_object(const internal_object<OtherOps> &other): callable_object<Ops>(other)
+	InternalLogic(const InternalLogic<OtherOps> &other): CallableLogic<Ops>(other)
 	{
 	}
 
 	template <typename OtherOps>
-	internal_object &operator=(const internal_object<OtherOps> &other)
+	InternalLogic &operator=(const InternalLogic<OtherOps> &other)
 	{
-		callable_object<Ops>::operator=(other);
+		CallableLogic<Ops>::operator=(other);
 		return *this;
 	}
 
 protected:
-	internal_object(BlockId id): callable_object<Ops>(id)
+	InternalLogic(BlockId id): CallableLogic<Ops>(id)
 	{
 	}
 
 	InternalBlock *internal_block() const
 	{
-		return static_cast<InternalBlock *> (callable_object<Ops>::callable_block());
+		return static_cast<InternalBlock *> (CallableLogic<Ops>::callable_block());
 	}
 } CONCRETE_PACKED;
 
-typedef internal_object<ObjectOps>         InternalObject;
-typedef internal_object<PortableObjectOps> PortableInternalObject;
+typedef InternalLogic<ObjectOps>         InternalObject;
+typedef InternalLogic<PortableObjectOps> PortableInternalObject;
 
-void register_internal(InternalSerial serial, InternalFunction function);
+void InternalRegister(InternalSerial serial, InternalFunction function);
 
 } // namespace
 

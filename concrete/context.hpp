@@ -28,7 +28,7 @@ struct ContextSnapshot {
 	BlockId builtins;
 };
 
-class Context: public activatable<Context>, noncopyable {
+class Context: public Activatable<Context>, Noncopyable {
 	struct BuiltinNoneBlock: Block {
 		const PortableNoneObject none;
 
@@ -93,7 +93,7 @@ public:
 	}
 
 	template <typename T>
-	static BlockId New() throw (AllocError)
+	static BlockId New()
 	{
 		auto id = Alloc(sizeof (T));
 		new (Pointer(id)) T();
@@ -124,7 +124,7 @@ public:
 
 	static Object ImportBuiltin(const Object &name);
 
-	Context() throw (AllocError);
+	Context();
 
 	Context(const ContextSnapshot &snapshot):
 		m_arena(snapshot.base, snapshot.size),
@@ -159,7 +159,7 @@ private:
 	BlockId m_builtins;
 };
 
-typedef active_scope<Context> ContextScope;
+typedef ActiveScope<Context> ContextScope;
 
 } // namespace
 

@@ -26,16 +26,16 @@ namespace concrete {
 
 struct ExecutionFrame: Block {
 	const PortableCodeObject code;
-	portable<uint32_t> code_position;
+	Portable<uint32_t> code_position;
 
 	const PortableDictObject dict;
 
-	const portable<BlockId> parent_frame_id;
+	const Portable<BlockId> parent_frame_id;
 
-	portable<BlockId> call_continuation;
+	Portable<BlockId> call_continuation;
 	PortableObject call_callable;
 
-	portable<uint32_t> stack_pointer;
+	Portable<uint32_t> stack_pointer;
 	PortableObject stack_objects[0];      // must be last
 
 	ExecutionFrame(const CodeObject &code,
@@ -53,11 +53,11 @@ struct ExecutionFrame: Block {
 	~ExecutionFrame()
 	{
 		if (call_continuation != NoBlockId) {
-			concrete_trace(("call cleanup enter: callable=%d") % call_callable.id());
+			ConcreteTrace(("call cleanup enter: callable=%d") % call_callable.id());
 
 			call_callable.require<CallableObject>().cleanup_call(call_continuation);
 
-			concrete_trace(("call cleanup leave: callable=%d") % call_callable.id());
+			ConcreteTrace(("call cleanup leave: callable=%d") % call_callable.id());
 		}
 
 		for (unsigned int i = stack_pointer; i-- > 0; )
@@ -93,7 +93,7 @@ struct ExecutionFrame: Block {
 	}
 } CONCRETE_PACKED;
 
-class ExecutionState: noncopyable {
+class ExecutionState: Noncopyable {
 public:
 	explicit ExecutionState(const CodeObject &code)
 	{
@@ -105,12 +105,12 @@ public:
 		m_initial_frame_id = frame_id;
 		m_current_frame_id = frame_id;
 
-		concrete_trace(("frame new initial %d") % m_initial_frame_id);
+		ConcreteTrace(("frame new initial %d") % m_initial_frame_id);
 	}
 
 	~ExecutionState()
 	{
-		concrete_trace(("frame destroy initial %d") % m_initial_frame_id);
+		ConcreteTrace(("frame destroy initial %d") % m_initial_frame_id);
 
 		Context::Delete<ExecutionFrame>(m_initial_frame_id);
 	}
@@ -128,21 +128,21 @@ public:
 
 		m_current_frame_id = new_frame_id;
 
-		concrete_trace(("frame new %d: code=%d") % new_frame_id % code.id());
+		ConcreteTrace(("frame new %d: code=%d") % new_frame_id % code.id());
 
 		return new_frame_id;
 	}
 
 	void exit_frame()
 	{
-		concrete_trace(("frame exit %d") % m_current_frame_id);
+		ConcreteTrace(("frame exit %d") % m_current_frame_id);
 
 		m_current_frame_id = current_frame()->parent_frame_id;
 	}
 
 	Object destroy_frame(BlockId frame_id)
 	{
-		concrete_trace(("frame destroy %d") % frame_id);
+		ConcreteTrace(("frame destroy %d") % frame_id);
 
 		auto return_value = Frame(frame_id)->pop_stack();
 		Context::Delete<ExecutionFrame>(frame_id);
@@ -164,7 +164,7 @@ public:
 		return current_frame()->code;
 	}
 
-	portable<uint32_t> &frame_position()
+	Portable<uint32_t> &frame_position()
 	{
 		return current_frame()->code_position;
 	}
@@ -197,11 +197,11 @@ public:
 		BlockId frame_id = m_current_frame_id;
 		BlockId continuation = NoBlockId;
 
-		concrete_trace(("call init enter: callable=%d frame=%d") % callable.id() % frame_id);
+		ConcreteTrace(("call init enter: callable=%d frame=%d") % callable.id() % frame_id);
 
 		auto return_value = callable.require<CallableObject>().init_call(continuation, args, kwargs);
 
-		concrete_trace(("call init leave: callable=%d frame=%d done=%d return=%d") % callable.id() % frame_id % (continuation == NoBlockId) % return_value.id());
+		ConcreteTrace(("call init leave: callable=%d frame=%d done=%d return=%d") % callable.id() % frame_id % (continuation == NoBlockId) % return_value.id());
 
 		auto frame = Frame(frame_id);
 
@@ -227,11 +227,11 @@ public:
 
 		auto callable = frame->call_callable;
 
-		concrete_trace(("call resume enter: callable=%d frame=%d") % callable.id() % frame_id);
+		ConcreteTrace(("call resume enter: callable=%d frame=%d") % callable.id() % frame_id);
 
 		auto return_value = callable.require<CallableObject>().resume_call(continuation);
 
-		concrete_trace(("call resume leave: callable=%d frame=%d done=%d return=%d") % callable.id() % frame_id % (continuation == NoBlockId) % return_value.id());
+		ConcreteTrace(("call resume leave: callable=%d frame=%d done=%d return=%d") % callable.id() % frame_id % (continuation == NoBlockId) % return_value.id());
 
 		frame = Frame(frame_id);
 		frame->call_continuation = continuation;
@@ -260,10 +260,10 @@ private:
 	BlockId m_current_frame_id;
 };
 
-class BytecodeLoader: public loader<BytecodeLoader> {
+class BytecodeLoader: public Loader<BytecodeLoader> {
 public:
 	BytecodeLoader(ExecutionState &execution):
-		loader<BytecodeLoader>(*this),
+		Loader<BytecodeLoader>(*this),
 		m_execution(execution)
 	{
 	}
@@ -318,7 +318,7 @@ private:
 		auto pos = m_loader.position();
 		unsigned int op = load_bytecode<uint8_t>();
 
-		concrete_trace(("execute %4u: opcode=%u") % pos % op);
+		ConcreteTrace(("execute %4u: opcode=%u") % pos % op);
 
 		switch (Opcode(op)) {
 		case PopTop:              op_pop_top(); break;
@@ -336,7 +336,7 @@ private:
 		case MakeFunction:        op_make_function(); break;
 
 		default:
-			concrete_trace(("unsupported opcode: %u") % op);
+			ConcreteTrace(("unsupported opcode: %u") % op);
 			throw RuntimeError("unsupported opcode");
 		}
 
@@ -474,7 +474,7 @@ Executor::~Executor()
 
 bool Executor::execute()
 {
-	active_scope<Executor> scope(*this);
+	ActiveScope<Executor> scope(*this);
 
 	return m_impl->execute();
 }

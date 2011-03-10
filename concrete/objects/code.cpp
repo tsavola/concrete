@@ -18,9 +18,9 @@
 
 namespace concrete {
 
-class ObjectLoaderState: noncopyable {
+class CodeLoaderState: Noncopyable {
 public:
-	ObjectLoaderState(const uint8_t *data, size_t size): m_data(data), m_size(size), m_position(0)
+	CodeLoaderState(const uint8_t *data, size_t size): m_data(data), m_size(size), m_position(0)
 	{
 	}
 
@@ -50,9 +50,9 @@ private:
 	size_t m_position;
 };
 
-class ObjectLoader: loader<ObjectLoaderState> {
+class CodeLoader: Loader<CodeLoaderState> {
 public:
-	explicit ObjectLoader(ObjectLoaderState &state): loader<ObjectLoaderState>(state)
+	explicit CodeLoader(CodeLoaderState &state): Loader<CodeLoaderState>(state)
 	{
 	}
 
@@ -132,15 +132,15 @@ private:
 	}
 };
 
-CodeObject CodeBlock::Load(const void *data, size_t size) throw (AllocError)
+CodeObject CodeBlock::Load(const void *data, size_t size)
 {
 	auto bytedata = reinterpret_cast<const uint8_t *> (data);
 
 	// TODO: check magic and mtime
 
-	ObjectLoaderState state(bytedata + 8, size - 8);
-	ObjectLoader loader(state);
-	return loader.load_next<CodeObject>();
+	CodeLoaderState state(bytedata + 8, size - 8);
+	CodeLoader Loader(state);
+	return Loader.load_next<CodeObject>();
 }
 
 } // namespace

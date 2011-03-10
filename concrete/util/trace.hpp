@@ -15,14 +15,14 @@
 # include <iostream>
 # include <boost/format.hpp>
 
-# define concrete_trace(args) \
+# define ConcreteTrace(args) \
 	do { \
 		std::cerr << "TRACE: " << (boost::format args) << std::endl; \
 	} while (0)
 
 #else
 
-# define concrete_trace(args) \
+# define ConcreteTrace(args) \
 	do {} while (0)
 
 #endif

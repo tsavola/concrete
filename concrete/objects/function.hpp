@@ -35,9 +35,9 @@ struct FunctionBlock: CallableBlock {
 } CONCRETE_PACKED;
 
 template <typename Ops>
-class function_object: public callable_object<Ops> {
-	friend class object<ObjectOps>;
-	friend class object<PortableObjectOps>;
+class FunctionLogic: public CallableLogic<Ops> {
+	friend class ObjectLogic<ObjectOps>;
+	friend class ObjectLogic<PortableObjectOps>;
 
 public:
 	static TypeObject Type()
@@ -45,41 +45,41 @@ public:
 		return Context::Builtins().function_type;
 	}
 
-	static function_object New(const CodeObject &code) throw (AllocError)
+	static FunctionLogic New(const CodeObject &code)
 	{
 		auto id = Context::Alloc(sizeof (FunctionBlock));
 		new (Context::Pointer(id)) FunctionBlock(Type(), code);
 		return id;
 	}
 
-	using callable_object<Ops>::operator==;
-	using callable_object<Ops>::operator!=;
+	using CallableLogic<Ops>::operator==;
+	using CallableLogic<Ops>::operator!=;
 
 	template <typename OtherOps>
-	function_object(const function_object<OtherOps> &other): callable_object<Ops>(other)
+	FunctionLogic(const FunctionLogic<OtherOps> &other): CallableLogic<Ops>(other)
 	{
 	}
 
 	template <typename OtherOps>
-	function_object &operator=(const function_object<OtherOps> &other)
+	FunctionLogic &operator=(const FunctionLogic<OtherOps> &other)
 	{
-		callable_object<Ops>::operator=(other);
+		CallableLogic<Ops>::operator=(other);
 		return *this;
 	}
 
 protected:
-	function_object(BlockId id): callable_object<Ops>(id)
+	FunctionLogic(BlockId id): CallableLogic<Ops>(id)
 	{
 	}
 
 	FunctionBlock *function_block() const
 	{
-		return static_cast<FunctionBlock *> (callable_object<Ops>::callable_block());
+		return static_cast<FunctionBlock *> (CallableLogic<Ops>::callable_block());
 	}
 } CONCRETE_PACKED;
 
-typedef function_object<ObjectOps>         FunctionObject;
-typedef function_object<PortableObjectOps> PortableFunctionObject;
+typedef FunctionLogic<ObjectOps>         FunctionObject;
+typedef FunctionLogic<PortableObjectOps> PortableFunctionObject;
 
 } // namespace
 

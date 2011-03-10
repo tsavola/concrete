@@ -20,13 +20,13 @@
 
 namespace concrete {
 
-template <typename Ops> class code_object;
+template <typename Ops> class CodeLogic;
 
-typedef code_object<ObjectOps>         CodeObject;
-typedef code_object<PortableObjectOps> PortableCodeObject;
+typedef CodeLogic<ObjectOps>         CodeObject;
+typedef CodeLogic<PortableObjectOps> PortableCodeObject;
 
 struct CodeBlock: ObjectBlock {
-	portable<uint32_t> stacksize;
+	Portable<uint32_t> stacksize;
 	PortableBytesObject code;
 	PortableTupleObject consts;
 	PortableTupleObject names;
@@ -48,14 +48,14 @@ struct CodeBlock: ObjectBlock {
 	{
 	}
 
-	static CodeObject Load(const void *data, size_t size) throw (AllocError);
+	static CodeObject Load(const void *data, size_t size);
 
 } CONCRETE_PACKED;
 
 template <typename Ops>
-class code_object: public object<Ops> {
-	friend class object<ObjectOps>;
-	friend class object<PortableObjectOps>;
+class CodeLogic: public ObjectLogic<Ops> {
+	friend class ObjectLogic<ObjectOps>;
+	friend class ObjectLogic<PortableObjectOps>;
 
 public:
 	static TypeObject Type()
@@ -63,35 +63,35 @@ public:
 		return Context::Builtins().code_type;
 	}
 
-	static code_object New(
+	static CodeLogic New(
 		unsigned int stacksize,
 		const BytesObject &code,
 		const TupleObject &consts,
 		const TupleObject &names,
-		const TupleObject &varnames) throw (AllocError)
+		const TupleObject &varnames)
 	{
 		auto id = Context::Alloc(sizeof (CodeBlock));
 		new (Context::Pointer(id)) CodeBlock(Type(), stacksize, code, consts, names, varnames);
 		return id;
 	}
 
-	static code_object Load(const void *data, size_t size) throw (AllocError)
+	static CodeLogic Load(const void *data, size_t size)
 	{
 		return CodeBlock::Load(data, size);
 	}
 
-	using object<Ops>::operator==;
-	using object<Ops>::operator!=;
+	using ObjectLogic<Ops>::operator==;
+	using ObjectLogic<Ops>::operator!=;
 
 	template <typename OtherOps>
-	code_object(const code_object<OtherOps> &other): object<Ops>(other)
+	CodeLogic(const CodeLogic<OtherOps> &other): ObjectLogic<Ops>(other)
 	{
 	}
 
 	template <typename OtherOps>
-	code_object &operator=(const code_object<OtherOps> &other)
+	CodeLogic &operator=(const CodeLogic<OtherOps> &other)
 	{
-		object<Ops>::operator=(other);
+		ObjectLogic<Ops>::operator=(other);
 		return *this;
 	}
 
@@ -102,13 +102,13 @@ public:
 	TupleObject varnames() const   { return code_block()->varnames; }
 
 protected:
-	code_object(BlockId id): object<Ops>(id)
+	CodeLogic(BlockId id): ObjectLogic<Ops>(id)
 	{
 	}
 
 	CodeBlock *code_block() const
 	{
-		return static_cast<CodeBlock *> (object<Ops>::object_block());
+		return static_cast<CodeBlock *> (ObjectLogic<Ops>::object_block());
 	}
 } CONCRETE_PACKED;
 

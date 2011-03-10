@@ -23,7 +23,7 @@
 
 namespace concrete {
 
-void print_backtrace()
+void Backtrace()
 {
 	size_t size = 64;
 	void *buffer[size];

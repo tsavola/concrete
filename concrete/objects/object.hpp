@@ -28,7 +28,7 @@ struct ObjectBlock: Block {
 	struct NoRefcountInit {};
 
 	PortableObject type_object;
-	portable<int32_t> refcount;
+	Portable<int32_t> refcount;
 
 	ObjectBlock(BlockId type_id, NoRefcountInit): type_object(type_id)
 	{
@@ -51,41 +51,41 @@ struct ObjectBlock: Block {
 } CONCRETE_PACKED;
 
 template <typename Ops>
-TypeObject object<Ops>::Type()
+TypeObject ObjectLogic<Ops>::Type()
 {
 	return Context::Builtins().object_type;
 }
 
 template <typename Ops>
-object<Ops> object<Ops>::New() throw (AllocError)
+ObjectLogic<Ops> ObjectLogic<Ops>::New()
 {
 	auto id = Context::Alloc(sizeof (ObjectBlock));
 	new (Context::Pointer(id)) ObjectBlock(Type());
-	return object(id);
+	return ObjectLogic(id);
 }
 
 template <typename Ops>
-object<Ops>::object(): m_raw_id(Ops::store(Context::None().id()))
+ObjectLogic<Ops>::ObjectLogic(): m_raw_id(Ops::Store(Context::None().id()))
 {
 	ref();
 }
 
 template <typename Ops> template <typename T>
-bool object<Ops>::check() const
+bool ObjectLogic<Ops>::check() const
 {
-	type_check<T> impl;
+	TypeCheck<T> impl;
 	return impl(type());
 }
 
 template <typename Ops> template <typename T>
-T object<Ops>::cast() const
+T ObjectLogic<Ops>::cast() const
 {
 	assert(check<T>());
 	return T(id());
 }
 
 template <typename Ops> template <typename T>
-T object<Ops>::require() const
+T ObjectLogic<Ops>::require() const
 {
 	if (!check<T>())
 		throw TypeError(type());
@@ -94,26 +94,26 @@ T object<Ops>::require() const
 }
 
 template <typename Ops>
-TypeObject object<Ops>::type() const
+TypeObject ObjectLogic<Ops>::type() const
 {
 	return object_block()->type();
 }
 
 template <typename Ops>
-StringObject object<Ops>::repr() const
+StringObject ObjectLogic<Ops>::repr() const
 {
 	return object_block()->repr(id());
 }
 
 template <typename Ops>
-void object<Ops>::ref() const
+void ObjectLogic<Ops>::ref() const
 {
 	auto block = object_block();
 	block->refcount = block->refcount + 1;
 }
 
 template <typename Ops>
-void object<Ops>::unref() const
+void ObjectLogic<Ops>::unref() const
 {
 	auto block = object_block();
 	int refcount = block->refcount - 1;
@@ -124,12 +124,12 @@ void object<Ops>::unref() const
 }
 
 template <typename Ops>
-ObjectBlock *object<Ops>::object_block() const
+ObjectBlock *ObjectLogic<Ops>::object_block() const
 {
 	return static_cast<ObjectBlock *> (Context::Pointer(id()));
 }
 
-void object_init(const TypeObject &type);
+void ObjectInit(const TypeObject &type);
 
 } // namespace
 

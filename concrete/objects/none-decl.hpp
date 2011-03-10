@@ -19,33 +19,33 @@
 namespace concrete {
 
 template <typename Ops>
-class none_object: public object<Ops> {
-	friend class object<ObjectOps>;
-	friend class object<PortableObjectOps>;
+class NoneLogic: public ObjectLogic<Ops> {
+	friend class ObjectLogic<ObjectOps>;
+	friend class ObjectLogic<PortableObjectOps>;
 
 public:
 	static TypeObject Type();
-	static none_object NewBuiltin() throw (AllocError);
+	static NoneLogic NewBuiltin();
 
-	using object<Ops>::operator==;
-	using object<Ops>::operator!=;
+	using ObjectLogic<Ops>::operator==;
+	using ObjectLogic<Ops>::operator!=;
 
 	template <typename OtherOps>
-	none_object(const none_object<OtherOps> &other): object<Ops>(other)
+	NoneLogic(const NoneLogic<OtherOps> &other): ObjectLogic<Ops>(other)
 	{
 	}
 
 	template <typename OtherOps>
-	none_object &operator=(const none_object<OtherOps> &other)
+	NoneLogic &operator=(const NoneLogic<OtherOps> &other)
 	{
-		object<Ops>::operator=(other);
+		ObjectLogic<Ops>::operator=(other);
 		return *this;
 	}
 
 	void init_builtin(const TypeObject &type);
 
 protected:
-	none_object(BlockId id): object<Ops>(id)
+	NoneLogic(BlockId id): ObjectLogic<Ops>(id)
 	{
 	}
 } CONCRETE_PACKED;

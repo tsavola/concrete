@@ -38,7 +38,7 @@ Arena::~Arena()
 	std::free(m_base);
 }
 
-BlockId Arena::alloc(size_t size) throw (AllocError)
+BlockId Arena::alloc(size_t size)
 {
 	assert(size >= sizeof (Block));
 

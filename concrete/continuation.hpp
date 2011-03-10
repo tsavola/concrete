@@ -27,7 +27,7 @@ enum ContinuationOp {
 };
 
 template <typename Continuation, typename Continuable>
-Object continuable_call(
+Object ContinuableCall(
 	ContinuationOp op,
 	BlockId &continuation_id,
 	const Continuable &continuable,

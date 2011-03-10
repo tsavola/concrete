@@ -24,37 +24,37 @@ namespace concrete {
 struct StringBlock;
 
 template <typename Ops>
-class string_object: public object<Ops> {
-	friend class object<ObjectOps>;
-	friend class object<PortableObjectOps>;
+class StringLogic: public ObjectLogic<Ops> {
+	friend class ObjectLogic<ObjectOps>;
+	friend class ObjectLogic<PortableObjectOps>;
 
 public:
 	static TypeObject Type();
 
-	static string_object New(const char *string) throw (AllocError)
+	static StringLogic New(const char *string)
 	{
 		return New(string, std::strlen(string));
 	}
 
-	static string_object New(const char *data, size_t size) throw (AllocError);
+	static StringLogic New(const char *data, size_t size);
 
-	using object<Ops>::operator==;
-	using object<Ops>::operator!=;
+	using ObjectLogic<Ops>::operator==;
+	using ObjectLogic<Ops>::operator!=;
 
 	template <typename OtherOps>
-	string_object(const string_object<OtherOps> &other): object<Ops>(other)
+	StringLogic(const StringLogic<OtherOps> &other): ObjectLogic<Ops>(other)
 	{
 	}
 
 	template <typename OtherOps>
-	string_object &operator=(const string_object<OtherOps> &other)
+	StringLogic &operator=(const StringLogic<OtherOps> &other)
 	{
-		object<Ops>::operator=(other);
+		ObjectLogic<Ops>::operator=(other);
 		return *this;
 	}
 
 	template <typename OtherOps>
-	bool equals(const string_object<OtherOps> &other) const
+	bool equals(const StringLogic<OtherOps> &other) const
 	{
 		return operator==(other) || std::strcmp(data(), other.data()) == 0;
 	}
@@ -64,7 +64,7 @@ public:
 	const char *data() const;
 
 protected:
-	string_object(BlockId id): object<Ops>(id)
+	StringLogic(BlockId id): ObjectLogic<Ops>(id)
 	{
 	}
 

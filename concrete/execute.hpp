@@ -19,16 +19,16 @@
 
 namespace concrete {
 
-class Executor: activatable<Executor>, noncopyable {
-	friend class activatable<Executor>;
-	friend class active_scope<Executor>;
+class Executor: Activatable<Executor>, Noncopyable {
+	friend class Activatable<Executor>;
+	friend class ActiveScope<Executor>;
 
 	class Impl;
 
 public:
 	static Executor &Active()
 	{
-		return activatable<Executor>::Active();
+		return Activatable<Executor>::Active();
 	}
 
 	explicit Executor(const CodeObject &code);

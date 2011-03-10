@@ -14,10 +14,10 @@
 
 namespace concrete {
 
-template <typename Ops> class string_object;
+template <typename Ops> class StringLogic;
 
-typedef string_object<ObjectOps>         StringObject;
-typedef string_object<PortableObjectOps> PortableStringObject;
+typedef StringLogic<ObjectOps>         StringObject;
+typedef StringLogic<PortableObjectOps> PortableStringObject;
 
 } // namespace
 

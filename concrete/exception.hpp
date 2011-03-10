@@ -24,7 +24,7 @@ public:
 	// TODO
 	explicit Exception(const Object &args) throw (): m_repr(args.repr())
 	{
-		print_backtrace();
+		Backtrace();
 	}
 
 	Exception(const Exception &other) throw (): m_repr(other.m_repr)
@@ -49,7 +49,7 @@ public:
 protected:
 	Exception(const StringObject &repr, int) throw (): m_repr(repr)
 	{
-		print_backtrace();
+		Backtrace();
 	}
 
 private:

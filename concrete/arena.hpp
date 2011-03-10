@@ -46,7 +46,7 @@ private:
 	const size_t m_size;
 };
 
-class Arena: noncopyable {
+class Arena: Noncopyable {
 public:
 	Arena(): m_base(NULL), m_size(0)
 	{
@@ -58,7 +58,7 @@ public:
 
 	~Arena();
 
-	BlockId alloc(size_t size) throw (AllocError);
+	BlockId alloc(size_t size);
 	void free(Block *block);
 
 	Block *pointer(BlockId id) const

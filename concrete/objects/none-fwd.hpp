@@ -14,10 +14,10 @@
 
 namespace concrete {
 
-template <typename Ops> class none_object;
+template <typename Ops> class NoneLogic;
 
-typedef none_object<ObjectOps>         NoneObject;
-typedef none_object<PortableObjectOps> PortableNoneObject;
+typedef NoneLogic<ObjectOps>         NoneObject;
+typedef NoneLogic<PortableObjectOps> PortableNoneObject;
 
 } // namespace
 

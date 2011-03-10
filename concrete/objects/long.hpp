@@ -20,7 +20,7 @@
 namespace concrete {
 
 struct LongBlock: ObjectBlock {
-	portable<int64_t> value;
+	Portable<int64_t> value;
 
 	LongBlock(const TypeObject &type, int64_t value): ObjectBlock(type), value(value)
 	{
@@ -28,9 +28,9 @@ struct LongBlock: ObjectBlock {
 } CONCRETE_PACKED;
 
 template <typename Ops>
-class long_object: public object<Ops> {
-	friend class object<ObjectOps>;
-	friend class object<PortableObjectOps>;
+class LongLogic: public ObjectLogic<Ops> {
+	friend class ObjectLogic<ObjectOps>;
+	friend class ObjectLogic<PortableObjectOps>;
 
 public:
 	static TypeObject Type()
@@ -38,25 +38,25 @@ public:
 		return Context::Builtins().long_type;
 	}
 
-	static long_object New(int64_t value) throw (AllocError)
+	static LongLogic New(int64_t value)
 	{
 		auto id = Context::Alloc(sizeof (LongBlock));
 		new (Context::Pointer(id)) LongBlock(Type(), value);
 		return id;
 	}
 
-	using object<Ops>::operator==;
-	using object<Ops>::operator!=;
+	using ObjectLogic<Ops>::operator==;
+	using ObjectLogic<Ops>::operator!=;
 
 	template <typename OtherOps>
-	long_object(const long_object<OtherOps> &other): object<Ops>(other)
+	LongLogic(const LongLogic<OtherOps> &other): ObjectLogic<Ops>(other)
 	{
 	}
 
 	template <typename OtherOps>
-	long_object &operator=(const long_object<OtherOps> &other)
+	LongLogic &operator=(const LongLogic<OtherOps> &other)
 	{
-		object<Ops>::operator=(other);
+		ObjectLogic<Ops>::operator=(other);
 		return *this;
 	}
 
@@ -66,20 +66,20 @@ public:
 	}
 
 protected:
-	long_object(BlockId id): object<Ops>(id)
+	LongLogic(BlockId id): ObjectLogic<Ops>(id)
 	{
 	}
 
 	LongBlock *long_block() const
 	{
-		return static_cast<LongBlock *> (object<Ops>::object_block());
+		return static_cast<LongBlock *> (ObjectLogic<Ops>::object_block());
 	}
 } CONCRETE_PACKED;
 
-typedef long_object<ObjectOps>         LongObject;
-typedef long_object<PortableObjectOps> PortableLongObject;
+typedef LongLogic<ObjectOps>         LongObject;
+typedef LongLogic<PortableObjectOps> PortableLongObject;
 
-void long_object_init(const TypeObject &type);
+void LongObjectInit(const TypeObject &type);
 
 } // namespace
 

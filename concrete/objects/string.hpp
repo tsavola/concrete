@@ -24,7 +24,7 @@
 namespace concrete {
 
 struct StringBlock: ObjectBlock {
-	portable<uint32_t> length;
+	Portable<uint32_t> length;
 	char data[0];
 
 	StringBlock(const TypeObject &type, const char *data);
@@ -36,13 +36,13 @@ struct StringBlock: ObjectBlock {
 } CONCRETE_PACKED;
 
 template <typename Ops>
-TypeObject string_object<Ops>::Type()
+TypeObject StringLogic<Ops>::Type()
 {
 	return Context::Builtins().string_type;
 }
 
 template <typename Ops>
-string_object<Ops> string_object<Ops>::New(const char *data, size_t size) throw (AllocError)
+StringLogic<Ops> StringLogic<Ops>::New(const char *data, size_t size)
 {
 	auto id = Context::Alloc(sizeof (StringBlock) + size + 1);
 	new (Context::Pointer(id)) StringBlock(Type(), data);
@@ -50,27 +50,27 @@ string_object<Ops> string_object<Ops>::New(const char *data, size_t size) throw 
 }
 
 template <typename Ops>
-size_t string_object<Ops>::size() const
+size_t StringLogic<Ops>::size() const
 {
 	return string_block()->size();
 }
 
 template <typename Ops>
-size_t string_object<Ops>::length() const
+size_t StringLogic<Ops>::length() const
 {
 	return string_block()->length;
 }
 
 template <typename Ops>
-const char *string_object<Ops>::data() const
+const char *StringLogic<Ops>::data() const
 {
 	return string_block()->data;
 }
 
 template <typename Ops>
-StringBlock *string_object<Ops>::string_block() const
+StringBlock *StringLogic<Ops>::string_block() const
 {
-	return static_cast<StringBlock *> (object<Ops>::object_block());
+	return static_cast<StringBlock *> (ObjectLogic<Ops>::object_block());
 }
 
 } // namespace

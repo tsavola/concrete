@@ -10,19 +10,19 @@ using namespace concrete;
 
 namespace {
 
-TEST(portable_object, size)
+TEST(Portable_object, size)
 {
 	EXPECT_EQ(sizeof (BlockId), sizeof (PortableObject));
 }
 
-TEST(portable_type_object, size)
+TEST(Portable_type_object, size)
 {
 	EXPECT_EQ(sizeof (BlockId), sizeof (PortableTypeObject));
 }
 
 TEST(object_block, size)
 {
-	EXPECT_EQ(sizeof (PortableObject) + sizeof (portable<int32_t>), sizeof (ObjectBlock) - sizeof (Block));
+	EXPECT_EQ(sizeof (PortableObject) + sizeof (Portable<int32_t>), sizeof (ObjectBlock) - sizeof (Block));
 }
 
 class context : public ::testing::Test {

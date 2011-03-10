@@ -22,30 +22,30 @@ namespace concrete {
 struct TypeBlock;
 
 template <typename Ops>
-class type_object: public object<Ops> {
-	friend class object<ObjectOps>;
-	friend class object<PortableObjectOps>;
+class TypeLogic: public ObjectLogic<Ops> {
+	friend class ObjectLogic<ObjectOps>;
+	friend class ObjectLogic<PortableObjectOps>;
 	friend struct ObjectBlock;
 
 public:
 	static TypeObject Type();
 
-	static type_object NewBuiltin() throw (AllocError);
-	static type_object NewBuiltin(const TypeObject &type) throw (AllocError);
-	static type_object New(const StringObject &name) throw (AllocError);
+	static TypeLogic NewBuiltin();
+	static TypeLogic NewBuiltin(const TypeObject &type);
+	static TypeLogic New(const StringObject &name);
 
-	using object<Ops>::operator==;
-	using object<Ops>::operator!=;
+	using ObjectLogic<Ops>::operator==;
+	using ObjectLogic<Ops>::operator!=;
 
 	template <typename OtherOps>
-	type_object(const type_object<OtherOps> &other): object<Ops>(other)
+	TypeLogic(const TypeLogic<OtherOps> &other): ObjectLogic<Ops>(other)
 	{
 	}
 
 	template <typename OtherOps>
-	type_object &operator=(const type_object<OtherOps> &other)
+	TypeLogic &operator=(const TypeLogic<OtherOps> &other)
 	{
-		object<Ops>::operator=(other);
+		ObjectLogic<Ops>::operator=(other);
 		return *this;
 	}
 
@@ -55,7 +55,7 @@ public:
 	ObjectProtocol &protocol() const;
 
 protected:
-	type_object(BlockId id): object<Ops>(id)
+	TypeLogic(BlockId id): ObjectLogic<Ops>(id)
 	{
 	}
 
@@ -64,7 +64,7 @@ protected:
 } CONCRETE_PACKED;
 
 template <typename T>
-struct type_check {
+struct TypeCheck {
 	bool operator()(const TypeObject &type)
 	{
 		return type == T::Type();

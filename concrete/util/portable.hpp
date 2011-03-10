@@ -17,74 +17,74 @@ namespace concrete {
 
 #ifdef CONCRETE_LITTLE_ENDIAN
 template <typename T, unsigned int N>
-struct portable_ops {
-	static inline T load(const T &x)  { return x; }
-	static inline T store(const T &x) { return x; }
+struct PortableOps {
+	static inline T Load(const T &x)  { return x; }
+	static inline T Store(const T &x) { return x; }
 };
 #else
 template <typename T, unsigned int N>
-struct portable_ops {
-	static inline T load(const T &x)  { return byteorder<T, N>::swap(x); }
-	static inline T store(const T &x) { return byteorder<T, N>::swap(x); }
+struct PortableOps {
+	static inline T Load(const T &x)  { return Byteorder<T, N>::Swap(x); }
+	static inline T Store(const T &x) { return Byteorder<T, N>::Swap(x); }
 };
 #endif
 
 template <typename T>
-class portable {
-	typedef portable_ops<T, sizeof (T)> Ops;
+class Portable {
+	typedef PortableOps<T, sizeof (T)> Ops;
 
 public:
-	portable()
+	Portable()
 	{
 	}
 
-	portable(const T &x): raw(Ops::store(x))
+	Portable(const T &x): m_raw(Ops::Store(x))
 	{
 	}
 
-	portable(const portable &other): raw(other.raw)
+	Portable(const Portable &other): m_raw(other.m_raw)
 	{
 	}
 
-	portable &operator=(const T &x)
+	Portable &operator=(const T &x)
 	{
-		raw = Ops::store(x);
+		m_raw = Ops::Store(x);
 		return *this;
 	}
 
-	portable &operator=(const portable &other)
+	Portable &operator=(const Portable &other)
 	{
-		raw = other.raw;
+		m_raw = other.m_raw;
 		return *this;
 	}
 
 	operator T() const
 	{
-		return Ops::load(raw);
+		return Ops::Load(m_raw);
 	}
 
 	bool operator==(const T &x) const
 	{
-		return Ops::load(raw) == x;
+		return Ops::Load(m_raw) == x;
 	}
 
 	bool operator!=(const T &x) const
 	{
-		return Ops::load(raw) != x;
+		return Ops::Load(m_raw) != x;
 	}
 
-	bool operator==(const portable &other) const
+	bool operator==(const Portable &other) const
 	{
-		return raw == other.raw;
+		return m_raw == other.m_raw;
 	}
 
-	bool operator!=(const portable &other) const
+	bool operator!=(const Portable &other) const
 	{
-		return raw != other.raw;
+		return m_raw != other.m_raw;
 	}
 
 private:
-	T raw;
+	T m_raw;
 
 } CONCRETE_PACKED;
 

@@ -55,7 +55,7 @@ StringObject ObjectBlock::repr(BlockId id) const
 	return StringObject::New(str.data(), str.size());
 }
 
-void object_init(const TypeObject &type)
+void ObjectInit(const TypeObject &type)
 {
 	type.init_builtin(StringObject::New("object"));
 

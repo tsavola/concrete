@@ -25,13 +25,13 @@ struct NoneBlock: ObjectBlock {
 } CONCRETE_PACKED;
 
 template <typename Ops>
-TypeObject none_object<Ops>::Type()
+TypeObject NoneLogic<Ops>::Type()
 {
 	return Context::Builtins().none_type;
 }
 
 template <typename Ops>
-none_object<Ops> none_object<Ops>::NewBuiltin() throw (AllocError)
+NoneLogic<Ops> NoneLogic<Ops>::NewBuiltin()
 {
 	auto id = Context::Alloc(sizeof (NoneBlock));
 	new (Context::Pointer(id)) NoneBlock(id);
@@ -39,9 +39,9 @@ none_object<Ops> none_object<Ops>::NewBuiltin() throw (AllocError)
 }
 
 template <typename Ops>
-void none_object<Ops>::init_builtin(const TypeObject &type)
+void NoneLogic<Ops>::init_builtin(const TypeObject &type)
 {
-	object<Ops>::object_block()->type_object = type;
+	ObjectLogic<Ops>::object_block()->type_object = type;
 }
 
 } // namespace

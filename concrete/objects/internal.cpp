@@ -13,20 +13,20 @@
 
 namespace concrete {
 
-static InternalFunction functions[internals::count];
+static InternalFunction internal_functions[internals::InternalCount];
 
 Object InternalBlock::call(ContinuationOp op,
                            BlockId &continuation,
                            const TupleObject *args,
                            const DictObject *kwargs) const
 {
-	assert(functions[serial]);
-	return functions[serial](op, continuation, args, kwargs);
+	assert(internal_functions[serial]);
+	return internal_functions[serial](op, continuation, args, kwargs);
 }
 
-void register_internal(InternalSerial serial, InternalFunction function)
+void InternalRegister(InternalSerial serial, InternalFunction function)
 {
-	functions[serial] = function;
+	internal_functions[serial] = function;
 }
 
 } // namespace

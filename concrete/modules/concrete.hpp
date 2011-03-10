@@ -14,7 +14,7 @@
 
 namespace concrete {
 
-void concrete_module_init(const DictObject &modules);
+void ConcreteModuleInit(const DictObject &modules);
 
 } // namespace
 

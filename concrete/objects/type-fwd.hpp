@@ -14,10 +14,10 @@
 
 namespace concrete {
 
-template <typename Ops> class type_object;
+template <typename Ops> class TypeLogic;
 
-typedef type_object<ObjectOps>         TypeObject;
-typedef type_object<PortableObjectOps> PortableTypeObject;
+typedef TypeLogic<ObjectOps>         TypeObject;
+typedef TypeLogic<PortableObjectOps> PortableTypeObject;
 
 } // namespace
 

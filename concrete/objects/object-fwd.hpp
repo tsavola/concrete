@@ -15,17 +15,20 @@
 
 namespace concrete {
 
+template <typename Ops> class ObjectLogic;
+
 struct ObjectOps {
-	static const BlockId &load(const BlockId &x)  { return x; }
-	static const BlockId &store(const BlockId &x) { return x; }
+	static const BlockId &Load(const BlockId &x)  { return x; }
+	static const BlockId &Store(const BlockId &x) { return x; }
 };
 
-typedef portable_ops<BlockId, sizeof (BlockId)> PortableObjectOps;
+struct PortableObjectOps {
+	static BlockId Load(BlockId x)  { return PortableOps<BlockId, sizeof (x)>::Load(x); }
+	static BlockId Store(BlockId x) { return PortableOps<BlockId, sizeof (x)>::Store(x); }
+};
 
-template <typename Ops> class object;
-
-typedef object<ObjectOps>         Object;
-typedef object<PortableObjectOps> PortableObject;
+typedef ObjectLogic<ObjectOps>         Object;
+typedef ObjectLogic<PortableObjectOps> PortableObject;
 
 } // namespace
 

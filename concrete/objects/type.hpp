@@ -41,16 +41,16 @@ struct TypeBlock: ObjectBlock {
 } CONCRETE_PACKED;
 
 template <typename Ops>
-TypeObject type_object<Ops>::Type()
+TypeObject TypeLogic<Ops>::Type()
 {
 	return Context::Builtins().type_type;
 }
 
 template <typename Ops>
-type_object<Ops> type_object<Ops>::NewBuiltin() throw (AllocError)
+TypeLogic<Ops> TypeLogic<Ops>::NewBuiltin()
 {
 	auto id = Context::Alloc(sizeof (TypeBlock));
-	concrete_trace(("type: id=%d") % id);
+	ConcreteTrace(("type: id=%d") % id);
 	auto block = static_cast<TypeBlock *> (Context::Pointer(id));
 	block->refcount = 0;
 	new (block) TypeBlock(id, ObjectBlock::NoRefcountInit());
@@ -58,46 +58,46 @@ type_object<Ops> type_object<Ops>::NewBuiltin() throw (AllocError)
 }
 
 template <typename Ops>
-type_object<Ops> type_object<Ops>::NewBuiltin(const TypeObject &type) throw (AllocError)
+TypeLogic<Ops> TypeLogic<Ops>::NewBuiltin(const TypeObject &type)
 {
 	auto id = Context::Alloc(sizeof (TypeBlock));
-	concrete_trace(("type: id=%d") % id);
+	ConcreteTrace(("type: id=%d") % id);
 	new (Context::Pointer(id)) TypeBlock(type);
 	return id;
 }
 
 template <typename Ops>
-type_object<Ops> type_object<Ops>::New(const StringObject &name) throw (AllocError)
+TypeLogic<Ops> TypeLogic<Ops>::New(const StringObject &name)
 {
 	auto id = Context::Alloc(sizeof (TypeBlock));
-	concrete_trace(("type: id=%d") % id);
+	ConcreteTrace(("type: id=%d") % id);
 	new (Context::Pointer(id)) TypeBlock(Type(), name);
 	return id;
 }
 
 template <typename Ops>
-void type_object<Ops>::init_builtin(const StringObject &name) const
+void TypeLogic<Ops>::init_builtin(const StringObject &name) const
 {
 	type_block()->name = name;
 }
 
 template <typename Ops>
-StringObject type_object<Ops>::name() const
+StringObject TypeLogic<Ops>::name() const
 {
 	return static_cast<PortableStringObject &> (type_block()->name);
 	// TODO: return type_block()->name.cast<StringObject>();
 }
 
 template <typename Ops>
-ObjectProtocol &type_object<Ops>::protocol() const
+ObjectProtocol &TypeLogic<Ops>::protocol() const
 {
 	return type_block()->protocol;
 }
 
 template <typename Ops>
-TypeBlock *type_object<Ops>::type_block() const
+TypeBlock *TypeLogic<Ops>::type_block() const
 {
-	return static_cast<TypeBlock *> (object<Ops>::object_block());
+	return static_cast<TypeBlock *> (ObjectLogic<Ops>::object_block());
 }
 
 } // namespace

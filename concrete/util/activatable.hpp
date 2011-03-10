@@ -7,8 +7,8 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#ifndef CONCRETE_UTIL_ACTIVE_HPP
-#define CONCRETE_UTIL_ACTIVE_HPP
+#ifndef CONCRETE_UTIL_ACTIVATABLE_HPP
+#define CONCRETE_UTIL_ACTIVATABLE_HPP
 
 #include <cassert>
 #include <cstdlib>
@@ -19,7 +19,7 @@
 namespace concrete {
 
 template <typename Impl>
-class activatable {
+class Activatable {
 public:
 	static Impl &Active()
 	{
@@ -44,17 +44,17 @@ private:
 };
 
 template <typename Impl>
-CONCRETE_THREAD_LOCAL Impl *activatable<Impl>::m_active;
+CONCRETE_THREAD_LOCAL Impl *Activatable<Impl>::m_active;
 
 template <typename Activatable>
-class active_scope: noncopyable {
+class ActiveScope: Noncopyable {
 public:
-	explicit active_scope(Activatable &activatable): m_activatable(activatable)
+	explicit ActiveScope(Activatable &activatable): m_activatable(activatable)
 	{
 		m_activatable.activate();
 	}
 
-	~active_scope()
+	~ActiveScope()
 	{
 		m_activatable.deactivate();
 	}
