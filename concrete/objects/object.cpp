@@ -27,7 +27,7 @@ static void destruct(ObjectBlock *block)
 	static_cast<T *> (block)->~T();
 }
 
-void ObjectBlock::Destroy(ObjectBlock *block) throw ()
+void ObjectBlock::Destroy(ObjectBlock *block)
 {
 	auto type = block->type();
 	auto &builtins = Context::Builtins();

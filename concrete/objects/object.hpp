@@ -46,7 +46,7 @@ struct ObjectBlock: Block {
 
 	StringObject repr(BlockId id) const;
 
-	static void Destroy(ObjectBlock *block) throw ();
+	static void Destroy(ObjectBlock *block);
 
 } CONCRETE_PACKED;
 
