@@ -26,7 +26,7 @@ CONCRETE_INTERNAL(LongObject_add)(const TupleObject &args, const DictObject &kwa
 	return LongObject::New(value);
 }
 
-void LongObjectInit(const TypeObject &type)
+void LongInit(const TypeObject &type)
 {
 	type.init_builtin(StringObject::New("long"));
 

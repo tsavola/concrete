@@ -105,6 +105,8 @@ protected:
 typedef TupleLogic<ObjectOps>         TupleObject;
 typedef TupleLogic<PortableObjectOps> PortableTupleObject;
 
+void TupleInit(const TypeObject &type);
+
 } // namespace
 
 #endif

@@ -71,6 +71,8 @@ StringBlock *StringLogic<Ops>::string_block() const
 	return static_cast<StringBlock *> (ObjectLogic<Ops>::object_block());
 }
 
+void StringInit(const TypeObject &type);
+
 } // namespace
 
 #endif

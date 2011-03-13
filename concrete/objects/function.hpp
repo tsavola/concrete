@@ -79,6 +79,8 @@ protected:
 typedef FunctionLogic<ObjectOps>         FunctionObject;
 typedef FunctionLogic<PortableObjectOps> PortableFunctionObject;
 
+void FunctionInit(const TypeObject &type);
+
 } // namespace
 
 #endif

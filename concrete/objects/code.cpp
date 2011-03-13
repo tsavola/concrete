@@ -143,4 +143,9 @@ CodeObject CodeBlock::Load(const void *data, size_t size)
 	return Loader.load_next<CodeObject>();
 }
 
+void CodeInit(const TypeObject &type)
+{
+	type.init_builtin(StringObject::New("code"));
+}
+
 } // namespace

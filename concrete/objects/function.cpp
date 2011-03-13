@@ -13,7 +13,9 @@
 #include <concrete/continuation.hpp>
 #include <concrete/execute.hpp>
 #include <concrete/objects/dict.hpp>
+#include <concrete/objects/string.hpp>
 #include <concrete/objects/tuple.hpp>
+#include <concrete/objects/type.hpp>
 #include <concrete/util/packed.hpp>
 #include <concrete/util/portable.hpp>
 #include <concrete/util/trace.hpp>
@@ -92,6 +94,11 @@ Object FunctionBlock::call(ContinuationOp op,
                            const DictObject *kwargs) const
 {
 	return ContinuableCall<CallContinuation>(op, continuation_id, Call { code }, args, kwargs);
+}
+
+void FunctionInit(const TypeObject &type)
+{
+	type.init_builtin(StringObject::New("function"));
 }
 
 } // namespace

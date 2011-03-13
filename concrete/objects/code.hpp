@@ -108,6 +108,8 @@ protected:
 	}
 } CONCRETE_PACKED;
 
+void CodeInit(const TypeObject &type);
+
 } // namespace
 
 #endif

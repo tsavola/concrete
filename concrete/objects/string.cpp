@@ -13,6 +13,7 @@
 #include <cstring>
 
 #include <concrete/exception.hpp>
+#include <concrete/objects/type.hpp>
 
 namespace concrete {
 
@@ -55,6 +56,11 @@ StringBlock::StringBlock(const TypeObject &type, const char *data_): ObjectBlock
 	}
 
 	length = string_length;
+}
+
+void StringInit(const TypeObject &type)
+{
+	type.init_builtin(StringObject::New("string"));
 }
 
 } // namespace

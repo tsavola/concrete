@@ -49,20 +49,20 @@ Context::Context()
 		internal_type,
 		module_type);
 
-	none         .init_builtin(none_type);
+	none.init_builtin(none_type);
 
-	type_type    .init_builtin(StringObject::New("type"));
+	TypeInit(type_type);
 	ObjectInit(object_type);
-	none_type    .init_builtin(StringObject::New("none"));
-	string_type  .init_builtin(StringObject::New("string"));
-	LongObjectInit(long_type);
-	bytes_type   .init_builtin(StringObject::New("bytes"));
-	tuple_type   .init_builtin(StringObject::New("tuple"));
-	dict_type    .init_builtin(StringObject::New("dict"));
-	code_type    .init_builtin(StringObject::New("code"));
-	function_type.init_builtin(StringObject::New("function"));
-	internal_type.init_builtin(StringObject::New("internal"));
-	module_type  .init_builtin(StringObject::New("module"));
+	NoneInit(none_type);
+	StringInit(string_type);
+	LongInit(long_type);
+	BytesInit(bytes_type);
+	TupleInit(tuple_type);
+	DictInit(dict_type);
+	CodeInit(code_type);
+	FunctionInit(function_type);
+	InternalInit(internal_type);
+	ModuleInit(module_type);
 
 	auto modules = DictObject::New(1);
 

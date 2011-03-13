@@ -89,6 +89,8 @@ protected:
 typedef BytesLogic<ObjectOps>         BytesObject;
 typedef BytesLogic<PortableObjectOps> PortableBytesObject;
 
+void BytesInit(const TypeObject &type);
+
 } // namespace
 
 #endif

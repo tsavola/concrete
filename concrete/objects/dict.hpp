@@ -152,6 +152,8 @@ private:
 typedef DictLogic<ObjectOps>         DictObject;
 typedef DictLogic<PortableObjectOps> PortableDictObject;
 
+void DictInit(const TypeObject &type);
+
 } // namespace
 
 #endif

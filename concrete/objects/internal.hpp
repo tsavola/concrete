@@ -142,6 +142,7 @@ typedef InternalLogic<ObjectOps>         InternalObject;
 typedef InternalLogic<PortableObjectOps> PortableInternalObject;
 
 void InternalRegister(InternalSerial serial, InternalFunction function);
+void InternalInit(const TypeObject &type);
 
 } // namespace
 
