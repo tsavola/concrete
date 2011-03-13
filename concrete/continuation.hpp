@@ -39,7 +39,7 @@ Object ContinuableCall(
 
 	switch (op) {
 	case InitContinuation:
-		assert(continuation_id == NoBlockId);
+		assert(continuation_id == NULL);
 		assert(args && kwargs);
 
 		continuation_id = Context::NewBlock<Continuation>();
@@ -47,13 +47,13 @@ Object ContinuableCall(
 		break;
 
 	case ResumeContinuation:
-		assert(continuation_id != NoBlockId);
+		assert(continuation_id);
 
 		done = continuable.resume(continuation_id, return_value);
 		break;
 
 	case CleanupContinuation:
-		assert(continuation_id != NoBlockId);
+		assert(continuation_id);
 
 		done = true;
 		break;
@@ -61,7 +61,7 @@ Object ContinuableCall(
 
 	if (done) {
 		BlockId id = continuation_id;
-		continuation_id = NoBlockId;
+		continuation_id = NULL;
 
 		Context::DeleteBlock<Continuation>(id);
 	}

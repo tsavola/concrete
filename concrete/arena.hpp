@@ -96,18 +96,27 @@ public:
 	{
 		assert(minimum_size >= sizeof (Block));
 
+		if (block_id == NULL)
+			throw AccessError(block_id);
+
+		size_t offset = block_id.offset();
+
 #ifndef NDEBUG
-		if (block_id & (sizeof (uint32_t) - 1))
+		if (offset & (sizeof (uint32_t) - 1))
 			throw AccessError(block_id);
 #endif
 
-		if (m_size < minimum_size || block_id > m_size - minimum_size)
+		if (m_size < minimum_size || offset > m_size - minimum_size)
 			throw AccessError(block_id);
 
-		auto block = reinterpret_cast<Block *> (reinterpret_cast<char *> (m_base) + block_id);
-		auto aligned_size = AlignedSize(block_id, block->block_size());
+		auto block = reinterpret_cast<Block *> (reinterpret_cast<char *> (m_base) + offset);
+		size_t block_size = block->block_size();
+		size_t aligned_size = AlignedSize(block_size);
 
-		if (m_size < aligned_size || block_id > m_size - aligned_size)
+		if (aligned_size < block_size)
+			throw AccessError(block_id);
+
+		if (m_size < aligned_size || offset > m_size - aligned_size)
 			throw AccessError(block_id);
 
 		return block;
@@ -126,17 +135,7 @@ public:
 	void dump() const;
 
 private:
-	static size_t AlignedSize(BlockId block_id, BlockSize block_size)
-	{
-		size_t aligned_size = UnverifiedAlignedSize(block_size);
-
-		if (aligned_size < block_size)
-			throw AccessError(block_id);
-
-		return aligned_size;
-	}
-
-	static size_t UnverifiedAlignedSize(BlockSize block_size) throw ()
+	static size_t AlignedSize(BlockSize block_size) throw ()
 	{
 		return (block_size + sizeof (uint32_t) - 1) & ~size_t(sizeof (uint32_t) - 1);
 	}

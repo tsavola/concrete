@@ -52,7 +52,7 @@ struct ObjectBlock: Block {
 	TypeObject type() const
 	{
 		// don't use cast<TypeObject>() because it causes an infinite recursion
-		return TypeObject(type_object.id());
+		return TypeObject(type_object.m_id);
 	}
 
 } CONCRETE_PACKED;
@@ -70,7 +70,7 @@ ObjectLogic<Ops> ObjectLogic<Ops>::New()
 }
 
 template <typename Ops>
-ObjectLogic<Ops>::ObjectLogic(): m_raw_id(Ops::Store(Context::None().id()))
+ObjectLogic<Ops>::ObjectLogic(): m_id(Context::None().m_id)
 {
 	ref();
 }
@@ -86,7 +86,7 @@ template <typename Ops> template <typename T>
 T ObjectLogic<Ops>::cast() const
 {
 	assert(check<T>());
-	return T(id());
+	return T(m_id);
 }
 
 template <typename Ops> template <typename T>
@@ -95,7 +95,7 @@ T ObjectLogic<Ops>::require() const
 	if (!check<T>())
 		throw TypeError(type());
 
-	return T(id());
+	return T(m_id);
 }
 
 template <typename Ops>

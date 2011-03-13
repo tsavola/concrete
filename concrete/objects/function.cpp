@@ -24,13 +24,9 @@ namespace concrete {
 
 class CallContinuation: public Block {
 public:
-	CallContinuation(): m_frame_id(NoBlockId)
-	{
-	}
-
 	~CallContinuation()
 	{
-		if (m_frame_id != NoBlockId)
+		if (m_frame_id)
 			Executor::Active().destroy_frame(m_frame_id);
 	}
 
@@ -42,13 +38,13 @@ public:
 	Object destroy_frame()
 	{
 		BlockId frame_id = m_frame_id;
-		m_frame_id = NoBlockId;
+		m_frame_id = NULL;
 
 		return Executor::Active().destroy_frame(frame_id);
 	}
 
 private:
-	Portable<BlockId> m_frame_id;
+	PortableBlockId m_frame_id;
 
 } CONCRETE_PACKED;
 

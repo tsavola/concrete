@@ -141,12 +141,13 @@ public:
 	template <typename... Args>
 	Object call(Args... args)
 	{
-		BlockId continuation = NoBlockId;
+		BlockId continuation;
+
 		auto tuple = TupleObject::NewFromItems(args...);
 		auto dict = DictObject::New(0);
 		auto value = internal_block()->call(InitContinuation, continuation, &tuple, &dict);
 
-		if (continuation != NoBlockId) {
+		if (continuation) {
 			internal_block()->call(CleanupContinuation, continuation, NULL, NULL);
 			throw RuntimeError("non-trivial protocol method called from native code");
 		}

@@ -27,24 +27,28 @@ struct ObjectBlock;
 
 template <typename Ops>
 class ObjectLogic {
+	friend class ObjectLogic<ObjectOps>;
+	friend class ObjectLogic<PortableObjectOps>;
+	friend struct ObjectBlock;
+
 public:
 	static TypeObject Type();
 	static ObjectLogic New();
 
 	ObjectLogic();
 
-	explicit ObjectLogic(BlockId id): m_raw_id(Ops::Store(id))
+	explicit ObjectLogic(BlockId id): m_id(id)
 	{
 		ref();
 	}
 
-	ObjectLogic(const ObjectLogic &other): m_raw_id(other.m_raw_id)
+	ObjectLogic(const ObjectLogic &other): m_id(other.m_id)
 	{
 		ref();
 	}
 
 	template <typename OtherOps>
-	ObjectLogic(const ObjectLogic<OtherOps> &other): m_raw_id(Ops::Store(other.id()))
+	ObjectLogic(const ObjectLogic<OtherOps> &other): m_id(other.m_id)
 	{
 		ref();
 	}
@@ -57,7 +61,7 @@ public:
 	ObjectLogic &operator=(const ObjectLogic &other)
 	{
 		unref();
-		m_raw_id = other.m_raw_id;
+		m_id = other.m_id;
 		ref();
 		return *this;
 	}
@@ -66,31 +70,31 @@ public:
 	ObjectLogic &operator=(const ObjectLogic<OtherOps> &other)
 	{
 		unref();
-		m_raw_id = Ops::Store(other.id());
+		m_id = other.m_id;
 		ref();
 		return *this;
 	}
 
 	bool operator==(const ObjectLogic &other) const throw ()
 	{
-		return m_raw_id == other.m_raw_id;
+		return m_id == other.m_id;
 	}
 
 	template <typename OtherOps>
 	bool operator==(const ObjectLogic<OtherOps> &other) const throw ()
 	{
-		return id() == other.id();
+		return m_id == other.m_id;
 	}
 
 	bool operator!=(const ObjectLogic &other) const throw ()
 	{
-		return m_raw_id != other.m_raw_id;
+		return m_id != other.m_id;
 	}
 
 	template <typename OtherOps>
 	bool operator!=(const ObjectLogic<OtherOps> &other) const throw ()
 	{
-		return id() != other.id();
+		return m_id != other.m_id;
 	}
 
 	template <typename T> bool check() const;
@@ -99,7 +103,7 @@ public:
 
 	BlockId id() const throw ()
 	{
-		return Ops::Load(m_raw_id);
+		return m_id;
 	}
 
 	TypeObject type() const;
@@ -116,7 +120,7 @@ private:
 	void ref() const;
 	void unref() const;
 
-	BlockId m_raw_id;
+	BlockIdLogic<Ops> m_id;
 
 } CONCRETE_PACKED;
 

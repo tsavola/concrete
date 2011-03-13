@@ -30,9 +30,9 @@ struct ExecutionFrame: Block {
 
 	const PortableDictObject dict;
 
-	const Portable<BlockId> parent_frame_id;
+	const PortableBlockId parent_frame_id;
 
-	Portable<BlockId> call_continuation;
+	PortableBlockId call_continuation;
 	PortableObject call_callable;
 
 	Portable<uint32_t> stack_pointer;
@@ -40,24 +40,23 @@ struct ExecutionFrame: Block {
 
 	ExecutionFrame(const CodeObject &code,
 	               const DictObject &dict,
-	               BlockId parent_frame_id = NoBlockId):
+	               BlockId parent_frame_id = NULL):
 		code(code),
 		code_position(0),
 		dict(dict),
 		parent_frame_id(parent_frame_id),
-		call_continuation(NoBlockId),
 		stack_pointer(0)
 	{
 	}
 
 	~ExecutionFrame()
 	{
-		if (call_continuation != NoBlockId) {
-			ConcreteTrace(("call cleanup enter: callable=%d") % call_callable.id());
+		if (call_continuation) {
+			ConcreteTrace(("call cleanup enter: callable=%d") % call_callable.id().offset());
 
 			call_callable.require<CallableObject>().cleanup_call(call_continuation);
 
-			ConcreteTrace(("call cleanup leave: callable=%d") % call_callable.id());
+			ConcreteTrace(("call cleanup leave: callable=%d") % call_callable.id().offset());
 		}
 
 		for (unsigned int i = stack_pointer; i-- > 0; )
@@ -105,12 +104,12 @@ public:
 		m_initial_frame_id = frame_id;
 		m_current_frame_id = frame_id;
 
-		ConcreteTrace(("frame new initial %d") % m_initial_frame_id);
+		ConcreteTrace(("frame new initial %d") % m_initial_frame_id.offset());
 	}
 
 	~ExecutionState()
 	{
-		ConcreteTrace(("frame destroy initial %d") % m_initial_frame_id);
+		ConcreteTrace(("frame destroy initial %d") % m_initial_frame_id.offset());
 
 		Context::DeleteBlock<ExecutionFrame>(m_initial_frame_id);
 	}
@@ -128,21 +127,21 @@ public:
 
 		m_current_frame_id = new_frame_id;
 
-		ConcreteTrace(("frame new %d: code=%d") % new_frame_id % code.id());
+		ConcreteTrace(("frame new %d: code=%d") % new_frame_id.offset() % code.id().offset());
 
 		return new_frame_id;
 	}
 
 	void exit_frame()
 	{
-		ConcreteTrace(("frame exit %d") % m_current_frame_id);
+		ConcreteTrace(("frame exit %d") % m_current_frame_id.offset());
 
 		m_current_frame_id = current_frame()->parent_frame_id;
 	}
 
 	Object destroy_frame(BlockId frame_id)
 	{
-		ConcreteTrace(("frame destroy %d") % frame_id);
+		ConcreteTrace(("frame destroy %d") % frame_id.offset());
 
 		auto return_value = Frame(frame_id)->pop_stack();
 		Context::DeleteBlock<ExecutionFrame>(frame_id);
@@ -152,7 +151,7 @@ public:
 
 	bool have_frame()
 	{
-		return m_current_frame_id != NoBlockId;
+		return m_current_frame_id;
 	}
 
 	/*
@@ -195,21 +194,24 @@ public:
 	void init_call(const Object &callable, const TupleObject &args, const DictObject &kwargs)
 	{
 		BlockId frame_id = m_current_frame_id;
-		BlockId continuation = NoBlockId;
+		BlockId continuation;
 
-		ConcreteTrace(("call init enter: callable=%d frame=%d") % callable.id() % frame_id);
+		ConcreteTrace(("call init enter: callable=%d frame=%d")
+		              % callable.id().offset() % frame_id.offset());
 
 		auto return_value = callable.require<CallableObject>().init_call(continuation, args, kwargs);
 
-		ConcreteTrace(("call init leave: callable=%d frame=%d done=%d return=%d") % callable.id() % frame_id % (continuation == NoBlockId) % return_value.id());
+		ConcreteTrace(("call init leave: callable=%d frame=%d done=%s return=%d")
+		              % callable.id().offset() % frame_id.offset()
+		              % (continuation ? "false" : "true") % return_value.id().offset());
 
 		auto frame = Frame(frame_id);
 
-		if (continuation == NoBlockId) {
-			frame->push_stack(return_value);
-		} else {
+		if (continuation) {
 			frame->call_continuation = continuation;
 			frame->call_callable = callable;
+		} else {
+			frame->push_stack(return_value);
 		}
 	}
 
@@ -222,21 +224,24 @@ public:
 		frame = Frame(frame_id);
 		continuation = frame->call_continuation;
 
-		if (continuation == NoBlockId)
+		if (continuation == NULL)
 			return false;
 
 		auto callable = frame->call_callable;
 
-		ConcreteTrace(("call resume enter: callable=%d frame=%d") % callable.id() % frame_id);
+		ConcreteTrace(("call resume enter: callable=%d frame=%d")
+		              % callable.id().offset() % frame_id.offset());
 
 		auto return_value = callable.require<CallableObject>().resume_call(continuation);
 
-		ConcreteTrace(("call resume leave: callable=%d frame=%d done=%d return=%d") % callable.id() % frame_id % (continuation == NoBlockId) % return_value.id());
+		ConcreteTrace(("call resume leave: callable=%d frame=%d done=%d return=%d")
+		              % callable.id().offset() % frame_id.offset()
+		              % (continuation ? "false" : "true") % return_value.id().offset());
 
 		frame = Frame(frame_id);
 		frame->call_continuation = continuation;
 
-		if (continuation == NoBlockId) {
+		if (continuation == NULL) {
 			frame->call_callable = Object();
 			frame->push_stack(return_value);
 		}

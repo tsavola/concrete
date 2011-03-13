@@ -37,11 +37,11 @@ Arena::Allocation Arena::alloc(size_t block_size)
 {
 	assert(block_size >= sizeof (Block));
 
-	auto aligned_size = UnverifiedAlignedSize(block_size);
+	size_t aligned_size = AlignedSize(block_size);
 	if (aligned_size < block_size)
 		throw AllocError(block_size);
 
-	BlockId offset = m_size;
+	size_t offset = m_size;
 
 	m_base = std::realloc(m_base, m_size + aligned_size);
 	if (m_base == NULL)
@@ -58,13 +58,17 @@ Arena::Allocation Arena::alloc(size_t block_size)
 #endif
 	block->m_size = block_size;
 
-	return Allocation { block, offset };
+	return Allocation {
+		block,
+		BlockId::New(offset),
+	};
 }
 
-void Arena::free(BlockId offset)
+void Arena::free(BlockId block_id)
 {
-	auto block = pointer(offset, sizeof (Block));
-	auto aligned_size = UnverifiedAlignedSize(block->block_size());
+	auto block = pointer(block_id, sizeof (Block));
+	size_t offset = block_id.offset();
+	size_t aligned_size = AlignedSize(block->block_size());
 
 	if (offset + aligned_size == m_size) {
 		m_size -= aligned_size;
