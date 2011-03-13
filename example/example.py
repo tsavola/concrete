@@ -15,3 +15,4 @@ def passthrough(x):
 	return x
 
 print(repr("hello" + passthrough(" ") + "world"))
+print("id(None) =", id(None))
