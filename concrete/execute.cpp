@@ -356,7 +356,7 @@ private:
 	{
 		auto b = pop_stack();
 		auto a = pop_stack();
-		init_call(a.protocol().add, TupleObject::NewFromItems(a, b), DictObject::New(0));
+		init_call(a.protocol().add, TupleObject::NewFromItems(a, b), DictObject::Empty());
 	}
 
 	void op_return_value()

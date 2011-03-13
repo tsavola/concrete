@@ -58,6 +58,11 @@ public:
 		return Context::BuiltinObjects().dict_type;
 	}
 
+	static DictLogic Empty()
+	{
+		return New(0);
+	}
+
 	static DictLogic New(unsigned int capacity = 16)
 	{
 		return Context::NewCustomSizeBlock<DictBlock>(
