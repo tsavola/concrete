@@ -27,7 +27,7 @@ struct NoneBlock: ObjectBlock {
 template <typename Ops>
 TypeObject NoneLogic<Ops>::Type()
 {
-	return Context::Builtins().none_type;
+	return Context::BuiltinObjects().none_type;
 }
 
 template <typename Ops>

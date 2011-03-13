@@ -35,7 +35,7 @@ class LongLogic: public ObjectLogic<Ops> {
 public:
 	static TypeObject Type()
 	{
-		return Context::Builtins().long_type;
+		return Context::BuiltinObjects().long_type;
 	}
 
 	static LongLogic New(int64_t value)

@@ -38,7 +38,7 @@ struct StringBlock: ObjectBlock {
 template <typename Ops>
 TypeObject StringLogic<Ops>::Type()
 {
-	return Context::Builtins().string_type;
+	return Context::BuiltinObjects().string_type;
 }
 
 template <typename Ops>

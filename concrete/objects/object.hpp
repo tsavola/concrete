@@ -58,7 +58,7 @@ struct ObjectBlock: Block {
 template <typename Ops>
 TypeObject ObjectLogic<Ops>::Type()
 {
-	return Context::Builtins().object_type;
+	return Context::BuiltinObjects().object_type;
 }
 
 template <typename Ops>

@@ -55,7 +55,7 @@ class DictLogic: public ObjectLogic<Ops> {
 public:
 	static TypeObject Type()
 	{
-		return Context::Builtins().dict_type;
+		return Context::BuiltinObjects().dict_type;
 	}
 
 	static DictLogic New(unsigned int capacity = 16)
@@ -106,16 +106,27 @@ public:
 
 	Object get_item(const Object &key) const
 	{
-		if (!key.check<StringObject>())
+		Object value;
+
+		if (!get_item(key, value))
 			throw KeyError(key);
+
+		return value;
+	}
+
+	bool get_item(const Object &key, Object &value) const
+	{
+		if (!key.check<StringObject>())
+			return false;
 
 		auto block = dict_block();
 		auto i = find_item(block, key);
 
 		if (i == block->size)
-			throw KeyError(key);
+			return false;
 
-		return block->items[i].value;
+		value = block->items[i].value;
+		return true;
 	}
 
 	void copy_to(const DictLogic &target) const

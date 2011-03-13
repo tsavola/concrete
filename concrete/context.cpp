@@ -9,6 +9,7 @@
 
 #include "context.hpp"
 
+#include <concrete/modules/builtins.hpp>
 #include <concrete/modules/concrete.hpp>
 #include <concrete/objects.hpp>
 
@@ -18,8 +19,7 @@ Context::Context()
 {
 	ContextScope scope(*this);
 
-	auto none          = NoneObject::NewBuiltin();
-
+	auto none = NoneObject::NewBuiltin();
 	m_builtin_none = NewBlock<BuiltinNoneBlock>(none);
 
 	auto type_type     = TypeObject::NewBuiltin();
@@ -35,7 +35,7 @@ Context::Context()
 	auto internal_type = TypeObject::NewBuiltin(type_type);
 	auto module_type   = TypeObject::NewBuiltin(type_type);
 
-	m_builtins = NewBlock<BuiltinsBlock>(
+	m_builtin_objects = NewBlock<BuiltinObjectsBlock>(
 		type_type,
 		object_type,
 		none_type,
@@ -64,16 +64,23 @@ Context::Context()
 	InternalInit(internal_type);
 	ModuleInit(module_type);
 
-	auto modules = DictObject::New(1);
+	auto modules = DictObject::New(2);
+	auto builtins = BuiltinsModuleInit(modules);
 
 	ConcreteModuleInit(modules);
 
-	builtins().modules = modules;
+	builtin_objects().builtins = builtins;
+	builtin_objects().modules = modules;
 }
 
-Object Context::ImportBuiltin(const Object &name)
+Object Context::LoadBuiltinName(const Object &name)
 {
-	return Builtins().modules.cast<DictObject>().get_item(name);
+	return BuiltinObjects().builtins.cast<DictObject>().get_item(name);
+}
+
+Object Context::ImportBuiltinModule(const Object &name)
+{
+	return BuiltinObjects().modules.cast<DictObject>().get_item(name);
 }
 
 } // namespace

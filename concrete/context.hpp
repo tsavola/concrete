@@ -27,7 +27,7 @@ struct ContextSnapshot {
 	void *base;
 	size_t size;
 	BlockId builtin_none;
-	BlockId builtins;
+	BlockId builtin_objects;
 };
 
 class Context: public Activatable<Context>, Noncopyable {
@@ -40,7 +40,7 @@ class Context: public Activatable<Context>, Noncopyable {
 	} CONCRETE_PACKED;
 
 public:
-	struct BuiltinsBlock: Block {
+	struct BuiltinObjectsBlock: Block {
 		const PortableTypeObject type_type;
 		const PortableTypeObject object_type;
 		const PortableTypeObject none_type;
@@ -54,20 +54,21 @@ public:
 		const PortableTypeObject internal_type;
 		const PortableTypeObject module_type;
 
+		PortableObject builtins;
 		PortableObject modules;
 
-		BuiltinsBlock(const TypeObject &type_type,
-		              const TypeObject &object_type,
-		              const TypeObject &none_type,
-		              const TypeObject &string_type,
-		              const TypeObject &long_type,
-		              const TypeObject &bytes_type,
-		              const TypeObject &tuple_type,
-		              const TypeObject &dict_type,
-		              const TypeObject &code_type,
-		              const TypeObject &function_type,
-		              const TypeObject &internal_type,
-		              const TypeObject &module_type):
+		BuiltinObjectsBlock(const TypeObject &type_type,
+		                    const TypeObject &object_type,
+		                    const TypeObject &none_type,
+		                    const TypeObject &string_type,
+		                    const TypeObject &long_type,
+		                    const TypeObject &bytes_type,
+		                    const TypeObject &tuple_type,
+		                    const TypeObject &dict_type,
+		                    const TypeObject &code_type,
+		                    const TypeObject &function_type,
+		                    const TypeObject &internal_type,
+		                    const TypeObject &module_type):
 			type_type(type_type),
 			object_type(object_type),
 			none_type(none_type),
@@ -113,19 +114,20 @@ public:
 		return Active().builtin_none().none;
 	}
 
-	static const BuiltinsBlock &Builtins()
+	static const BuiltinObjectsBlock &BuiltinObjects()
 	{
-		return Active().builtins();
+		return Active().builtin_objects();
 	}
 
-	static Object ImportBuiltin(const Object &name);
+	static Object LoadBuiltinName(const Object &name);
+	static Object ImportBuiltinModule(const Object &name);
 
 	Context();
 
 	Context(const ContextSnapshot &snapshot) throw ():
 		m_arena(snapshot.base, snapshot.size),
 		m_builtin_none(snapshot.builtin_none),
-		m_builtins(snapshot.builtins)
+		m_builtin_objects(snapshot.builtin_objects)
 	{
 	}
 
@@ -135,7 +137,7 @@ public:
 			m_arena.base(),
 			m_arena.size(),
 			m_builtin_none,
-			m_builtins,
+			m_builtin_objects,
 		};
 	}
 
@@ -179,14 +181,14 @@ private:
 		return *block_pointer<BuiltinNoneBlock>(m_builtin_none);
 	}
 
-	BuiltinsBlock &builtins()
+	BuiltinObjectsBlock &builtin_objects()
 	{
-		return *block_pointer<BuiltinsBlock>(m_builtins);
+		return *block_pointer<BuiltinObjectsBlock>(m_builtin_objects);
 	}
 
 	Arena m_arena;
 	BlockId m_builtin_none;
-	BlockId m_builtins;
+	BlockId m_builtin_objects;
 };
 
 typedef ActiveScope<Context> ContextScope;

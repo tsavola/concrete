@@ -46,7 +46,7 @@ class TupleLogic: public ObjectLogic<Ops> {
 public:
 	static TypeObject Type()
 	{
-		return Context::Builtins().tuple_type;
+		return Context::BuiltinObjects().tuple_type;
 	}
 
 	static TupleLogic New(unsigned int size)

@@ -59,7 +59,7 @@ class CodeLogic: public ObjectLogic<Ops> {
 public:
 	static TypeObject Type()
 	{
-		return Context::Builtins().code_type;
+		return Context::BuiltinObjects().code_type;
 	}
 
 	static CodeLogic New(unsigned int stacksize,

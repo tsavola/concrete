@@ -115,7 +115,7 @@ class InternalLogic: public CallableLogic<Ops> {
 public:
 	static TypeObject Type()
 	{
-		return Context::Builtins().internal_type;
+		return Context::BuiltinObjects().internal_type;
 	}
 
 	static InternalLogic New(InternalSerial serial)

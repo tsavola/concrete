@@ -374,7 +374,12 @@ private:
 	void op_load_name()
 	{
 		auto name = frame_code().names().get_item(load_bytecode<uint16_t>());
-		push_stack(frame_dict().get_item(name));
+		Object value;
+
+		if (!frame_dict().get_item(name, value))
+			value = Context::LoadBuiltinName(name);
+
+		push_stack(value);
 	}
 
 	void op_load_attr()
@@ -393,7 +398,7 @@ private:
 		auto from = pop_stack();
 		auto level = pop_stack().require<LongObject>();
 		auto name = frame_code().names().get_item(load_bytecode<uint16_t>());
-		auto module = Context::ImportBuiltin(name);
+		auto module = Context::ImportBuiltinModule(name);
 
 		if (!from.check<NoneObject>()) {
 			auto fromlist = from.require<TupleObject>();
