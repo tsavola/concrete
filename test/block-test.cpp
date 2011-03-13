@@ -21,7 +21,7 @@ TEST(arena, alloc_min)
 	Arena arena;
 
 	BlockId id = arena.alloc(sizeof (Block)).id;
-	Block *ptr = arena.pointer(id);
+	Block *ptr = arena.pointer(id, sizeof (Block));
 	EXPECT_TRUE(ptr);
 	EXPECT_EQ(ptr->block_size(), sizeof (Block));
 	// leak the block
@@ -48,7 +48,7 @@ TEST(arena, alloc_odd_multi)
 		for (int i = 0; i < 10; i++) {
 			int size = sizeof (Block) + i * 4 + (((i + pass) & 1) ? 1 : 3);
 			block[i] = arena.alloc(size).id;
-			Block *ptr = arena.pointer(block[i]);
+			Block *ptr = arena.pointer(block[i], sizeof (Block));
 			EXPECT_TRUE(ptr);
 			EXPECT_EQ(uintptr_t(ptr) & 3, 0);
 			EXPECT_EQ(ptr->block_size(), size);

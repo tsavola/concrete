@@ -165,7 +165,7 @@ public:
 	template <typename T>
 	T *block_pointer(BlockId id)
 	{
-		return static_cast<T *> (m_arena.pointer(id));
+		return static_cast<T *> (m_arena.pointer(id, sizeof (T)));
 	}
 
 	Arena &arena()

@@ -92,15 +92,16 @@ public:
 	Allocation alloc(size_t size);
 	void free(BlockId id);
 
-	// TODO: verify caller-supplied block type size against actual block size
-	Block *pointer(BlockId block_id) const
+	Block *pointer(BlockId block_id, size_t minimum_size) const
 	{
+		assert(minimum_size >= sizeof (Block));
+
 #ifndef NDEBUG
 		if (block_id & (sizeof (uint32_t) - 1))
 			throw AccessError(block_id);
 #endif
 
-		if (m_size < sizeof (Block) || block_id > m_size - sizeof (Block))
+		if (m_size < minimum_size || block_id > m_size - minimum_size)
 			throw AccessError(block_id);
 
 		auto block = reinterpret_cast<Block *> (reinterpret_cast<char *> (m_base) + block_id);

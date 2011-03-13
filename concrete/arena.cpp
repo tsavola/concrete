@@ -63,7 +63,7 @@ Arena::Allocation Arena::alloc(size_t block_size)
 
 void Arena::free(BlockId offset)
 {
-	auto block = pointer(offset);
+	auto block = pointer(offset, sizeof (Block));
 	auto aligned_size = UnverifiedAlignedSize(block->block_size());
 
 	if (offset + aligned_size == m_size) {
