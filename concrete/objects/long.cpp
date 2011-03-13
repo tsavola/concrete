@@ -9,6 +9,8 @@
 
 #include "long.hpp"
 
+#include <boost/format.hpp>
+
 #include <concrete/internals.hpp>
 #include <concrete/objects/internal.hpp>
 #include <concrete/objects/string.hpp>
@@ -26,12 +28,22 @@ CONCRETE_INTERNAL(LongObject_add)(const TupleObject &args, const DictObject &kwa
 	return LongObject::New(value);
 }
 
+CONCRETE_INTERNAL_FUNCTION(LongObject_str)(const TupleObject &args, const DictObject &kwargs)
+{
+	return StringObject::New(
+		(boost::format("%ld") % args.get_item(0).require<LongObject>().value()).str());
+}
+
+CONCRETE_INTERNAL_REGISTER(LongObject_repr, LongObject_str)
+CONCRETE_INTERNAL_REGISTER(LongObject_str,  LongObject_str)
+
 void LongInit(const TypeObject &type)
 {
 	type.init_builtin(StringObject::New("long"));
 
 	type.protocol().add   = InternalObject::New(internals::LongObject_add);
-	type.protocol().repr  = InternalObject::New(internals::Object_repr);
+	type.protocol().repr  = InternalObject::New(internals::LongObject_repr);
+	type.protocol().str   = InternalObject::New(internals::LongObject_str);
 }
 
 } // namespace

@@ -21,11 +21,24 @@ namespace concrete {
 
 DictObject BuiltinsModuleInit(const DictObject &modules)
 {
-	auto dict = DictObject::New(0);
+	auto dict = DictObject::New(2);
+
+	dict.set_item(StringObject::New("repr"),  InternalObject::New(internals::BuiltinsModule_repr));
+	dict.set_item(StringObject::New("str"),   InternalObject::New(internals::BuiltinsModule_str));
 
 	modules.set_item(StringObject::New("builtins"), ModuleObject::New(dict));
 
 	return dict;
+}
+
+CONCRETE_INTERNAL(BuiltinsModule_repr)(const TupleObject &args, const DictObject &kwargs)
+{
+	return args.get_item(0).repr();
+}
+
+CONCRETE_INTERNAL(BuiltinsModule_str)(const TupleObject &args, const DictObject &kwargs)
+{
+	return args.get_item(0).str();
 }
 
 } // namespace

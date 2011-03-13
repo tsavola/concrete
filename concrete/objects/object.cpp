@@ -26,6 +26,11 @@ Object ObjectProtocol::Repr(const Object &self)
 	return self.protocol().repr.require<InternalObject>().call(self);
 }
 
+Object ObjectProtocol::Str(const Object &self)
+{
+	return self.protocol().str.require<InternalObject>().call(self);
+}
+
 CONCRETE_INTERNAL(Object_repr)(const TupleObject &args, const DictObject &kwargs)
 {
 	auto self = args.get_item(0);

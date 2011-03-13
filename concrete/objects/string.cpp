@@ -60,11 +60,53 @@ StringBlock::StringBlock(const TypeObject &type, const char *data_): ObjectBlock
 	length = string_length;
 }
 
+CONCRETE_INTERNAL(StringObject_repr)(const TupleObject &args, const DictObject &kwargs)
+{
+	auto self = args.get_item(0).require<StringObject>();
+
+	std::string value;
+
+	value += "'";
+
+	const char *data = self.data();
+	unsigned int size = self.size();
+
+	for (unsigned int i = 0; i < size; i++) {
+		switch (data[i]) {
+		case '\0':
+			value += "\\0";
+			break;
+
+		case '\'':
+			value += "\\'";
+			break;
+
+		case '\\':
+			value += "\\\\";
+			break;
+
+		default:
+			value += data[i];
+			break;
+		}
+	}
+
+	value += "'";
+
+	return StringObject::New(value);
+}
+
+CONCRETE_INTERNAL(StringObject_str)(const TupleObject &args, const DictObject &kwargs)
+{
+	return args.get_item(0);
+}
+
 void StringInit(const TypeObject &type)
 {
 	type.init_builtin(StringObject::New("string"));
 
-	type.protocol().repr  = InternalObject::New(internals::Object_repr);
+	type.protocol().repr  = InternalObject::New(internals::StringObject_repr);
+	type.protocol().str   = InternalObject::New(internals::StringObject_str);
 }
 
 } // namespace

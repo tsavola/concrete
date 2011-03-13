@@ -27,9 +27,11 @@ namespace concrete {
 struct ObjectProtocol {
 	PortableObject add;
 	PortableObject repr;
+	PortableObject str;
 
 	static Object Add(const Object &self, const Object &other);
 	static Object Repr(const Object &self);
+	static Object Str(const Object &self);
 
 } CONCRETE_PACKED;
 
@@ -118,6 +120,12 @@ template <typename Ops>
 StringObject ObjectLogic<Ops>::repr() const
 {
 	return ObjectProtocol::Repr(*this).require<StringObject>();
+}
+
+template <typename Ops>
+StringObject ObjectLogic<Ops>::str() const
+{
+	return ObjectProtocol::Str(*this).require<StringObject>();
 }
 
 template <typename Ops>

@@ -15,7 +15,17 @@ namespace concrete {
 namespace internals {
 	enum Serial {
 		Object_repr,
+		Object_str,
+
 		LongObject_add,
+		LongObject_repr,
+		LongObject_str,
+
+		StringObject_repr,
+		StringObject_str,
+
+		BuiltinsModule_repr,
+		BuiltinsModule_str,
 
 		ConcreteModule_test,
 

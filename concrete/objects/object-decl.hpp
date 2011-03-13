@@ -107,6 +107,7 @@ public:
 
 	Object add(const Object &) const;
 	StringObject repr() const;
+	StringObject str() const;
 
 protected:
 	ObjectBlock *object_block() const;
