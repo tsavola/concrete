@@ -30,7 +30,8 @@ void LongInit(const TypeObject &type)
 {
 	type.init_builtin(StringObject::New("long"));
 
-	type.protocol().add = InternalObject::New(internals::LongObject_add);
+	type.protocol().add   = InternalObject::New(internals::LongObject_add);
+	type.protocol().repr  = InternalObject::New(internals::Object_repr);
 }
 
 } // namespace

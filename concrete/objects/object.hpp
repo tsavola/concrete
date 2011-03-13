@@ -24,6 +24,15 @@
 
 namespace concrete {
 
+struct ObjectProtocol {
+	PortableObject add;
+	PortableObject repr;
+
+	static Object Add(const Object &self, const Object &other);
+	static Object Repr(const Object &self);
+
+} CONCRETE_PACKED;
+
 struct ObjectBlock: Block {
 	struct NoRefcountInit {};
 
@@ -43,8 +52,6 @@ struct ObjectBlock: Block {
 		// don't use cast<TypeObject>() because it causes an infinite recursion
 		return TypeObject(type_object.id());
 	}
-
-	StringObject repr(BlockId id) const;
 
 } CONCRETE_PACKED;
 
@@ -96,9 +103,21 @@ TypeObject ObjectLogic<Ops>::type() const
 }
 
 template <typename Ops>
+const ObjectProtocol &ObjectLogic<Ops>::protocol() const
+{
+	return type().protocol();
+}
+
+template <typename Ops>
+Object ObjectLogic<Ops>::add(const Object &other) const
+{
+	return ObjectProtocol::Add(*this, other);
+}
+
+template <typename Ops>
 StringObject ObjectLogic<Ops>::repr() const
 {
-	return object_block()->repr(id());
+	return ObjectProtocol::Repr(*this).require<StringObject>();
 }
 
 template <typename Ops>

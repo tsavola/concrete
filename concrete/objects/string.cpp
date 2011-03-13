@@ -13,6 +13,8 @@
 #include <cstring>
 
 #include <concrete/exception.hpp>
+#include <concrete/internals.hpp>
+#include <concrete/objects/internal.hpp>
 #include <concrete/objects/type.hpp>
 
 namespace concrete {
@@ -61,6 +63,8 @@ StringBlock::StringBlock(const TypeObject &type, const char *data_): ObjectBlock
 void StringInit(const TypeObject &type)
 {
 	type.init_builtin(StringObject::New("string"));
+
+	type.protocol().repr  = InternalObject::New(internals::Object_repr);
 }
 
 } // namespace

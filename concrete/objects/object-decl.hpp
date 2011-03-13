@@ -22,6 +22,7 @@
 
 namespace concrete {
 
+struct ObjectProtocol;
 struct ObjectBlock;
 
 template <typename Ops>
@@ -102,6 +103,9 @@ public:
 	}
 
 	TypeObject type() const;
+	const ObjectProtocol &protocol() const;
+
+	Object add(const Object &) const;
 	StringObject repr() const;
 
 protected:
@@ -113,11 +117,6 @@ private:
 
 	BlockId m_raw_id;
 
-} CONCRETE_PACKED;
-
-struct ObjectProtocol {
-	PortableObject repr;
-	PortableObject add;
 } CONCRETE_PACKED;
 
 } // namespace

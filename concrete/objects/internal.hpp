@@ -127,6 +127,22 @@ public:
 		return *this;
 	}
 
+	template <typename... Args>
+	Object call(Args... args)
+	{
+		BlockId continuation = NoBlockId;
+		auto tuple = TupleObject::NewFromItems(args...);
+		auto dict = DictObject::New(0);
+		auto value = internal_block()->call(InitContinuation, continuation, &tuple, &dict);
+
+		if (continuation != NoBlockId) {
+			internal_block()->call(CleanupContinuation, continuation, NULL, NULL);
+			throw RuntimeError("non-trivial protocol method called from native code");
+		}
+
+		return value;
+	}
+
 protected:
 	InternalLogic(BlockId id): CallableLogic<Ops>(id)
 	{

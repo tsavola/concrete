@@ -16,9 +16,28 @@
 
 namespace concrete {
 
+Object ObjectProtocol::Add(const Object &self, const Object &other)
+{
+	return self.protocol().add.require<InternalObject>().call(self, other);
+}
+
+Object ObjectProtocol::Repr(const Object &self)
+{
+	return self.protocol().repr.require<InternalObject>().call(self);
+}
+
 CONCRETE_INTERNAL(Object_repr)(const TupleObject &args, const DictObject &kwargs)
 {
-	return args.get_item(0).repr();
+	auto self = args.get_item(0);
+	auto str = (boost::format("<%s object at 0x%lx>") % self.type().name().data() % self.id()).str();
+	return StringObject::New(str.data(), str.size());
+}
+
+void ObjectInit(const TypeObject &type)
+{
+	type.init_builtin(StringObject::New("object"));
+
+	type.protocol().repr = InternalObject::New(internals::Object_repr);
 }
 
 template <typename T>
@@ -47,19 +66,6 @@ void ObjectDestroy(ObjectBlock *block, BlockId id)
 	                                    { assert(false); return;          }
 
 	Context::Active().arena().free(id);
-}
-
-StringObject ObjectBlock::repr(BlockId id) const
-{
-	auto str = (boost::format("<%s object at 0x%lx>") % type().name().data() % id).str();
-	return StringObject::New(str.data(), str.size());
-}
-
-void ObjectInit(const TypeObject &type)
-{
-	type.init_builtin(StringObject::New("object"));
-
-	type.protocol().repr = InternalObject::New(internals::Object_repr);
 }
 
 } // namespace
