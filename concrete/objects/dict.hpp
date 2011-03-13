@@ -10,6 +10,8 @@
 #ifndef CONCRETE_OBJECTS_DICT_HPP
 #define CONCRETE_OBJECTS_DICT_HPP
 
+#include <cassert>
+
 #include <concrete/block.hpp>
 #include <concrete/exception.hpp>
 #include <concrete/objects/object.hpp>
