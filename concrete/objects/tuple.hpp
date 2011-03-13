@@ -49,19 +49,25 @@ public:
 		return Context::BuiltinObjects().tuple_type;
 	}
 
-	static TupleLogic New(unsigned int size)
+	static TupleLogic New()
+	{
+		// TODO: singleton
+		return NewWithSize(0);
+	}
+
+	template <typename Item, typename... Tail>
+	static TupleLogic New(Item first_item, Tail... other_items)
+	{
+		auto tuple = NewWithSize(1 + sizeof...(Tail));
+		tuple.init_items(0, first_item, other_items...);
+		return tuple;
+	}
+
+	static TupleLogic NewWithSize(unsigned int size)
 	{
 		return Context::NewCustomSizeBlock<TupleBlock>(
 			sizeof (TupleBlock) + sizeof (PortableObject) * size,
 			Type());
-	}
-
-	template <typename... Items>
-	static TupleLogic NewFromItems(Items... items)
-	{
-		auto tuple = New(sizeof...(Items));
-		tuple.init_items(0, items...);
-		return tuple;
 	}
 
 	using ObjectLogic<Ops>::operator==;

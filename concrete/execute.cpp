@@ -356,7 +356,7 @@ private:
 	{
 		auto b = pop_stack();
 		auto a = pop_stack();
-		init_call(a.protocol().add, TupleObject::NewFromItems(a, b), DictObject::Empty());
+		init_call(a.protocol().add, TupleObject::New(a, b), DictObject::Empty());
 	}
 
 	void op_return_value()
@@ -432,8 +432,8 @@ private:
 		unsigned int argc = load_bytecode<uint8_t>();
 		unsigned int kwargc = load_bytecode<uint8_t>();
 
-		auto args = TupleObject::New(argc);
-		auto kwargs = DictObject::New(kwargc);
+		auto args = TupleObject::NewWithSize(argc);
+		auto kwargs = DictObject::NewWithCapacity(kwargc);
 
 		for (unsigned int i = 0; i < kwargc; i++) {
 			auto value = pop_stack();

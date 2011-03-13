@@ -143,8 +143,8 @@ public:
 	{
 		BlockId continuation;
 
-		auto tuple = TupleObject::NewFromItems(args...);
-		auto dict = DictObject::New(0);
+		auto tuple = TupleObject::New(args...);
+		auto dict = DictObject::Empty();
 		auto value = internal_block()->call(InitContinuation, continuation, &tuple, &dict);
 
 		if (continuation) {

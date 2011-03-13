@@ -102,7 +102,7 @@ private:
 	TupleObject load_tuple()
 	{
 		auto length = load<uint32_t>();
-		auto tuple = TupleObject::New(length);
+		auto tuple = TupleObject::NewWithSize(length);
 
 		for (unsigned int i = 0; i < length; i++)
 			tuple.init_item(i, load_next());

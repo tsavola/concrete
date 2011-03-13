@@ -64,7 +64,7 @@ Context::Context()
 	InternalInit(internal_type);
 	ModuleInit(module_type);
 
-	auto modules = DictObject::New(2);
+	auto modules = DictObject::New();
 	auto builtins = BuiltinsModuleInit(modules);
 
 	ConcreteModuleInit(modules);

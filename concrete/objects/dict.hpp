@@ -60,10 +60,16 @@ public:
 
 	static DictLogic Empty()
 	{
-		return New(0);
+		// TODO: singleton
+		return NewWithCapacity(0);
 	}
 
-	static DictLogic New(unsigned int capacity = 16)
+	static DictLogic New()
+	{
+		return NewWithCapacity(16);
+	}
+
+	static DictLogic NewWithCapacity(unsigned int capacity)
 	{
 		return Context::NewCustomSizeBlock<DictBlock>(
 			sizeof (DictBlock) + sizeof (DictBlock::Item) * capacity,

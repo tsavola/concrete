@@ -56,7 +56,7 @@ struct Call {
 	          const TupleObject &args,
 	          const DictObject &kwargs) const
 	{
-		auto dict = DictObject::New(args.size() + kwargs.size());
+		auto dict = DictObject::NewWithCapacity(args.size() + kwargs.size());
 
 		for (unsigned int i = 0; i < args.size(); i++)
 			dict.set_item(code.varnames().get_item(i), args.get_item(i));

@@ -19,7 +19,7 @@ namespace concrete {
 
 void ConcreteModuleInit(const DictObject &modules)
 {
-	auto dict = DictObject::New(1);
+	auto dict = DictObject::NewWithCapacity(1);
 
 	dict.set_item(
 		StringObject::New("test"),
