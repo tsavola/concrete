@@ -29,8 +29,9 @@ Object ObjectProtocol::Repr(const Object &self)
 CONCRETE_INTERNAL(Object_repr)(const TupleObject &args, const DictObject &kwargs)
 {
 	auto self = args.get_item(0);
-	auto str = (boost::format("<%s object at 0x%lx>") % self.type().name().data() % self.id()).str();
-	return StringObject::New(str.data(), str.size());
+
+	return StringObject::New(
+		(boost::format("<%s object at 0x%lx>") % self.type().name().data() % self.id()).str());
 }
 
 void ObjectInit(const TypeObject &type)

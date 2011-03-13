@@ -14,6 +14,7 @@
 
 #include <cstddef>
 #include <cstring>
+#include <string>
 
 #include <concrete/objects/object-decl.hpp>
 #include <concrete/objects/type-fwd.hpp>
@@ -30,6 +31,11 @@ class StringLogic: public ObjectLogic<Ops> {
 
 public:
 	static TypeObject Type();
+
+	static StringLogic New(const std::string &string)
+	{
+		return New(string.data(), string.length());
+	}
 
 	static StringLogic New(const char *string)
 	{
