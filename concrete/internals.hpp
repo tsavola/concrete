@@ -25,6 +25,7 @@ namespace internals {
 		StringObject_repr,
 		StringObject_str,
 
+		BuiltinsModule_id,
 		BuiltinsModule_print,
 		BuiltinsModule_repr,
 		BuiltinsModule_str,

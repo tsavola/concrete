@@ -14,6 +14,7 @@
 #include <concrete/internals.hpp>
 #include <concrete/objects/dict.hpp>
 #include <concrete/objects/internal.hpp>
+#include <concrete/objects/long.hpp>
 #include <concrete/objects/module.hpp>
 #include <concrete/objects/string.hpp>
 
@@ -21,8 +22,9 @@ namespace concrete {
 
 DictObject BuiltinsModuleInit(const DictObject &modules)
 {
-	auto dict = DictObject::New(3);
+	auto dict = DictObject::New();
 
+	dict.set_item(StringObject::New("id"),    InternalObject::New(internals::BuiltinsModule_id));
 	dict.set_item(StringObject::New("print"), InternalObject::New(internals::BuiltinsModule_print));
 	dict.set_item(StringObject::New("repr"),  InternalObject::New(internals::BuiltinsModule_repr));
 	dict.set_item(StringObject::New("str"),   InternalObject::New(internals::BuiltinsModule_str));
@@ -30,6 +32,11 @@ DictObject BuiltinsModuleInit(const DictObject &modules)
 	modules.set_item(StringObject::New("builtins"), ModuleObject::New(dict));
 
 	return dict;
+}
+
+CONCRETE_INTERNAL(BuiltinsModule_id)(const TupleObject &args, const DictObject &kwargs)
+{
+	return LongObject::New(args.get_item(0).id().offset());
 }
 
 CONCRETE_INTERNAL(BuiltinsModule_print)(const TupleObject &args, const DictObject &kwargs)
