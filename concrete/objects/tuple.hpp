@@ -51,9 +51,9 @@ public:
 
 	static TupleLogic New(unsigned int size)
 	{
-		auto id = Context::Alloc(sizeof (TupleBlock) + sizeof (PortableObject) * size);
-		new (Context::Pointer(id)) TupleBlock(Type());
-		return id;
+		return Context::NewCustomSizeBlock<TupleBlock>(
+			sizeof (TupleBlock) + sizeof (PortableObject) * size,
+			Type());
 	}
 
 	using ObjectLogic<Ops>::operator==;

@@ -20,7 +20,7 @@ TEST(arena, alloc_min)
 {
 	Arena arena;
 
-	BlockId id = arena.alloc(sizeof (Block));
+	BlockId id = arena.alloc(sizeof (Block)).id;
 	Block *ptr = arena.pointer(id);
 	EXPECT_TRUE(ptr);
 	EXPECT_EQ(ptr->block_size(), sizeof (Block));
@@ -31,10 +31,11 @@ TEST(arena, alloc_big)
 {
 	Arena arena;
 
-	Block *ptr = arena.pointer(arena.alloc(131072));
+	auto ret = arena.alloc(131072);
+	Block *ptr = ret.ptr;
 	EXPECT_TRUE(ptr);
 	EXPECT_EQ(ptr->block_size(), 131072);
-	arena.free(ptr);
+	arena.free(ret.id);
 }
 
 TEST(arena, alloc_odd_multi)
@@ -46,7 +47,7 @@ TEST(arena, alloc_odd_multi)
 
 		for (int i = 0; i < 10; i++) {
 			int size = sizeof (Block) + i * 4 + (((i + pass) & 1) ? 1 : 3);
-			block[i] = arena.alloc(size);
+			block[i] = arena.alloc(size).id;
 			Block *ptr = arena.pointer(block[i]);
 			EXPECT_TRUE(ptr);
 			EXPECT_EQ(uintptr_t(ptr) & 3, 0);
@@ -57,7 +58,7 @@ TEST(arena, alloc_odd_multi)
 		}
 
 		for (int i = 3; i < 10; i++) // leak the first 3
-			arena.free(arena.pointer(block[i]));
+			arena.free(block[i]);
 	}
 }
 

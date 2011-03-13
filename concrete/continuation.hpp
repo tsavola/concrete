@@ -42,7 +42,7 @@ Object ContinuableCall(
 		assert(continuation_id == NoBlockId);
 		assert(args && kwargs);
 
-		continuation_id = Context::New<Continuation>();
+		continuation_id = Context::NewBlock<Continuation>();
 		done = continuable.call(continuation_id, return_value, *args, *kwargs);
 		break;
 
@@ -63,7 +63,7 @@ Object ContinuableCall(
 		BlockId id = continuation_id;
 		continuation_id = NoBlockId;
 
-		Context::Delete<Continuation>(id);
+		Context::DeleteBlock<Continuation>(id);
 	}
 
 	return return_value;

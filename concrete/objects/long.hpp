@@ -40,9 +40,7 @@ public:
 
 	static LongLogic New(int64_t value)
 	{
-		auto id = Context::Alloc(sizeof (LongBlock));
-		new (Context::Pointer(id)) LongBlock(Type(), value);
-		return id;
+		return Context::NewBlock<LongBlock>(Type(), value);
 	}
 
 	using ObjectLogic<Ops>::operator==;

@@ -33,9 +33,9 @@ TypeObject NoneLogic<Ops>::Type()
 template <typename Ops>
 NoneLogic<Ops> NoneLogic<Ops>::NewBuiltin()
 {
-	auto id = Context::Alloc(sizeof (NoneBlock));
-	new (Context::Pointer(id)) NoneBlock(id);
-	return id;
+	auto ret = Context::Active().arena().alloc(sizeof (NoneBlock));
+	new (ret.ptr) NoneBlock(ret.id);
+	return ret.id;
 }
 
 template <typename Ops>

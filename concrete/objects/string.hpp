@@ -44,9 +44,7 @@ TypeObject StringLogic<Ops>::Type()
 template <typename Ops>
 StringLogic<Ops> StringLogic<Ops>::New(const char *data, size_t size)
 {
-	auto id = Context::Alloc(sizeof (StringBlock) + size + 1);
-	new (Context::Pointer(id)) StringBlock(Type(), data);
-	return id;
+	return Context::NewCustomSizeBlock<StringBlock>(sizeof (StringBlock) + size + 1, Type(), data);
 }
 
 template <typename Ops>

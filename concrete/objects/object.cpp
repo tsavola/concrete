@@ -27,26 +27,26 @@ static void destruct(ObjectBlock *block)
 	static_cast<T *> (block)->~T();
 }
 
-void ObjectBlock::Destroy(ObjectBlock *block)
+void ObjectDestroy(ObjectBlock *block, BlockId id)
 {
 	auto type = block->type();
 	auto &builtins = Context::Builtins();
 
-	if (type == builtins.object_type)   destruct<ObjectBlock>(block);   else
-	if (type == builtins.type_type)     destruct<TypeBlock>(block);     else
-	if (type == builtins.none_type)     assert(false);                  else
-	if (type == builtins.long_type)     destruct<LongBlock>(block);     else
-	if (type == builtins.bytes_type)    destruct<BytesBlock>(block);    else
-	if (type == builtins.string_type)   destruct<StringBlock>(block);   else
-	if (type == builtins.tuple_type)    destruct<TupleBlock>(block);    else
-	if (type == builtins.dict_type)     destruct<DictBlock>(block);     else
-	if (type == builtins.code_type)     destruct<CodeBlock>(block);     else
-	if (type == builtins.function_type) destruct<FunctionBlock>(block); else
-	if (type == builtins.internal_type) destruct<InternalBlock>(block); else
-	if (type == builtins.module_type)   destruct<ModuleBlock>(block);   else
-	                                    assert(false);
+	if (type == builtins.object_type)   { destruct<ObjectBlock>(block);   } else
+	if (type == builtins.type_type)     { destruct<TypeBlock>(block);     } else
+	if (type == builtins.none_type)     { assert(false); return;          } else
+	if (type == builtins.long_type)     { destruct<LongBlock>(block);     } else
+	if (type == builtins.bytes_type)    { destruct<BytesBlock>(block);    } else
+	if (type == builtins.string_type)   { destruct<StringBlock>(block);   } else
+	if (type == builtins.tuple_type)    { destruct<TupleBlock>(block);    } else
+	if (type == builtins.dict_type)     { destruct<DictBlock>(block);     } else
+	if (type == builtins.code_type)     { destruct<CodeBlock>(block);     } else
+	if (type == builtins.function_type) { destruct<FunctionBlock>(block); } else
+	if (type == builtins.internal_type) { destruct<InternalBlock>(block); } else
+	if (type == builtins.module_type)   { destruct<ModuleBlock>(block);   } else
+	                                    { assert(false); return;          }
 
-	Context::Free(block);
+	Context::Active().arena().free(id);
 }
 
 StringObject ObjectBlock::repr(BlockId id) const

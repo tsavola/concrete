@@ -82,7 +82,7 @@ struct Call {
 private:
 	static CallContinuation *Continuation(BlockId id)
 	{
-		return static_cast<CallContinuation *> (Context::Pointer(id));
+		return Context::BlockPointer<CallContinuation>(id);
 	}
 };
 

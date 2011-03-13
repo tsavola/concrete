@@ -21,7 +21,9 @@ namespace concrete {
 struct ModuleBlock: ObjectBlock {
 	const PortableDictObject dict;
 
-	ModuleBlock(const TypeObject &type, const DictObject &dict): ObjectBlock(type), dict(dict)
+	ModuleBlock(const TypeObject &type, const DictObject &dict):
+		ObjectBlock(type),
+		dict(dict)
 	{
 	}
 } CONCRETE_PACKED;
@@ -39,9 +41,7 @@ public:
 
 	static ModuleLogic New(const DictObject &dict)
 	{
-		auto id = Context::Alloc(sizeof (ModuleBlock));
-		new (Context::Pointer(id)) ModuleBlock(Type(), dict);
-		return id;
+		return Context::NewBlock<ModuleBlock>(Type(), dict);
 	}
 
 	using ObjectLogic<Ops>::operator==;

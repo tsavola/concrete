@@ -47,9 +47,7 @@ public:
 
 	static FunctionLogic New(const CodeObject &code)
 	{
-		auto id = Context::Alloc(sizeof (FunctionBlock));
-		new (Context::Pointer(id)) FunctionBlock(Type(), code);
-		return id;
+		return Context::NewBlock<FunctionBlock>(Type(), code);
 	}
 
 	using CallableLogic<Ops>::operator==;

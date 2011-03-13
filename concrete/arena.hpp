@@ -74,6 +74,11 @@ private:
 
 class Arena: Noncopyable {
 public:
+	struct Allocation {
+		Block *ptr;
+		BlockId id;
+	};
+
 	Arena() throw (): m_base(NULL), m_size(0)
 	{
 	}
@@ -84,8 +89,8 @@ public:
 
 	~Arena() throw ();
 
-	BlockId alloc(size_t size);
-	void free(Block *block);
+	Allocation alloc(size_t size);
+	void free(BlockId id);
 
 	// TODO: verify caller-supplied block type size against actual block size
 	Block *pointer(BlockId block_id) const

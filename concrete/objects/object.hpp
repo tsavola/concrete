@@ -46,8 +46,6 @@ struct ObjectBlock: Block {
 
 	StringObject repr(BlockId id) const;
 
-	static void Destroy(ObjectBlock *block);
-
 } CONCRETE_PACKED;
 
 template <typename Ops>
@@ -59,9 +57,7 @@ TypeObject ObjectLogic<Ops>::Type()
 template <typename Ops>
 ObjectLogic<Ops> ObjectLogic<Ops>::New()
 {
-	auto id = Context::Alloc(sizeof (ObjectBlock));
-	new (Context::Pointer(id)) ObjectBlock(Type());
-	return ObjectLogic(id);
+	return ObjectLogic(Context::NewBlock<ObjectBlock>(Type()));
 }
 
 template <typename Ops>
@@ -120,16 +116,17 @@ void ObjectLogic<Ops>::unref() const
 	block->refcount = refcount;
 	assert(refcount >= 0);
 	if (refcount == 0)
-		ObjectBlock::Destroy(block);
+		ObjectDestroy(block, id());
 }
 
 template <typename Ops>
 ObjectBlock *ObjectLogic<Ops>::object_block() const
 {
-	return static_cast<ObjectBlock *> (Context::Pointer(id()));
+	return Context::BlockPointer<ObjectBlock>(id());
 }
 
 void ObjectInit(const TypeObject &type);
+void ObjectDestroy(ObjectBlock *block, BlockId id);
 
 } // namespace
 

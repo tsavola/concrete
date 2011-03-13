@@ -87,7 +87,7 @@ struct ExecutionFrame: Block {
 		return object;
 	}
 
-	static size_t AllocSize(const CodeObject &code)
+	static size_t BlockSize(const CodeObject &code)
 	{
 		return sizeof (ExecutionFrame) + sizeof (PortableObject) * code.stacksize();
 	}
@@ -99,8 +99,8 @@ public:
 	{
 		auto dict = DictObject::New();
 
-		auto frame_id = Context::Alloc(ExecutionFrame::AllocSize(code));
-		new (Context::Pointer(frame_id)) ExecutionFrame(code, dict);
+		auto frame_id = Context::NewCustomSizeBlock<ExecutionFrame>(
+			ExecutionFrame::BlockSize(code), code, dict);
 
 		m_initial_frame_id = frame_id;
 		m_current_frame_id = frame_id;
@@ -112,7 +112,7 @@ public:
 	{
 		ConcreteTrace(("frame destroy initial %d") % m_initial_frame_id);
 
-		Context::Delete<ExecutionFrame>(m_initial_frame_id);
+		Context::DeleteBlock<ExecutionFrame>(m_initial_frame_id);
 	}
 
 	/*
@@ -123,8 +123,8 @@ public:
 	{
 		auto old_frame_id = m_current_frame_id;
 
-		auto new_frame_id = Context::Alloc(ExecutionFrame::AllocSize(code));
-		new (Context::Pointer(new_frame_id)) ExecutionFrame(code, dict, old_frame_id);
+		auto new_frame_id = Context::NewCustomSizeBlock<ExecutionFrame>(
+			ExecutionFrame::BlockSize(code), code, dict, old_frame_id);
 
 		m_current_frame_id = new_frame_id;
 
@@ -145,7 +145,7 @@ public:
 		ConcreteTrace(("frame destroy %d") % frame_id);
 
 		auto return_value = Frame(frame_id)->pop_stack();
-		Context::Delete<ExecutionFrame>(frame_id);
+		Context::DeleteBlock<ExecutionFrame>(frame_id);
 
 		return return_value;
 	}
@@ -247,8 +247,7 @@ public:
 private:
 	static ExecutionFrame *Frame(BlockId id)
 	{
-		assert(id != NoBlockId);
-		return static_cast<ExecutionFrame *> (Context::Pointer(id));
+		return Context::BlockPointer<ExecutionFrame>(id);
 	}
 
 	ExecutionFrame *current_frame() const

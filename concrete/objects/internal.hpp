@@ -109,9 +109,7 @@ public:
 
 	static InternalLogic New(InternalSerial serial)
 	{
-		auto id = Context::Alloc(sizeof (InternalBlock));
-		new (Context::Pointer(id)) InternalBlock(Type(), serial);
-		return id;
+		return Context::NewBlock<InternalBlock>(Type(), serial);
 	}
 
 	using CallableLogic<Ops>::operator==;

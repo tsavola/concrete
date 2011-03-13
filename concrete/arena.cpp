@@ -33,7 +33,7 @@ Arena::~Arena() throw ()
 	std::free(m_base);
 }
 
-BlockId Arena::alloc(size_t block_size)
+Arena::Allocation Arena::alloc(size_t block_size)
 {
 	assert(block_size >= sizeof (Block));
 
@@ -41,13 +41,15 @@ BlockId Arena::alloc(size_t block_size)
 	if (aligned_size < block_size)
 		throw AllocError(block_size);
 
+	BlockId offset = m_size;
+
 	m_base = std::realloc(m_base, m_size + aligned_size);
 	if (m_base == NULL)
 		throw AllocError(block_size);
 
 	m_size += aligned_size;
 
-	char *ptr = reinterpret_cast<char *> (m_base) + m_size - aligned_size;
+	char *ptr = reinterpret_cast<char *> (m_base) + offset;
 	std::memset(ptr, 0, aligned_size);
 
 	Block *block = reinterpret_cast<Block *> (ptr);
@@ -56,12 +58,12 @@ BlockId Arena::alloc(size_t block_size)
 #endif
 	block->m_size = block_size;
 
-	return ptr - reinterpret_cast<char *> (m_base);
+	return Allocation { block, offset };
 }
 
-void Arena::free(Block *block)
+void Arena::free(BlockId offset)
 {
-	auto offset = reinterpret_cast<char *> (block) - reinterpret_cast<char *> (m_base);
+	auto block = pointer(offset);
 	auto aligned_size = UnverifiedAlignedSize(block->block_size());
 
 	if (offset + aligned_size == m_size) {

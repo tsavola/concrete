@@ -60,9 +60,9 @@ public:
 
 	static DictLogic New(unsigned int capacity = 16)
 	{
-		auto id = Context::Alloc(sizeof (DictBlock) + sizeof (DictBlock::Item) * capacity);
-		new (Context::Pointer(id)) DictBlock(Type());
-		return id;
+		return Context::NewCustomSizeBlock<DictBlock>(
+			sizeof (DictBlock) + sizeof (DictBlock::Item) * capacity,
+			Type());
 	}
 
 	using ObjectLogic<Ops>::operator==;

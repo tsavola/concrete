@@ -32,13 +32,12 @@ struct CodeBlock: ObjectBlock {
 	PortableTupleObject names;
 	PortableTupleObject varnames;
 
-	CodeBlock(
-		const TypeObject &type,
-		unsigned int stacksize,
-		const BytesObject &code,
-		const TupleObject &consts,
-		const TupleObject &names,
-		const TupleObject &varnames):
+	CodeBlock(const TypeObject &type,
+	          unsigned int stacksize,
+	          const BytesObject &code,
+	          const TupleObject &consts,
+	          const TupleObject &names,
+	          const TupleObject &varnames):
 		ObjectBlock(type),
 		stacksize(stacksize),
 		code(code),
@@ -63,16 +62,13 @@ public:
 		return Context::Builtins().code_type;
 	}
 
-	static CodeLogic New(
-		unsigned int stacksize,
-		const BytesObject &code,
-		const TupleObject &consts,
-		const TupleObject &names,
-		const TupleObject &varnames)
+	static CodeLogic New(unsigned int stacksize,
+	                     const BytesObject &code,
+	                     const TupleObject &consts,
+	                     const TupleObject &names,
+	                     const TupleObject &varnames)
 	{
-		auto id = Context::Alloc(sizeof (CodeBlock));
-		new (Context::Pointer(id)) CodeBlock(Type(), stacksize, code, consts, names, varnames);
-		return id;
+		return Context::NewBlock<CodeBlock>(Type(), stacksize, code, consts, names, varnames);
 	}
 
 	static CodeLogic Load(const void *data, size_t size)

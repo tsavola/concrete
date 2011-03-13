@@ -10,6 +10,8 @@
 #ifndef CONCRETE_CONTEXT_HPP
 #define CONCRETE_CONTEXT_HPP
 
+#include <cassert>
+
 #include <concrete/arena.hpp>
 #include <concrete/block.hpp>
 #include <concrete/objects/none-decl.hpp>
@@ -82,34 +84,28 @@ public:
 		}
 	} CONCRETE_PACKED;
 
-	static BlockId Alloc(size_t size)
+	template <typename T, typename... Args>
+	static BlockId NewBlock(Args... args)
 	{
-		return Active().m_arena.alloc(size);
+		return Active().new_block<T>(args...);
 	}
 
-	static void Free(Block *block)
+	template <typename T, typename... Args>
+	static BlockId NewCustomSizeBlock(size_t size, Args... args)
 	{
-		return Active().m_arena.free(block);
-	}
-
-	template <typename T>
-	static BlockId New()
-	{
-		auto id = Alloc(sizeof (T));
-		new (Pointer(id)) T();
-		return id;
+		return Active().new_custom_size_block<T>(size, args...);
 	}
 
 	template <typename T>
-	static void Delete(BlockId id)
+	static void DeleteBlock(BlockId id)
 	{
-		static_cast<T *> (Pointer(id))->~T();
-		Free(Pointer(id));
+		Active().delete_block<T>(id);
 	}
 
-	static Block *Pointer(BlockId id)
+	template <typename T>
+	static T *BlockPointer(BlockId id)
 	{
-		return Active().m_arena.pointer(id);
+		return Active().block_pointer<T>(id);
 	}
 
 	static const PortableNoneObject &None()
@@ -143,15 +139,49 @@ public:
 		};
 	}
 
+	template <typename T, typename... Args>
+	BlockId new_block(Args... args)
+	{
+		return new_custom_size_block<T>(sizeof (T), args...);
+	}
+
+	template <typename T, typename... Args>
+	BlockId new_custom_size_block(size_t size, Args... args)
+	{
+		assert(size >= sizeof (T));
+
+		auto ret = m_arena.alloc(size);
+		new (static_cast<T *> (ret.ptr)) T(args...);
+		return ret.id;
+	}
+
+	template <typename T>
+	void delete_block(BlockId id)
+	{
+		block_pointer<T>(id)->~T();
+		m_arena.free(id);
+	}
+
+	template <typename T>
+	T *block_pointer(BlockId id)
+	{
+		return static_cast<T *> (m_arena.pointer(id));
+	}
+
+	Arena &arena()
+	{
+		return m_arena;
+	}
+
 private:
 	BuiltinNoneBlock &builtin_none()
 	{
-		return *static_cast<BuiltinNoneBlock *> (m_arena.pointer(m_builtin_none));
+		return *block_pointer<BuiltinNoneBlock>(m_builtin_none);
 	}
 
 	BuiltinsBlock &builtins()
 	{
-		return *static_cast<BuiltinsBlock *> (m_arena.pointer(m_builtins));
+		return *block_pointer<BuiltinsBlock>(m_builtins);
 	}
 
 	Arena m_arena;

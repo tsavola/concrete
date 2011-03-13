@@ -47,9 +47,7 @@ public:
 
 	static BytesLogic New(const uint8_t *data, size_t size)
 	{
-		auto id = Context::Alloc(sizeof (BytesBlock) + size);
-		new (Context::Pointer(id)) BytesBlock(Type(), data);
-		return id;
+		return Context::NewCustomSizeBlock<BytesBlock>(sizeof (BytesBlock) + size, Type(), data);
 	}
 
 	using ObjectLogic<Ops>::operator==;

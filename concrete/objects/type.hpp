@@ -49,30 +49,25 @@ TypeObject TypeLogic<Ops>::Type()
 template <typename Ops>
 TypeLogic<Ops> TypeLogic<Ops>::NewBuiltin()
 {
-	auto id = Context::Alloc(sizeof (TypeBlock));
-	ConcreteTrace(("type: id=%d") % id);
-	auto block = static_cast<TypeBlock *> (Context::Pointer(id));
+	auto ret = Context::Active().arena().alloc(sizeof (TypeBlock));
+	auto block = static_cast<TypeBlock *> (ret.ptr);
 	block->refcount = 0;
-	new (block) TypeBlock(id, ObjectBlock::NoRefcountInit());
-	return id;
+	new (block) TypeBlock(ret.id, ObjectBlock::NoRefcountInit());
+	return ret.id;
 }
 
 template <typename Ops>
 TypeLogic<Ops> TypeLogic<Ops>::NewBuiltin(const TypeObject &type)
 {
-	auto id = Context::Alloc(sizeof (TypeBlock));
-	ConcreteTrace(("type: id=%d") % id);
-	new (Context::Pointer(id)) TypeBlock(type);
-	return id;
+	auto ret = Context::Active().arena().alloc(sizeof (TypeBlock));
+	new (ret.ptr) TypeBlock(type);
+	return ret.id;
 }
 
 template <typename Ops>
 TypeLogic<Ops> TypeLogic<Ops>::New(const StringObject &name)
 {
-	auto id = Context::Alloc(sizeof (TypeBlock));
-	ConcreteTrace(("type: id=%d") % id);
-	new (Context::Pointer(id)) TypeBlock(Type(), name);
-	return id;
+	return Context::NewBlock<TypeBlock>(Type(), name);
 }
 
 template <typename Ops>

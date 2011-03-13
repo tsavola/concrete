@@ -20,8 +20,7 @@ Context::Context()
 
 	auto none          = NoneObject::NewBuiltin();
 
-	m_builtin_none = Alloc(sizeof (BuiltinNoneBlock));
-	new (Pointer(m_builtin_none)) BuiltinNoneBlock(none);
+	m_builtin_none = NewBlock<BuiltinNoneBlock>(none);
 
 	auto type_type     = TypeObject::NewBuiltin();
 	auto object_type   = TypeObject::NewBuiltin(type_type);
@@ -36,8 +35,7 @@ Context::Context()
 	auto internal_type = TypeObject::NewBuiltin(type_type);
 	auto module_type   = TypeObject::NewBuiltin(type_type);
 
-	m_builtins = Alloc(sizeof (BuiltinsBlock));
-	new (Pointer(m_builtins)) BuiltinsBlock(
+	m_builtins = NewBlock<BuiltinsBlock>(
 		type_type,
 		object_type,
 		none_type,
