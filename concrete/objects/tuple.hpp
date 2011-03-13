@@ -56,6 +56,14 @@ public:
 			Type());
 	}
 
+	template <typename... Items>
+	static TupleLogic NewFromItems(Items... items)
+	{
+		auto tuple = New(sizeof...(Items));
+		tuple.init_items(0, items...);
+		return tuple;
+	}
+
 	using ObjectLogic<Ops>::operator==;
 	using ObjectLogic<Ops>::operator!=;
 
@@ -76,6 +84,17 @@ public:
 		auto block = tuple_block();
 		assert(index < block->size());
 		block->items[index] = item;
+	}
+
+	void init_items(unsigned int first_index)
+	{
+	}
+
+	template <typename Item, typename... Tail>
+	void init_items(unsigned int first_index, Item first_item, Tail... other_items)
+	{
+		init_item(first_index, first_item);
+		init_items(first_index + 1, other_items...);
 	}
 
 	unsigned int size() const

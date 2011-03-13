@@ -351,13 +351,7 @@ private:
 	{
 		auto b = pop_stack();
 		auto a = pop_stack();
-
-		auto args = TupleObject::New(2);
-		args.init_item(0, a);
-		args.init_item(1, b);
-
-		auto callable = a.type().protocol().add.require<CallableObject>();
-		init_call(callable, args, DictObject::New(0));
+		init_call(a.type().protocol().add, TupleObject::NewFromItems(a, b), DictObject::New(0));
 	}
 
 	void op_return_value()
