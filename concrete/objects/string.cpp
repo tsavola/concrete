@@ -21,14 +21,25 @@ namespace concrete {
 
 StringBlock::StringBlock(const TypeObject &type, const char *data_): ObjectBlock(type)
 {
-	auto data_length = size();
+	auto data_size = size();
 
-	std::memcpy(data, data_, data_length);
-	data[data_length] = '\0';
+	std::memcpy(data, data_, data_size);
+	data[data_size] = '\0';
 
+	initialized();
+}
+
+StringBlock::StringBlock(const TypeObject &type): ObjectBlock(type)
+{
+	data[size()] = '\0';
+}
+
+void StringBlock::initialized()
+{
+	auto data_size = size();
 	size_t string_length = 0;
 
-	for (size_t i = 0; i < data_length; string_length++) {
+	for (size_t i = 0; i < data_size; string_length++) {
 		uint8_t byte = data[i++];
 
 		if ((byte & 0x80) != 0) {
@@ -45,7 +56,7 @@ StringBlock::StringBlock(const TypeObject &type, const char *data_): ObjectBlock
 				throw RuntimeError("invalid UTF-8 string");
 
 			next = i + skip;
-			if (next > data_length)
+			if (next > data_size)
 				throw RuntimeError("invalid UTF-8 string");
 
 			for (; i < next; i++) {
@@ -58,6 +69,31 @@ StringBlock::StringBlock(const TypeObject &type, const char *data_): ObjectBlock
 	}
 
 	length = string_length;
+}
+
+CONCRETE_INTERNAL(StringObject_add)(const TupleObject &args, const DictObject &kwargs)
+{
+	auto s1 = args.get_item(0).require<StringObject>();
+	auto s2 = args.get_item(1).require<StringObject>();
+
+	auto s1size = s1.size();
+	auto s2size = s2.size();
+
+	if (s1size == 0)
+		return s2;
+
+	if (s2size == 0)
+		return s1;
+
+	auto r = StringObject::NewUninitialized(s1size + s2size);
+	auto rdata = r.data();
+
+	std::memcpy(rdata, s1.data(), s1size);
+	std::memcpy(rdata + s1size, s2.data(), s2size);
+
+	r.initialized();
+
+	return r;
 }
 
 CONCRETE_INTERNAL(StringObject_repr)(const TupleObject &args, const DictObject &kwargs)
@@ -105,6 +141,7 @@ void StringInit(const TypeObject &type)
 {
 	type.init_builtin(StringObject::New("string"));
 
+	type.protocol().add   = InternalObject::New(internals::StringObject_add);
 	type.protocol().repr  = InternalObject::New(internals::StringObject_repr);
 	type.protocol().str   = InternalObject::New(internals::StringObject_str);
 }

@@ -21,6 +21,7 @@ namespace internals {
 		LongObject_repr,
 		LongObject_str,
 
+		StringObject_add,
 		StringObject_repr,
 		StringObject_str,
 

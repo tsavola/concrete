@@ -28,6 +28,9 @@ struct StringBlock: ObjectBlock {
 	char data[0];
 
 	StringBlock(const TypeObject &type, const char *data);
+	StringBlock(const TypeObject &type);
+
+	void initialized();
 
 	size_t size() const throw ()
 	{
@@ -48,6 +51,18 @@ StringLogic<Ops> StringLogic<Ops>::New(const char *data, size_t size)
 }
 
 template <typename Ops>
+StringLogic<Ops> StringLogic<Ops>::NewUninitialized(size_t size)
+{
+	return Context::NewCustomSizeBlock<StringBlock>(sizeof (StringBlock) + size + 1, Type());
+}
+
+template <typename Ops>
+void StringLogic<Ops>::initialized()
+{
+	string_block()->initialized();
+}
+
+template <typename Ops>
 size_t StringLogic<Ops>::size() const
 {
 	return string_block()->size();
@@ -60,9 +75,16 @@ size_t StringLogic<Ops>::length() const
 }
 
 template <typename Ops>
-const char *StringLogic<Ops>::data() const
+char *StringLogic<Ops>::data() const
 {
 	return string_block()->data;
+}
+
+template <typename Ops>
+std::string StringLogic<Ops>::string() const
+{
+	auto block = string_block();
+	return std::string(block->data, block->size());
 }
 
 template <typename Ops>

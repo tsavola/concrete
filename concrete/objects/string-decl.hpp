@@ -43,6 +43,7 @@ public:
 	}
 
 	static StringLogic New(const char *data, size_t size);
+	static StringLogic NewUninitialized(size_t size);
 
 	using ObjectLogic<Ops>::operator==;
 	using ObjectLogic<Ops>::operator!=;
@@ -65,9 +66,12 @@ public:
 		return operator==(other) || std::strcmp(data(), other.data()) == 0;
 	}
 
+	void initialized();
+
 	size_t size() const;
 	size_t length() const;
-	const char *data() const;
+	char *data() const;
+	std::string string() const;
 
 protected:
 	StringLogic(BlockId id): ObjectLogic<Ops>(id)
