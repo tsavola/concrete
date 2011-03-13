@@ -9,3 +9,9 @@ def func1(value):
 x = 10
 r = func0() + func1(x)
 r = concrete.test(r, foo=80, bar="jep jep") + 1000
+print("r =", r)
+
+def passthrough(x):
+	return x
+
+print(repr("hello" + passthrough(" ") + "world"))
