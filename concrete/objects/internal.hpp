@@ -33,7 +33,7 @@ typedef Object (*InternalFunction)(ContinuationOp op,
                                    const TupleObject *args,
                                    const DictObject *kwargs);
 
-#define CONCRETE_INTERNAL(Function)                                           \
+#define CONCRETE_INTERNAL_FUNCTION_DECLARE(Function)                          \
 	static ::concrete::Object Function(const ::concrete::TupleObject &,   \
 	                                   const ::concrete::DictObject &);   \
 	                                                                      \
@@ -45,17 +45,28 @@ typedef Object (*InternalFunction)(ContinuationOp op,
 	{                                                                     \
 		assert(op == ::concrete::InitContinuation);                   \
 		return Function(*args, *kwargs);                              \
-	}                                                                     \
-	                                                                      \
-	static void Function##__register() __attribute__ ((constructor));     \
-	                                                                      \
-	void Function##__register()                                           \
-	{                                                                     \
-		::concrete::InternalRegister(::concrete::internals::Function, \
-		                             Function##__entry);              \
-	}                                                                     \
-	                                                                      \
+	}
+
+#define CONCRETE_INTERNAL_FUNCTION_IMPLEMENT(Function)                        \
 	::concrete::Object Function
+
+#define CONCRETE_INTERNAL_FUNCTION(Function)                                  \
+	CONCRETE_INTERNAL_FUNCTION_DECLARE(Function)                          \
+	CONCRETE_INTERNAL_FUNCTION_IMPLEMENT(Function)
+
+#define CONCRETE_INTERNAL_REGISTER(Internal, Function)                        \
+	static void Internal##__register() __attribute__ ((constructor));     \
+	                                                                      \
+	void Internal##__register()                                           \
+	{                                                                     \
+		::concrete::InternalRegister(::concrete::internals::Internal, \
+		                             Function##__entry);              \
+	}
+
+#define CONCRETE_INTERNAL(Function)                                           \
+	CONCRETE_INTERNAL_FUNCTION_DECLARE(Function)                          \
+	CONCRETE_INTERNAL_REGISTER(Function, Function)                        \
+	CONCRETE_INTERNAL_FUNCTION_IMPLEMENT(Function)
 
 #define CONCRETE_INTERNAL_CONTINUABLE(Continuable, Continuation)              \
 	struct Continuable;                                                   \
