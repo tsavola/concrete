@@ -58,10 +58,11 @@ public:
 		return Context::BuiltinObjects().dict_type;
 	}
 
-	static DictLogic Empty()
+	static DictLogic EmptySingleton()
 	{
-		// TODO: singleton
-		return NewWithCapacity(0);
+		auto empty = Context::BuiltinObjects().dict_empty.cast<DictLogic>();
+		assert(empty.capacity() == 0);
+		return empty;
 	}
 
 	static DictLogic New()
@@ -168,6 +169,11 @@ private:
 				break;
 
 		return i;
+	}
+
+	unsigned int capacity() const
+	{
+		return dict_block()->capacity();
 	}
 } CONCRETE_PACKED;
 

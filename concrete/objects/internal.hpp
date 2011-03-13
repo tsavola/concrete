@@ -144,7 +144,7 @@ public:
 		BlockId continuation;
 
 		auto tuple = TupleObject::New(args...);
-		auto dict = DictObject::Empty();
+		auto dict = DictObject::EmptySingleton();
 		auto value = internal_block()->call(InitContinuation, continuation, &tuple, &dict);
 
 		if (continuation) {

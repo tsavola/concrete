@@ -48,7 +48,9 @@ public:
 		const PortableTypeObject long_type;
 		const PortableTypeObject bytes_type;
 		const PortableTypeObject tuple_type;
+		PortableObject tuple_empty;
 		const PortableTypeObject dict_type;
+		PortableObject dict_empty;
 		const PortableTypeObject code_type;
 		const PortableTypeObject function_type;
 		const PortableTypeObject internal_type;
@@ -114,7 +116,7 @@ public:
 		return Active().builtin_none().none;
 	}
 
-	static const BuiltinObjectsBlock &BuiltinObjects()
+	static BuiltinObjectsBlock &BuiltinObjects()
 	{
 		return Active().builtin_objects();
 	}

@@ -51,8 +51,7 @@ public:
 
 	static TupleLogic New()
 	{
-		// TODO: singleton
-		return NewWithSize(0);
+		return Context::BuiltinObjects().tuple_empty.cast<TupleLogic>();
 	}
 
 	template <typename Item, typename... Tail>

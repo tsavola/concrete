@@ -9,6 +9,7 @@
 
 #include "dict.hpp"
 
+#include <concrete/context.hpp>
 #include <concrete/objects/string.hpp>
 #include <concrete/objects/type.hpp>
 
@@ -17,6 +18,8 @@ namespace concrete {
 void DictInit(const TypeObject &type)
 {
 	type.init_builtin(StringObject::New("dict"));
+
+	Context::BuiltinObjects().dict_empty = DictObject::NewWithCapacity(0);
 }
 
 } // namespace

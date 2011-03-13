@@ -9,6 +9,7 @@
 
 #include "tuple.hpp"
 
+#include <concrete/context.hpp>
 #include <concrete/objects/string.hpp>
 #include <concrete/objects/type.hpp>
 
@@ -17,6 +18,8 @@ namespace concrete {
 void TupleInit(const TypeObject &type)
 {
 	type.init_builtin(StringObject::New("tuple"));
+
+	Context::BuiltinObjects().tuple_empty = TupleObject::NewWithSize(0);
 }
 
 } // namespace
