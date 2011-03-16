@@ -55,9 +55,10 @@ typedef Object (*InternalFunction)(ContinuationOp op,
 	CONCRETE_INTERNAL_FUNCTION_IMPLEMENT(Function)
 
 #define CONCRETE_INTERNAL_REGISTER(Internal, Function)                        \
-	static void Internal##__register() __attribute__ ((constructor));     \
+	static void Internal##__register() throw ()                           \
+		__attribute__ ((constructor));                                \
 	                                                                      \
-	void Internal##__register()                                           \
+	void Internal##__register() throw ()                                  \
 	{                                                                     \
 		::concrete::InternalRegister(::concrete::internals::Internal, \
 		                             Function##__entry);              \
@@ -81,9 +82,10 @@ typedef Object (*InternalFunction)(ContinuationOp op,
 			op, continuation, args, kwargs);                      \
 	}                                                                     \
 	                                                                      \
-	static void Continuable##__register() __attribute__ ((constructor));  \
+	static void Continuable##__register() throw ()                        \
+		__attribute__ ((constructor));                                \
 	                                                                      \
-	void Continuable##__register()                                        \
+	void Continuable##__register() throw ()                               \
 	{                                                                     \
 		::concrete::InternalRegister(                                 \
 			::concrete::internals::Continuable,                   \
@@ -127,12 +129,13 @@ public:
 	using CallableLogic<Ops>::operator!=;
 
 	template <typename OtherOps>
-	InternalLogic(const InternalLogic<OtherOps> &other): CallableLogic<Ops>(other)
+	InternalLogic(const InternalLogic<OtherOps> &other) throw ():
+		CallableLogic<Ops>(other)
 	{
 	}
 
 	template <typename OtherOps>
-	InternalLogic &operator=(const InternalLogic<OtherOps> &other)
+	InternalLogic &operator=(const InternalLogic<OtherOps> &other) throw ()
 	{
 		CallableLogic<Ops>::operator=(other);
 		return *this;
@@ -156,7 +159,8 @@ public:
 	}
 
 protected:
-	InternalLogic(BlockId id): CallableLogic<Ops>(id)
+	InternalLogic(BlockId id) throw ():
+		CallableLogic<Ops>(id)
 	{
 	}
 
@@ -169,7 +173,7 @@ protected:
 typedef InternalLogic<ObjectOps>         InternalObject;
 typedef InternalLogic<PortableObjectOps> PortableInternalObject;
 
-void InternalRegister(InternalSerial serial, InternalFunction function);
+void InternalRegister(InternalSerial serial, InternalFunction function) throw ();
 void InternalInit(const TypeObject &type);
 
 } // namespace

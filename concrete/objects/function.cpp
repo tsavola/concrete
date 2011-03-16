@@ -24,34 +24,20 @@ namespace concrete {
 
 class CallContinuation: public Block {
 public:
-	~CallContinuation()
+	~CallContinuation() throw ()
 	{
-		if (m_frame_id)
-			Executor::Active().destroy_frame(m_frame_id);
+		if (frame_id)
+			Executor::Active().destroy_frame(frame_id);
 	}
 
-	void new_frame(const CodeObject &code, const DictObject &dict)
-	{
-		m_frame_id = Executor::Active().new_frame(code, dict);
-	}
-
-	Object destroy_frame()
-	{
-		BlockId frame_id = m_frame_id;
-		m_frame_id = NULL;
-
-		return Executor::Active().destroy_frame(frame_id);
-	}
-
-private:
-	PortableBlockId m_frame_id;
+	PortableBlockId frame_id;
 
 } CONCRETE_PACKED;
 
 struct Call {
 	const CodeObject code;
 
-	bool call(BlockId continuation_id,
+	bool call(BlockId state_id,
 	          Object &result,
 	          const TupleObject &args,
 	          const DictObject &kwargs) const
@@ -63,33 +49,32 @@ struct Call {
 
 		kwargs.copy_to(dict);
 
-		Continuation(continuation_id)->new_frame(code, dict);
+		BlockId frame_id = Executor::Active().new_frame(code, dict);
+		State(state_id)->frame_id = frame_id;
+
 		return false;
 	}
 
-	bool resume(BlockId continuation_id, Object &result) const
+	bool resume(BlockId state_id, Object &result) const
 	{
-		result = Continuation(continuation_id)->destroy_frame();
-
-		auto repr = result.repr();
-		ConcreteTrace(("Function: value=%s") % repr.data());
+		BlockId frame_id = State(state_id)->frame_id;
+		result = Executor::Active().frame_result(frame_id);
 
 		return true;
 	}
 
-private:
-	static CallContinuation *Continuation(BlockId id)
+	static CallContinuation *State(BlockId id)
 	{
 		return Context::BlockPointer<CallContinuation>(id);
 	}
 };
 
 Object FunctionBlock::call(ContinuationOp op,
-                           BlockId &continuation_id,
+                           BlockId &state_id,
                            const TupleObject *args,
                            const DictObject *kwargs) const
 {
-	return ContinuableCall<CallContinuation>(op, continuation_id, Call { code }, args, kwargs);
+	return ContinuableCall<CallContinuation>(op, state_id, Call { code }, args, kwargs);
 }
 
 void FunctionInit(const TypeObject &type)

@@ -27,7 +27,7 @@ Object InternalBlock::call(ContinuationOp op,
 	return internal_functions[serial](op, continuation, args, kwargs);
 }
 
-void InternalRegister(InternalSerial serial, InternalFunction function)
+void InternalRegister(InternalSerial serial, InternalFunction function) throw ()
 {
 	internal_functions[serial] = function;
 }

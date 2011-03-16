@@ -49,12 +49,11 @@ struct ObjectBlock: Block {
 	{
 	}
 
-	TypeObject type() const
+	TypeObject type() const throw ()
 	{
 		// don't use cast<TypeObject>() because it causes an infinite recursion
 		return TypeObject(type_object.m_id);
 	}
-
 } CONCRETE_PACKED;
 
 template <typename Ops>
@@ -129,21 +128,24 @@ StringObject ObjectLogic<Ops>::str() const
 }
 
 template <typename Ops>
-void ObjectLogic<Ops>::ref() const
+void ObjectLogic<Ops>::ref() const throw ()
 {
-	auto block = object_block();
-	block->refcount = block->refcount + 1;
+	auto block = nonthrowing_object_block();
+	if (block)
+		block->refcount = block->refcount + 1;
 }
 
 template <typename Ops>
-void ObjectLogic<Ops>::unref() const
+void ObjectLogic<Ops>::unref() const throw ()
 {
-	auto block = object_block();
-	int refcount = block->refcount - 1;
-	block->refcount = refcount;
-	assert(refcount >= 0);
-	if (refcount == 0)
-		ObjectDestroy(block, id());
+	auto block = nonthrowing_object_block();
+	if (block) {
+		int refcount = block->refcount - 1;
+		block->refcount = refcount;
+		assert(refcount >= 0);
+		if (refcount == 0)
+			ObjectDestroy(block, block->type_object, id());
+	}
 }
 
 template <typename Ops>
@@ -152,8 +154,14 @@ ObjectBlock *ObjectLogic<Ops>::object_block() const
 	return Context::BlockPointer<ObjectBlock>(id());
 }
 
+template <typename Ops>
+ObjectBlock *ObjectLogic<Ops>::nonthrowing_object_block() const throw ()
+{
+	return Context::NonthrowingBlockPointer<ObjectBlock>(id());
+}
+
 void ObjectInit(const TypeObject &type);
-void ObjectDestroy(ObjectBlock *block, BlockId id);
+void ObjectDestroy(ObjectBlock *block, Object type, BlockId id) throw ();
 
 } // namespace
 

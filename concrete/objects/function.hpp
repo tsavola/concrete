@@ -54,19 +54,21 @@ public:
 	using CallableLogic<Ops>::operator!=;
 
 	template <typename OtherOps>
-	FunctionLogic(const FunctionLogic<OtherOps> &other): CallableLogic<Ops>(other)
+	FunctionLogic(const FunctionLogic<OtherOps> &other) throw ():
+		CallableLogic<Ops>(other)
 	{
 	}
 
 	template <typename OtherOps>
-	FunctionLogic &operator=(const FunctionLogic<OtherOps> &other)
+	FunctionLogic &operator=(const FunctionLogic<OtherOps> &other) throw ()
 	{
 		CallableLogic<Ops>::operator=(other);
 		return *this;
 	}
 
 protected:
-	FunctionLogic(BlockId id): CallableLogic<Ops>(id)
+	FunctionLogic(BlockId id) throw ():
+		CallableLogic<Ops>(id)
 	{
 	}
 

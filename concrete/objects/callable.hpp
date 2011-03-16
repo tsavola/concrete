@@ -44,12 +44,13 @@ public:
 	using ObjectLogic<Ops>::operator!=;
 
 	template <typename OtherOps>
-	CallableLogic(const CallableLogic<OtherOps> &other): ObjectLogic<Ops>(other)
+	CallableLogic(const CallableLogic<OtherOps> &other) throw ():
+		ObjectLogic<Ops>(other)
 	{
 	}
 
 	template <typename OtherOps>
-	CallableLogic &operator=(const CallableLogic<OtherOps> &other)
+	CallableLogic &operator=(const CallableLogic<OtherOps> &other) throw ()
 	{
 		ObjectLogic<Ops>::operator=(other);
 		return *this;
@@ -67,13 +68,18 @@ public:
 		return callable_block()->call(ResumeContinuation, continuation);
 	}
 
-	void cleanup_call(BlockId cont) const
+	void cleanup_call(BlockId cont) const throw ()
 	{
-		callable_block()->call(CleanupContinuation, cont);
+		try {
+			callable_block()->call(CleanupContinuation, cont);
+		} catch (...) {
+			assert(false);
+		}
 	}
 
 protected:
-	CallableLogic(BlockId id): ObjectLogic<Ops>(id)
+	CallableLogic(BlockId id) throw ():
+		ObjectLogic<Ops>(id)
 	{
 	}
 

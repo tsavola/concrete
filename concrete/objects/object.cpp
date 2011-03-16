@@ -56,29 +56,31 @@ void ObjectInit(const TypeObject &type)
 }
 
 template <typename T>
-static void destruct(ObjectBlock *block)
+static void destruct(ObjectBlock *block) // doesn't throw unless ~T() does
 {
 	static_cast<T *> (block)->~T();
 }
 
-void ObjectDestroy(ObjectBlock *block, BlockId id)
+void ObjectDestroy(ObjectBlock *block, Object type, BlockId id) throw ()
 {
-	auto type = block->type();
-	auto &builtin = Context::BuiltinObjects();
+	auto builtin = Context::Active().nonthrowing_builtin_objects();
 
-	if (type == builtin.object_type)   { destruct<ObjectBlock>(block);   } else
-	if (type == builtin.type_type)     { destruct<TypeBlock>(block);     } else
-	if (type == builtin.none_type)     { assert(false); return;          } else
-	if (type == builtin.long_type)     { destruct<LongBlock>(block);     } else
-	if (type == builtin.bytes_type)    { destruct<BytesBlock>(block);    } else
-	if (type == builtin.string_type)   { destruct<StringBlock>(block);   } else
-	if (type == builtin.tuple_type)    { destruct<TupleBlock>(block);    } else
-	if (type == builtin.dict_type)     { destruct<DictBlock>(block);     } else
-	if (type == builtin.code_type)     { destruct<CodeBlock>(block);     } else
-	if (type == builtin.function_type) { destruct<FunctionBlock>(block); } else
-	if (type == builtin.internal_type) { destruct<InternalBlock>(block); } else
-	if (type == builtin.module_type)   { destruct<ModuleBlock>(block);   } else
-	                                   { assert(false); return;          }
+	if (builtin == NULL)
+		return;
+
+	if (type == builtin->object_type)   { destruct<ObjectBlock>(block);   } else
+	if (type == builtin->type_type)     { destruct<TypeBlock>(block);     } else
+	if (type == builtin->none_type)     { assert(false); return;          } else
+	if (type == builtin->long_type)     { destruct<LongBlock>(block);     } else
+	if (type == builtin->bytes_type)    { destruct<BytesBlock>(block);    } else
+	if (type == builtin->string_type)   { destruct<StringBlock>(block);   } else
+	if (type == builtin->tuple_type)    { destruct<TupleBlock>(block);    } else
+	if (type == builtin->dict_type)     { destruct<DictBlock>(block);     } else
+	if (type == builtin->code_type)     { destruct<CodeBlock>(block);     } else
+	if (type == builtin->function_type) { destruct<FunctionBlock>(block); } else
+	if (type == builtin->internal_type) { destruct<InternalBlock>(block); } else
+	if (type == builtin->module_type)   { destruct<ModuleBlock>(block);   } else
+	                                    { assert(false); return;          }
 
 	Context::Active().arena().free(id);
 }

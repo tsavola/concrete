@@ -54,12 +54,13 @@ public:
 	using ObjectLogic<Ops>::operator!=;
 
 	template <typename OtherOps>
-	BytesLogic(const BytesLogic<OtherOps> &other): ObjectLogic<Ops>(other)
+	BytesLogic(const BytesLogic<OtherOps> &other) throw ():
+		ObjectLogic<Ops>(other)
 	{
 	}
 
 	template <typename OtherOps>
-	BytesLogic &operator=(const BytesLogic<OtherOps> &other)
+	BytesLogic &operator=(const BytesLogic<OtherOps> &other) throw ()
 	{
 		ObjectLogic<Ops>::operator=(other);
 		return *this;
@@ -76,7 +77,8 @@ public:
 	}
 
 protected:
-	BytesLogic(BlockId id): ObjectLogic<Ops>(id)
+	BytesLogic(BlockId id) throw ():
+		ObjectLogic<Ops>(id)
 	{
 	}
 

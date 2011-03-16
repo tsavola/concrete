@@ -31,12 +31,13 @@ public:
 	using ObjectLogic<Ops>::operator!=;
 
 	template <typename OtherOps>
-	NoneLogic(const NoneLogic<OtherOps> &other): ObjectLogic<Ops>(other)
+	NoneLogic(const NoneLogic<OtherOps> &other) throw ():
+		ObjectLogic<Ops>(other)
 	{
 	}
 
 	template <typename OtherOps>
-	NoneLogic &operator=(const NoneLogic<OtherOps> &other)
+	NoneLogic &operator=(const NoneLogic<OtherOps> &other) throw ()
 	{
 		ObjectLogic<Ops>::operator=(other);
 		return *this;
@@ -45,7 +46,8 @@ public:
 	void init_builtin(const TypeObject &type);
 
 protected:
-	NoneLogic(BlockId id): ObjectLogic<Ops>(id)
+	NoneLogic(BlockId id) throw ():
+		ObjectLogic<Ops>(id)
 	{
 	}
 } CONCRETE_PACKED;

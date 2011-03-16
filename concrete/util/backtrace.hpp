@@ -13,9 +13,9 @@
 namespace concrete {
 
 #ifdef CONCRETE_BACKTRACE
-void Backtrace();
+void Backtrace() throw ();
 #else
-inline void Backtrace() {}
+inline void Backtrace() throw () {}
 #endif
 
 } // namespace

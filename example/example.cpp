@@ -33,7 +33,10 @@ static CodeObject load_code()
 	stream.read(buf.get(), size);
 	stream.close();
 
-	return CodeObject::Load(buf.get(), size);
+	auto code = CodeObject::Load(buf.get(), size);
+	Context::Active().arena().check_error();
+
+	return code;
 }
 
 template <typename T>
@@ -52,8 +55,10 @@ static int main()
 
 	try {
 		Executor executor(load_code());
+
 		while (executor.execute())
-			;
+			context.arena().check_error();
+
 	} catch (const Exception &e) {
 		std::cerr << type_name(e) << ": " << e.what() << "\n";
 		return 1;

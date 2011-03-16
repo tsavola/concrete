@@ -37,7 +37,7 @@ struct DictBlock: ObjectBlock {
 	{
 	}
 
-	~DictBlock()
+	~DictBlock() throw ()
 	{
 		for (unsigned int i = size; i-- > 0; )
 			items[i].~Item();
@@ -83,12 +83,13 @@ public:
 	using ObjectLogic<Ops>::operator!=;
 
 	template <typename OtherOps>
-	DictLogic(const DictLogic<OtherOps> &other): ObjectLogic<Ops>(other)
+	DictLogic(const DictLogic<OtherOps> &other) throw ():
+		ObjectLogic<Ops>(other)
 	{
 	}
 
 	template <typename OtherOps>
-	DictLogic &operator=(const DictLogic<OtherOps> &other)
+	DictLogic &operator=(const DictLogic<OtherOps> &other) throw ()
 	{
 		ObjectLogic<Ops>::operator=(other);
 		return *this;
@@ -152,7 +153,8 @@ public:
 	}
 
 protected:
-	DictLogic(BlockId id): ObjectLogic<Ops>(id)
+	DictLogic(BlockId id) throw ():
+		ObjectLogic<Ops>(id)
 	{
 	}
 

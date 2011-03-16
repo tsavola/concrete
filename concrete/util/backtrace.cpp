@@ -23,7 +23,7 @@
 
 namespace concrete {
 
-void Backtrace()
+void Backtrace() throw ()
 {
 	size_t size = 64;
 	void *buffer[size];
@@ -50,12 +50,15 @@ void Backtrace()
 
 		*end = '\0';
 
-		auto sym = abi::__cxa_demangle(beg, 0, 0, 0);
-		if (sym) {
-			std::cerr << boost::format("  %s in %s\n") % sym % strings[i];
-			std::free(sym);
-		} else {
-			std::cerr << boost::format("  %s in %s\n") % beg % strings[i];
+		try {
+			auto sym = abi::__cxa_demangle(beg, 0, 0, 0);
+			if (sym) {
+				std::cerr << boost::format("  %s in %s\n") % sym % strings[i];
+				std::free(sym);
+			} else {
+				std::cerr << boost::format("  %s in %s\n") % beg % strings[i];
+			}
+		} catch (...) {
 		}
 	}
 }

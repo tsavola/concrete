@@ -37,6 +37,8 @@ Arena::Allocation Arena::alloc(size_t block_size)
 {
 	assert(block_size >= sizeof (Block));
 
+	check_error();
+
 	size_t aligned_size = AlignedSize(block_size);
 	if (aligned_size < block_size)
 		throw AllocError(block_size);
@@ -64,9 +66,13 @@ Arena::Allocation Arena::alloc(size_t block_size)
 	};
 }
 
-void Arena::free(BlockId block_id)
+void Arena::free(BlockId block_id) throw ()
 {
-	auto block = pointer(block_id, sizeof (Block));
+	auto block = nonthrowing_pointer(block_id, sizeof (Block));
+
+	if (block == NULL)
+		return;
+
 	size_t offset = block_id.offset();
 	size_t aligned_size = AlignedSize(block->block_size());
 

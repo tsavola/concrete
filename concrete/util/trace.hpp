@@ -17,7 +17,9 @@
 
 # define ConcreteTrace(args) \
 	do { \
-		std::cerr << "TRACE: " << (boost::format args) << std::endl; \
+		try { \
+			std::cerr << "TRACE: " << (boost::format args) << std::endl; \
+		} catch (...) {} \
 	} while (0)
 
 #else

@@ -38,12 +38,13 @@ public:
 	using ObjectLogic<Ops>::operator!=;
 
 	template <typename OtherOps>
-	TypeLogic(const TypeLogic<OtherOps> &other): ObjectLogic<Ops>(other)
+	TypeLogic(const TypeLogic<OtherOps> &other) throw ():
+		ObjectLogic<Ops>(other)
 	{
 	}
 
 	template <typename OtherOps>
-	TypeLogic &operator=(const TypeLogic<OtherOps> &other)
+	TypeLogic &operator=(const TypeLogic<OtherOps> &other) throw ()
 	{
 		ObjectLogic<Ops>::operator=(other);
 		return *this;
@@ -55,7 +56,8 @@ public:
 	ObjectProtocol &protocol() const;
 
 protected:
-	TypeLogic(BlockId id): ObjectLogic<Ops>(id)
+	TypeLogic(BlockId id) throw ():
+		ObjectLogic<Ops>(id)
 	{
 	}
 

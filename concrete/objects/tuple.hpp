@@ -26,7 +26,7 @@ struct TupleBlock: ObjectBlock {
 			new (&items[i]) PortableObject();
 	}
 
-	~TupleBlock()
+	~TupleBlock() throw ()
 	{
 		for (unsigned int i = size(); i-- > 0; )
 			items[i].~PortableObject();
@@ -73,12 +73,13 @@ public:
 	using ObjectLogic<Ops>::operator!=;
 
 	template <typename OtherOps>
-	TupleLogic(const TupleLogic<OtherOps> &other): ObjectLogic<Ops>(other)
+	TupleLogic(const TupleLogic<OtherOps> &other) throw ():
+		ObjectLogic<Ops>(other)
 	{
 	}
 
 	template <typename OtherOps>
-	TupleLogic &operator=(const TupleLogic<OtherOps> &other)
+	TupleLogic &operator=(const TupleLogic<OtherOps> &other) throw ()
 	{
 		ObjectLogic<Ops>::operator=(other);
 		return *this;
@@ -116,7 +117,8 @@ public:
 	}
 
 protected:
-	TupleLogic(BlockId id): ObjectLogic<Ops>(id)
+	TupleLogic(BlockId id) throw ():
+		ObjectLogic<Ops>(id)
 	{
 	}
 

@@ -74,7 +74,7 @@ public:
 	{
 	}
 
-	NestedCall(const NestedCall &other):
+	NestedCall(const NestedCall &other) throw ():
 		callable(other.callable),
 		args(other.args),
 		kwargs(other.kwargs)
@@ -92,7 +92,7 @@ class NestedContinuation: public Block, Noncopyable {
 	friend struct NestedContinuable;
 
 public:
-	~NestedContinuation()
+	~NestedContinuation() throw ()
 	{
 		if (call_id)
 			callable.cast<CallableObject>().cleanup_call(call_id);

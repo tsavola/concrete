@@ -80,12 +80,13 @@ public:
 	using ObjectLogic<Ops>::operator!=;
 
 	template <typename OtherOps>
-	CodeLogic(const CodeLogic<OtherOps> &other): ObjectLogic<Ops>(other)
+	CodeLogic(const CodeLogic<OtherOps> &other) throw ():
+		ObjectLogic<Ops>(other)
 	{
 	}
 
 	template <typename OtherOps>
-	CodeLogic &operator=(const CodeLogic<OtherOps> &other)
+	CodeLogic &operator=(const CodeLogic<OtherOps> &other) throw ()
 	{
 		ObjectLogic<Ops>::operator=(other);
 		return *this;
@@ -98,7 +99,8 @@ public:
 	TupleObject varnames() const   { return code_block()->varnames; }
 
 protected:
-	CodeLogic(BlockId id): ObjectLogic<Ops>(id)
+	CodeLogic(BlockId id) throw ():
+		ObjectLogic<Ops>(id)
 	{
 	}
 

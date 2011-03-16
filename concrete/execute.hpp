@@ -32,12 +32,13 @@ public:
 	}
 
 	explicit Executor(const CodeObject &code);
-	~Executor();
+	~Executor() throw ();
 
 	bool execute();
 
 	BlockId new_frame(const CodeObject &code, const DictObject &dict);
-	Object destroy_frame(BlockId frame);
+	Object frame_result(BlockId frame);
+	void destroy_frame(BlockId frame) throw ();
 
 private:
 	Impl *m_impl;

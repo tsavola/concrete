@@ -100,7 +100,7 @@ public:
 	}
 
 	template <typename T>
-	static void DeleteBlock(BlockId id)
+	static void DeleteBlock(BlockId id) // doesn't throw unless ~T() does
 	{
 		Active().delete_block<T>(id);
 	}
@@ -109,6 +109,12 @@ public:
 	static T *BlockPointer(BlockId id)
 	{
 		return Active().block_pointer<T>(id);
+	}
+
+	template <typename T>
+	static T *NonthrowingBlockPointer(BlockId id) throw ()
+	{
+		return Active().nonthrowing_block_pointer<T>(id);
 	}
 
 	static const PortableNoneObject &None()
@@ -133,8 +139,10 @@ public:
 	{
 	}
 
-	ContextSnapshot snapshot() const throw ()
+	ContextSnapshot snapshot()
 	{
+		m_arena.check_error();
+
 		return ContextSnapshot {
 			m_arena.base(),
 			m_arena.size(),
@@ -160,10 +168,13 @@ public:
 	}
 
 	template <typename T>
-	void delete_block(BlockId id)
+	void delete_block(BlockId id) // doesn't throw unless ~T() does
 	{
-		block_pointer<T>(id)->~T();
-		m_arena.free(id);
+		auto ptr = nonthrowing_block_pointer<T>(id);
+		if (ptr) {
+			ptr->~T();
+			m_arena.free(id);
+		}
 	}
 
 	template <typename T>
@@ -172,9 +183,20 @@ public:
 		return static_cast<T *> (m_arena.pointer(id, sizeof (T)));
 	}
 
-	Arena &arena()
+	template <typename T>
+	T *nonthrowing_block_pointer(BlockId id) throw ()
+	{
+		return static_cast<T *> (m_arena.nonthrowing_pointer(id, sizeof (T)));
+	}
+
+	Arena &arena() throw ()
 	{
 		return m_arena;
+	}
+
+	const BuiltinObjectsBlock *nonthrowing_builtin_objects() throw ()
+	{
+		return nonthrowing_block_pointer<BuiltinObjectsBlock>(m_builtin_objects);
 	}
 
 private:

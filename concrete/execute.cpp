@@ -49,12 +49,12 @@ struct ExecutionFrame: Block {
 	{
 	}
 
-	~ExecutionFrame()
+	~ExecutionFrame() throw ()
 	{
 		if (call_continuation) {
 			ConcreteTrace(("call cleanup enter: callable=%d") % call_callable.id().offset());
 
-			call_callable.require<CallableObject>().cleanup_call(call_continuation);
+			call_callable.cast<CallableObject>().cleanup_call(call_continuation);
 
 			ConcreteTrace(("call cleanup leave: callable=%d") % call_callable.id().offset());
 		}
@@ -107,7 +107,7 @@ public:
 		ConcreteTrace(("frame new initial %d") % m_initial_frame_id.offset());
 	}
 
-	~ExecutionState()
+	~ExecutionState() throw ()
 	{
 		ConcreteTrace(("frame destroy initial %d") % m_initial_frame_id.offset());
 
@@ -139,17 +139,21 @@ public:
 		m_current_frame_id = current_frame()->parent_frame_id;
 	}
 
-	Object destroy_frame(BlockId frame_id)
+	Object frame_result(BlockId frame_id)
+	{
+		ConcreteTrace(("frame result %d") % frame_id.offset());
+
+		return Frame(frame_id)->pop_stack();
+	}
+
+	void destroy_frame(BlockId frame_id) throw ()
 	{
 		ConcreteTrace(("frame destroy %d") % frame_id.offset());
 
-		auto result = Frame(frame_id)->pop_stack();
 		Context::DeleteBlock<ExecutionFrame>(frame_id);
-
-		return result;
 	}
 
-	bool have_frame()
+	bool have_frame() throw ()
 	{
 		return m_current_frame_id;
 	}
@@ -232,7 +236,7 @@ public:
 		ConcreteTrace(("call resume enter: callable=%d frame=%d")
 		              % callable.id().offset() % frame_id.offset());
 
-		auto result = callable.require<CallableObject>().resume_call(continuation);
+		auto result = callable.cast<CallableObject>().resume_call(continuation);
 
 		ConcreteTrace(("call resume leave: callable=%d frame=%d done=%d return=%d")
 		              % callable.id().offset() % frame_id.offset()
@@ -470,7 +474,7 @@ Executor::Executor(const CodeObject &code): m_impl(new Impl(code))
 {
 }
 
-Executor::~Executor()
+Executor::~Executor() throw ()
 {
 	delete m_impl;
 }
@@ -487,9 +491,14 @@ BlockId Executor::new_frame(const CodeObject &code, const DictObject &dict)
 	return m_impl->new_frame(code, dict);
 }
 
-Object Executor::destroy_frame(BlockId id)
+Object Executor::frame_result(BlockId id)
 {
-	return m_impl->destroy_frame(id);
+	return m_impl->frame_result(id);
+}
+
+void Executor::destroy_frame(BlockId id) throw ()
+{
+	m_impl->destroy_frame(id);
 }
 
 } // namespace

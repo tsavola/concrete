@@ -37,28 +37,31 @@ public:
 
 	ObjectLogic();
 
-	explicit ObjectLogic(BlockId id): m_id(id)
+	explicit ObjectLogic(BlockId id) throw ():
+		m_id(id)
 	{
 		ref();
 	}
 
-	ObjectLogic(const ObjectLogic &other): m_id(other.m_id)
+	ObjectLogic(const ObjectLogic &other) throw ():
+		m_id(other.m_id)
 	{
 		ref();
 	}
 
 	template <typename OtherOps>
-	ObjectLogic(const ObjectLogic<OtherOps> &other): m_id(other.m_id)
+	ObjectLogic(const ObjectLogic<OtherOps> &other) throw ():
+		m_id(other.m_id)
 	{
 		ref();
 	}
 
-	~ObjectLogic()
+	~ObjectLogic() throw ()
 	{
 		unref();
 	}
 
-	ObjectLogic &operator=(const ObjectLogic &other)
+	ObjectLogic &operator=(const ObjectLogic &other) throw ()
 	{
 		unref();
 		m_id = other.m_id;
@@ -67,7 +70,7 @@ public:
 	}
 
 	template <typename OtherOps>
-	ObjectLogic &operator=(const ObjectLogic<OtherOps> &other)
+	ObjectLogic &operator=(const ObjectLogic<OtherOps> &other) throw ()
 	{
 		unref();
 		m_id = other.m_id;
@@ -117,8 +120,10 @@ protected:
 	ObjectBlock *object_block() const;
 
 private:
-	void ref() const;
-	void unref() const;
+	void ref() const throw ();
+	void unref() const throw ();
+
+	ObjectBlock *nonthrowing_object_block() const throw ();
 
 	BlockIdLogic<Ops> m_id;
 

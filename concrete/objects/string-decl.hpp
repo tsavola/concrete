@@ -49,12 +49,13 @@ public:
 	using ObjectLogic<Ops>::operator!=;
 
 	template <typename OtherOps>
-	StringLogic(const StringLogic<OtherOps> &other): ObjectLogic<Ops>(other)
+	StringLogic(const StringLogic<OtherOps> &other) throw ():
+		ObjectLogic<Ops>(other)
 	{
 	}
 
 	template <typename OtherOps>
-	StringLogic &operator=(const StringLogic<OtherOps> &other)
+	StringLogic &operator=(const StringLogic<OtherOps> &other) throw ()
 	{
 		ObjectLogic<Ops>::operator=(other);
 		return *this;
@@ -74,7 +75,8 @@ public:
 	std::string string() const;
 
 protected:
-	StringLogic(BlockId id): ObjectLogic<Ops>(id)
+	StringLogic(BlockId id) throw ():
+		ObjectLogic<Ops>(id)
 	{
 	}
 

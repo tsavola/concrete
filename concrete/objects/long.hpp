@@ -47,12 +47,13 @@ public:
 	using ObjectLogic<Ops>::operator!=;
 
 	template <typename OtherOps>
-	LongLogic(const LongLogic<OtherOps> &other): ObjectLogic<Ops>(other)
+	LongLogic(const LongLogic<OtherOps> &other) throw ():
+		ObjectLogic<Ops>(other)
 	{
 	}
 
 	template <typename OtherOps>
-	LongLogic &operator=(const LongLogic<OtherOps> &other)
+	LongLogic &operator=(const LongLogic<OtherOps> &other) throw ()
 	{
 		ObjectLogic<Ops>::operator=(other);
 		return *this;
@@ -64,7 +65,8 @@ public:
 	}
 
 protected:
-	LongLogic(BlockId id): ObjectLogic<Ops>(id)
+	LongLogic(BlockId id) throw ():
+		ObjectLogic<Ops>(id)
 	{
 	}
 
