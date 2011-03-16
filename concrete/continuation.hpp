@@ -27,12 +27,11 @@ enum ContinuationOp {
 };
 
 template <typename Continuation, typename Continuable>
-Object ContinuableCall(
-	ContinuationOp op,
-	BlockId &continuation_id,
-	const Continuable &continuable,
-	const TupleObject *args,
-	const DictObject *kwargs)
+Object ContinuableCall(ContinuationOp op,
+                       BlockId &continuation_id,
+                       const Continuable &continuable,
+                       const TupleObject *args,
+                       const DictObject *kwargs)
 {
 	bool done = false;
 	Object return_value;
@@ -67,6 +66,15 @@ Object ContinuableCall(
 	}
 
 	return return_value;
+}
+
+template <typename Continuation, typename Continuable>
+Object ContinuableCall(ContinuationOp op,
+                       BlockId &continuation_id,
+                       const TupleObject *args,
+                       const DictObject *kwargs)
+{
+	return ContinuableCall<Continuation>(op, continuation_id, Continuable(), args, kwargs);
 }
 
 } // namespace

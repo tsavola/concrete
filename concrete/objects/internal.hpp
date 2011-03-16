@@ -77,8 +77,8 @@ typedef Object (*InternalFunction)(ContinuationOp op,
 		const ::concrete::TupleObject *args,                          \
 		const ::concrete::DictObject *kwargs)                         \
 	{                                                                     \
-		return ::concrete::ContinuableCall<Continuation>(             \
-			op, continuation, Continuable(), args, kwargs);       \
+		return ::concrete::ContinuableCall<Continuation, Continuable>(\
+			op, continuation, args, kwargs);                      \
 	}                                                                     \
 	                                                                      \
 	static void Continuable##__register() __attribute__ ((constructor));  \
