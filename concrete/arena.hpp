@@ -20,6 +20,8 @@
 #include <concrete/block.hpp>
 #include <concrete/util/backtrace.hpp>
 #include <concrete/util/noncopyable.hpp>
+#include <concrete/util/packed.hpp>
+#include <concrete/util/portable.hpp>
 
 namespace concrete {
 
@@ -78,6 +80,53 @@ private:
 	const bool m_deferred;
 };
 
+struct ArenaSnapshot {
+	void *base;
+	Portable<BlockSize> size;
+	PortableBlockId access_error_block;
+
+	ArenaSnapshot() throw ()
+	{
+	}
+
+	ArenaSnapshot(void *base, size_t size, BlockId access_error_block) throw ():
+		base(base),
+		size(size),
+		access_error_block(access_error_block)
+	{
+	}
+
+	size_t head_size() const throw ()
+	{
+		return sizeof (*this) - sizeof (base);
+	}
+
+	const void *head_ptr() const throw ()
+	{
+		return reinterpret_cast<const char *> (this) + sizeof (base);
+	}
+
+	void *head_ptr() throw ()
+	{
+		return reinterpret_cast<char *> (this) + sizeof (base);
+	}
+
+	size_t data_size() const throw ()
+	{
+		return size;
+	}
+
+	const void *data_ptr() const throw ()
+	{
+		return base;
+	}
+
+	void init_data(void *data) throw ()
+	{
+		base = data;
+	}
+} CONCRETE_PACKED;
+
 class Arena: Noncopyable {
 public:
 	struct Allocation {
@@ -91,9 +140,10 @@ public:
 	{
 	}
 
-	Arena(void *base, size_t size) throw ():
-		m_base(base),
-		m_size(size)
+	Arena(const ArenaSnapshot &snapshot) throw ():
+		m_base(snapshot.base),
+		m_size(snapshot.size),
+		m_access_error_block(snapshot.access_error_block)
 	{
 	}
 
@@ -145,22 +195,17 @@ public:
 
 	void check_error()
 	{
-		if (m_access_error_id) {
-			auto block_id = m_access_error_id;
-			m_access_error_id = NULL;
+		if (m_access_error_block) {
+			auto block_id = m_access_error_block;
+			m_access_error_block = NULL;
 
 			throw AccessError(block_id, true);
 		}
 	}
 
-	void *base() const throw ()
+	ArenaSnapshot snapshot() const throw ()
 	{
-		return m_base;
-	}
-
-	size_t size() const throw ()
-	{
-		return m_size;
+		return ArenaSnapshot(m_base, m_size, m_access_error_block);
 	}
 
 	void dump() const;
@@ -173,9 +218,9 @@ private:
 
 	Block *set_access_error(BlockId block_id) throw ()
 	{
-		if (m_access_error_id == NULL) {
+		if (m_access_error_block == NULL) {
 			Backtrace();
-			m_access_error_id = block_id;
+			m_access_error_block = block_id;
 		}
 
 		return NULL;
@@ -183,7 +228,7 @@ private:
 
 	void *m_base;
 	size_t m_size;
-	BlockId m_access_error_id;
+	BlockId m_access_error_block;
 };
 
 } // namespace

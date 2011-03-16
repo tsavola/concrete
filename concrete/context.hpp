@@ -23,12 +23,28 @@
 
 namespace concrete {
 
-struct ContextSnapshot {
-	void *base;
-	size_t size;
-	BlockId builtin_none;
-	BlockId builtin_objects;
-};
+struct ContextSnapshot: ArenaSnapshot {
+	PortableBlockId builtin_none;
+	PortableBlockId builtin_objects;
+
+	ContextSnapshot() throw ()
+	{
+	}
+
+	ContextSnapshot(const ArenaSnapshot &arena,
+	                BlockId builtin_none,
+	                BlockId builtin_objects) throw ():
+		ArenaSnapshot(arena),
+		builtin_none(builtin_none),
+		builtin_objects(builtin_objects)
+	{
+	}
+
+	size_t head_size() const throw ()
+	{
+		return sizeof (ContextSnapshot) - sizeof (ArenaSnapshot) + ArenaSnapshot::head_size();
+	}
+} CONCRETE_PACKED;
 
 class Context: public Activatable<Context>, Noncopyable {
 	struct BuiltinNoneBlock: Block {
@@ -133,22 +149,15 @@ public:
 	Context();
 
 	Context(const ContextSnapshot &snapshot) throw ():
-		m_arena(snapshot.base, snapshot.size),
+		m_arena(snapshot),
 		m_builtin_none(snapshot.builtin_none),
 		m_builtin_objects(snapshot.builtin_objects)
 	{
 	}
 
-	ContextSnapshot snapshot()
+	ContextSnapshot snapshot() const throw ()
 	{
-		m_arena.check_error();
-
-		return ContextSnapshot {
-			m_arena.base(),
-			m_arena.size(),
-			m_builtin_none,
-			m_builtin_objects,
-		};
+		return ContextSnapshot(m_arena.snapshot(), m_builtin_none, m_builtin_objects);
 	}
 
 	template <typename T, typename... Args>
