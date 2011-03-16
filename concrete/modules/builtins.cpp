@@ -42,21 +42,82 @@ CONCRETE_INTERNAL(BuiltinsModule_id)(const TupleObject &args, const DictObject &
 	return LongObject::New(args.get_item(0).id().offset());
 }
 
-CONCRETE_INTERNAL(BuiltinsModule_print)(const TupleObject &args, const DictObject &kwargs)
-{
-	unsigned int size = args.size();
+class PrintContinuation: public NestedContinuation {
+public:
+	Portable<uint32_t> index;
+	PortableObject args;
 
-	for (unsigned int i = 0; i < size; i++) {
-		std::cout << args.get_item(i).str().string();
+	PortableObject deferred_value;
 
-		if (i < size - 1)
-			std::cout << " ";
+} CONCRETE_PACKED;
+
+CONCRETE_INTERNAL_CONTINUABLE(BuiltinsModule_print, PrintContinuation): NestedContinuable {
+	bool call(BlockId state_id, Object &, const TupleObject &args, const DictObject &kwargs) const
+	{
+		if (args.size() == 0)
+			return finish();
+
+		PrintState(state_id)->index = 0;
+		PrintState(state_id)->args = args;
+
+		return evaluate(state_id);
 	}
 
-	std::cout << std::endl;
+	bool resume(BlockId state_id, Object &) const
+	{
+		Object value;
 
-	return Object();
-}
+		if (in_nested_call(state_id)) {
+			if (!resume_nested(state_id, value))
+				return false;
+		} else {
+			value = PrintState(state_id)->deferred_value;
+		}
+
+		std::cout << value.require<StringObject>().string();
+
+		unsigned int index = PrintState(state_id)->index;
+		unsigned int size = PrintState(state_id)->args.cast<TupleObject>().size();
+
+		if (index == size - 1)
+			return finish();
+
+		std::cout << " ";
+
+		PrintState(state_id)->index = ++index;
+
+		return evaluate(state_id);
+	}
+
+private:
+	bool evaluate(BlockId state_id) const
+	{
+		unsigned int index = PrintState(state_id)->index;
+		auto self = PrintState(state_id)->args.cast<TupleObject>().get_item(index);
+		auto callable = self.protocol().str.require<CallableObject>();
+
+		Object value;
+		auto tuple = TupleObject::New(self);
+		auto dict = DictObject::EmptySingleton();
+
+		if (call_nested(state_id, callable, value, tuple, dict))
+			PrintState(state_id)->deferred_value = value;
+
+		return false;
+	}
+
+	bool finish() const
+	{
+		std::cout << std::endl;
+
+		return true;
+	}
+
+	static PrintContinuation *PrintState(BlockId id)
+	{
+		return static_cast<PrintContinuation *> (NestedState(id));
+	}
+};
 
 CONCRETE_INTERNAL(BuiltinsModule_repr)(const TupleObject &args, const DictObject &kwargs)
 {
