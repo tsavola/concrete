@@ -52,7 +52,7 @@ struct Call {
 	const CodeObject code;
 
 	bool call(BlockId continuation_id,
-	          Object &return_value,
+	          Object &result,
 	          const TupleObject &args,
 	          const DictObject &kwargs) const
 	{
@@ -67,11 +67,11 @@ struct Call {
 		return false;
 	}
 
-	bool resume(BlockId continuation_id, Object &return_value) const
+	bool resume(BlockId continuation_id, Object &result) const
 	{
-		return_value = Continuation(continuation_id)->destroy_frame();
+		result = Continuation(continuation_id)->destroy_frame();
 
-		auto repr = return_value.repr();
+		auto repr = result.repr();
 		ConcreteTrace(("Function: value=%s") % repr.data());
 
 		return true;

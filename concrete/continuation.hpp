@@ -34,7 +34,7 @@ Object ContinuableCall(ContinuationOp op,
                        const DictObject *kwargs)
 {
 	bool done = false;
-	Object return_value;
+	Object result;
 
 	switch (op) {
 	case InitContinuation:
@@ -42,13 +42,13 @@ Object ContinuableCall(ContinuationOp op,
 		assert(args && kwargs);
 
 		continuation_id = Context::NewBlock<Continuation>();
-		done = continuable.call(continuation_id, return_value, *args, *kwargs);
+		done = continuable.call(continuation_id, result, *args, *kwargs);
 		break;
 
 	case ResumeContinuation:
 		assert(continuation_id);
 
-		done = continuable.resume(continuation_id, return_value);
+		done = continuable.resume(continuation_id, result);
 		break;
 
 	case CleanupContinuation:
@@ -65,7 +65,7 @@ Object ContinuableCall(ContinuationOp op,
 		Context::DeleteBlock<Continuation>(id);
 	}
 
-	return return_value;
+	return result;
 }
 
 template <typename Continuation, typename Continuable>

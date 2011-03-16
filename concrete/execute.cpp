@@ -143,10 +143,10 @@ public:
 	{
 		ConcreteTrace(("frame destroy %d") % frame_id.offset());
 
-		auto return_value = Frame(frame_id)->pop_stack();
+		auto result = Frame(frame_id)->pop_stack();
 		Context::DeleteBlock<ExecutionFrame>(frame_id);
 
-		return return_value;
+		return result;
 	}
 
 	bool have_frame()
@@ -199,11 +199,11 @@ public:
 		ConcreteTrace(("call init enter: callable=%d frame=%d")
 		              % callable.id().offset() % frame_id.offset());
 
-		auto return_value = callable.require<CallableObject>().init_call(continuation, args, kwargs);
+		auto result = callable.require<CallableObject>().init_call(continuation, args, kwargs);
 
 		ConcreteTrace(("call init leave: callable=%d frame=%d done=%s return=%d")
 		              % callable.id().offset() % frame_id.offset()
-		              % (continuation ? "false" : "true") % return_value.id().offset());
+		              % (continuation ? "false" : "true") % result.id().offset());
 
 		auto frame = Frame(frame_id);
 
@@ -211,7 +211,7 @@ public:
 			frame->call_continuation = continuation;
 			frame->call_callable = callable;
 		} else {
-			frame->push_stack(return_value);
+			frame->push_stack(result);
 		}
 	}
 
@@ -232,18 +232,18 @@ public:
 		ConcreteTrace(("call resume enter: callable=%d frame=%d")
 		              % callable.id().offset() % frame_id.offset());
 
-		auto return_value = callable.require<CallableObject>().resume_call(continuation);
+		auto result = callable.require<CallableObject>().resume_call(continuation);
 
 		ConcreteTrace(("call resume leave: callable=%d frame=%d done=%d return=%d")
 		              % callable.id().offset() % frame_id.offset()
-		              % (continuation ? "false" : "true") % return_value.id().offset());
+		              % (continuation ? "false" : "true") % result.id().offset());
 
 		frame = Frame(frame_id);
 		frame->call_continuation = continuation;
 
 		if (continuation == NULL) {
 			frame->call_callable = Object();
-			frame->push_stack(return_value);
+			frame->push_stack(result);
 		}
 
 		return true;
