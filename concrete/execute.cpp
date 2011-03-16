@@ -107,11 +107,22 @@ public:
 		ConcreteTrace(("frame new initial %d") % m_initial_frame_id.offset());
 	}
 
+	explicit ExecutionState(const ExecutorSnapshot &snapshot) throw ():
+		m_initial_frame_id(snapshot.initial_frame_id),
+		m_current_frame_id(snapshot.current_frame_id)
+	{
+	}
+
 	~ExecutionState() throw ()
 	{
 		ConcreteTrace(("frame destroy initial %d") % m_initial_frame_id.offset());
 
 		Context::DeleteBlock<ExecutionFrame>(m_initial_frame_id);
+	}
+
+	ExecutorSnapshot snapshot() const throw ()
+	{
+		return ExecutorSnapshot(m_initial_frame_id, m_current_frame_id);
 	}
 
 	/*
@@ -270,7 +281,7 @@ private:
 
 class BytecodeLoader: public Loader<BytecodeLoader> {
 public:
-	BytecodeLoader(ExecutionState &execution):
+	BytecodeLoader(ExecutionState &execution) throw ():
 		Loader<BytecodeLoader>(*this),
 		m_execution(execution)
 	{
@@ -303,16 +314,26 @@ private:
 
 class Executor::Impl: public ExecutionState {
 public:
-	explicit Impl(const CodeObject &code): ExecutionState(code), m_loader(*this)
+	explicit Impl(const CodeObject &code):
+		ExecutionState(code),
+		m_loader(*this)
+	{
+	}
+
+	explicit Impl(const ExecutorSnapshot &snapshot) throw ():
+		ExecutionState(snapshot),
+		m_loader(*this)
 	{
 	}
 
 	bool execute()
 	{
-		if (resume_call() || execute_opcode())
-			return have_frame();
-		else
-			return false;
+		if (have_frame()) {
+			if (resume_call() || execute_opcode())
+				return have_frame();
+		}
+
+		return false;
 	}
 
 private:
@@ -474,15 +495,24 @@ Executor::Executor(const CodeObject &code): m_impl(new Impl(code))
 {
 }
 
+Executor::Executor(const ExecutorSnapshot &snapshot): m_impl(new Impl(snapshot))
+{
+}
+
 Executor::~Executor() throw ()
 {
+	ActiveScope<Executor> scope(*this);
 	delete m_impl;
+}
+
+ExecutorSnapshot Executor::snapshot() const throw ()
+{
+	return m_impl->snapshot();
 }
 
 bool Executor::execute()
 {
 	ActiveScope<Executor> scope(*this);
-
 	return m_impl->execute();
 }
 

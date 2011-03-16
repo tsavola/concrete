@@ -16,8 +16,40 @@
 #include <concrete/objects/object.hpp>
 #include <concrete/util/activatable.hpp>
 #include <concrete/util/noncopyable.hpp>
+#include <concrete/util/packed.hpp>
+#include <concrete/util/portable.hpp>
 
 namespace concrete {
+
+struct ExecutorSnapshot {
+	PortableBlockId initial_frame_id;
+	PortableBlockId current_frame_id;
+
+	ExecutorSnapshot() throw ()
+	{
+	}
+
+	ExecutorSnapshot(BlockId initial_frame_id, BlockId current_frame_id) throw ():
+		initial_frame_id(initial_frame_id),
+		current_frame_id(current_frame_id)
+	{
+	}
+
+	size_t size() const throw ()
+	{
+		return sizeof (*this);
+	}
+
+	const void *ptr() const throw ()
+	{
+		return reinterpret_cast<const void *> (this);
+	}
+
+	void *ptr() throw ()
+	{
+		return reinterpret_cast<void *> (this);
+	}
+} CONCRETE_PACKED;
 
 class Executor: Activatable<Executor>, Noncopyable {
 	friend class Activatable<Executor>;
@@ -32,7 +64,10 @@ public:
 	}
 
 	explicit Executor(const CodeObject &code);
+	explicit Executor(const ExecutorSnapshot &snapshot);
 	~Executor() throw ();
+
+	ExecutorSnapshot snapshot() const throw ();
 
 	bool execute();
 
