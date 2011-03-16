@@ -37,7 +37,9 @@ CONCRETE_INTERNAL(Object_repr)(const TupleObject &args, const DictObject &kwargs
 	auto self = args.get_item(0);
 
 	return StringObject::New(
-		(boost::format("<%s object at 0x%lx>") % self.type().name().data() % self.id()).str());
+		(boost::format("<%s object at 0x%lx>")
+		 % self.type().name().data()
+		 % self.id().offset()).str());
 }
 
 CONCRETE_INTERNAL_NESTED_CALL(Object_str)(const TupleObject &args, const DictObject &kwargs)
