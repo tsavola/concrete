@@ -17,6 +17,7 @@
 #include <concrete/objects/long.hpp>
 #include <concrete/objects/module.hpp>
 #include <concrete/objects/string.hpp>
+#include <concrete/util/nested.hpp>
 
 namespace concrete {
 
@@ -62,9 +63,9 @@ CONCRETE_INTERNAL(BuiltinsModule_repr)(const TupleObject &args, const DictObject
 	return args.get_item(0).repr();
 }
 
-CONCRETE_INTERNAL(BuiltinsModule_str)(const TupleObject &args, const DictObject &kwargs)
+CONCRETE_INTERNAL_NESTED_CALL(BuiltinsModule_str)(const TupleObject &args, const DictObject &kwargs)
 {
-	return args.get_item(0).str();
+	return NestedCall(args.get_item(0).protocol().repr, args, kwargs);
 }
 
 } // namespace

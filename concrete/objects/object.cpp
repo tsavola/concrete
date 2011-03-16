@@ -13,6 +13,7 @@
 
 #include <concrete/context.hpp>
 #include <concrete/objects.hpp>
+#include <concrete/util/nested.hpp>
 
 namespace concrete {
 
@@ -39,11 +40,17 @@ CONCRETE_INTERNAL(Object_repr)(const TupleObject &args, const DictObject &kwargs
 		(boost::format("<%s object at 0x%lx>") % self.type().name().data() % self.id()).str());
 }
 
+CONCRETE_INTERNAL_NESTED_CALL(Object_str)(const TupleObject &args, const DictObject &kwargs)
+{
+	return NestedCall(args.get_item(0).protocol().repr, args, kwargs);
+}
+
 void ObjectInit(const TypeObject &type)
 {
 	type.init_builtin(StringObject::New("object"));
 
-	type.protocol().repr = InternalObject::New(internals::Object_repr);
+	type.protocol().repr  = InternalObject::New(internals::Object_repr);
+	type.protocol().str   = InternalObject::New(internals::Object_str);
 }
 
 template <typename T>
