@@ -22,6 +22,11 @@
 
 namespace concrete {
 
+void FunctionTypeInit(const TypeObject &type)
+{
+	type.init_builtin(StringObject::New("function"));
+}
+
 class CallContinuation: public Block {
 public:
 	~CallContinuation() throw ()
@@ -75,11 +80,6 @@ Object FunctionBlock::call(ContinuationOp op,
                            const DictObject *kwargs) const
 {
 	return ContinuableCall<CallContinuation>(op, state_id, Call { code }, args, kwargs);
-}
-
-void FunctionInit(const TypeObject &type)
-{
-	type.init_builtin(StringObject::New("function"));
 }
 
 } // namespace

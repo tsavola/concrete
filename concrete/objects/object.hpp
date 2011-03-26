@@ -160,7 +160,7 @@ ObjectBlock *ObjectLogic<Ops>::nonthrowing_object_block() const throw ()
 	return Context::NonthrowingBlockPointer<ObjectBlock>(id());
 }
 
-void ObjectInit(const TypeObject &type);
+void ObjectTypeInit(const TypeObject &type);
 void ObjectDestroy(ObjectBlock *block, Object type, BlockId id) throw ();
 
 } // namespace

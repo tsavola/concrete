@@ -80,7 +80,7 @@ protected:
 typedef ModuleLogic<ObjectOps>         ModuleObject;
 typedef ModuleLogic<PortableObjectOps> PortableModuleObject;
 
-void ModuleInit(const TypeObject &type);
+void ModuleTypeInit(const TypeObject &type);
 
 } // namespace
 

@@ -22,69 +22,11 @@
 
 namespace concrete {
 
-#define CONCRETE_INTERNAL_NESTED_CALL(Function)                               \
-	static ::concrete::NestedCall Function##__call(                       \
-		const ::concrete::TupleObject &args,                          \
-		const ::concrete::DictObject &kwargs);                        \
-	                                                                      \
-	CONCRETE_INTERNAL_CONTINUABLE(Function, NestedContinuation):          \
-			public ::concrete::NestedContinuable {                \
-		bool call(::concrete::BlockId state_id,                       \
-		          ::concrete::Object &result,                         \
-		          const ::concrete::TupleObject &args,                \
-		          const ::concrete::DictObject &kwargs) const         \
-		{                                                             \
-			auto call = Function##__call(args, kwargs);           \
-			return call_nested(state_id,                          \
-			                   call.callable,                     \
-			                   result,                            \
-			                   call.args,                         \
-			                   call.kwargs);                      \
-		}                                                             \
-		                                                              \
-		bool resume(::concrete::BlockId state_id,                     \
-		            ::concrete::Object &result) const                 \
-		{                                                             \
-			return resume_nested(state_id, result);               \
-		}                                                             \
-	};                                                                    \
-	                                                                      \
-	::concrete::NestedCall Function##__call
-
-class NestedCall: Noncopyable {
-public:
-	NestedCall(const Object &callable):
-		callable(callable.require<CallableObject>()),
-		args(TupleObject::New()),
-		kwargs(DictObject::EmptySingleton())
-	{
-	}
-
-	NestedCall(const Object &callable, const TupleObject &args):
-		callable(callable.require<CallableObject>()),
-		args(args),
-		kwargs(DictObject::EmptySingleton())
-	{
-	}
-
-	NestedCall(const Object &callable, const TupleObject &args, const DictObject &kwargs):
-		callable(callable.require<CallableObject>()),
-		args(args),
-		kwargs(kwargs)
-	{
-	}
-
-	NestedCall(const NestedCall &other) throw ():
-		callable(other.callable),
-		args(other.args),
-		kwargs(other.kwargs)
-	{
-	}
-
-	const CallableObject callable;
-	const TupleObject args;
-	const DictObject kwargs;
-};
+#define CONCRETE_INTERNAL_NESTED_CALL(Name, Function)                         \
+	CONCRETE_INTERNAL_CONTINUABLE(Name,                                   \
+	                              ::concrete::NestedCallContinuable,      \
+	                              ::concrete::NestedContinuation,         \
+	                              Function)
 
 struct NestedContinuable;
 
@@ -139,6 +81,65 @@ protected:
 	static NestedContinuation *NestedState(BlockId id)
 	{
 		return Context::BlockPointer<NestedContinuation>(id);
+	}
+};
+
+class NestedCall: Noncopyable {
+public:
+	NestedCall(const Object &callable):
+		callable(callable.require<CallableObject>()),
+		args(TupleObject::New()),
+		kwargs(DictObject::EmptySingleton())
+	{
+	}
+
+	NestedCall(const Object &callable, const TupleObject &args):
+		callable(callable.require<CallableObject>()),
+		args(args),
+		kwargs(DictObject::EmptySingleton())
+	{
+	}
+
+	NestedCall(const Object &callable, const TupleObject &args, const DictObject &kwargs):
+		callable(callable.require<CallableObject>()),
+		args(args),
+		kwargs(kwargs)
+	{
+	}
+
+	NestedCall(const NestedCall &other) throw ():
+		callable(other.callable),
+		args(other.args),
+		kwargs(other.kwargs)
+	{
+	}
+
+	const CallableObject callable;
+	const TupleObject args;
+	const DictObject kwargs;
+};
+
+struct NestedCallContinuable: NestedContinuable {
+	typedef NestedCall (*Function)(const TupleObject &args, const DictObject &kwargs);
+
+	const Function function;
+
+	explicit NestedCallContinuable(Function function): function(function)
+	{
+	}
+
+	bool call(BlockId state_id,
+	          Object &result,
+	          const TupleObject &args,
+	          const DictObject &kwargs) const
+	{
+		auto call = function(args, kwargs);
+		return call_nested(state_id, call.callable, result, call.args, call.kwargs);
+	}
+
+	bool resume(BlockId state_id, Object &result) const
+	{
+		return resume_nested(state_id, result);
 	}
 };
 

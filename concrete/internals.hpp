@@ -1,41 +1,13 @@
-/*
- * Copyright (c) 2011  Timo Savola
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- */
-
-#ifndef CONCRETE_INTERNALS_HPP
-#define CONCRETE_INTERNALS_HPP
-
-namespace concrete {
-
-namespace internals {
-	enum Serial {
-		Object_repr,
-		Object_str,
-
-		LongObject_add,
-		LongObject_repr,
-		LongObject_str,
-
-		StringObject_add,
-		StringObject_repr,
-		StringObject_str,
-
-		BuiltinsModule_id,
-		BuiltinsModule_print,
-		BuiltinsModule_repr,
-		BuiltinsModule_str,
-
-		ConcreteModule_test,
-
-		InternalCount
-	};
-}
-
-} // namespace
-
-#endif
+CONCRETE_INTERNAL_SYMBOL(ObjectType_Repr)
+CONCRETE_INTERNAL_SYMBOL(ObjectType_Str)
+CONCRETE_INTERNAL_SYMBOL(LongType_Add)
+CONCRETE_INTERNAL_SYMBOL(LongType_Repr)
+CONCRETE_INTERNAL_SYMBOL(LongType_Str)
+CONCRETE_INTERNAL_SYMBOL(StringType_Add)
+CONCRETE_INTERNAL_SYMBOL(StringType_Repr)
+CONCRETE_INTERNAL_SYMBOL(StringType_Str)
+CONCRETE_INTERNAL_SYMBOL(BuiltinsModule_Id)
+CONCRETE_INTERNAL_SYMBOL(BuiltinsModule_Print)
+CONCRETE_INTERNAL_SYMBOL(BuiltinsModule_Repr)
+CONCRETE_INTERNAL_SYMBOL(BuiltinsModule_Str)
+CONCRETE_INTERNAL_SYMBOL(ConcreteModule_Test)

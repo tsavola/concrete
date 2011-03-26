@@ -9,19 +9,18 @@
 
 #include "none.hpp"
 
-#include <concrete/internals.hpp>
 #include <concrete/objects/internal.hpp>
 #include <concrete/objects/string.hpp>
 #include <concrete/objects/type.hpp>
 
 namespace concrete {
 
-void NoneInit(const TypeObject &type)
+void NoneTypeInit(const TypeObject &type)
 {
 	type.init_builtin(StringObject::New("none"));
 
-	type.protocol().repr  = InternalObject::New(internals::Object_repr);
-	type.protocol().str   = InternalObject::New(internals::Object_str);
+	type.protocol().repr  = InternalObject::New(internal::ObjectType_Repr);
+	type.protocol().str   = InternalObject::New(internal::ObjectType_Str);
 }
 
 } // namespace

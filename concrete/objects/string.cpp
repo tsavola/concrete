@@ -13,11 +13,19 @@
 #include <cstring>
 
 #include <concrete/exception.hpp>
-#include <concrete/internals.hpp>
 #include <concrete/objects/internal.hpp>
 #include <concrete/objects/type.hpp>
 
 namespace concrete {
+
+void StringTypeInit(const TypeObject &type)
+{
+	type.init_builtin(StringObject::New("string"));
+
+	type.protocol().add   = InternalObject::New(internal::StringType_Add);
+	type.protocol().repr  = InternalObject::New(internal::StringType_Repr);
+	type.protocol().str   = InternalObject::New(internal::StringType_Str);
+}
 
 StringBlock::StringBlock(const TypeObject &type, const char *data_): ObjectBlock(type)
 {
@@ -71,7 +79,7 @@ void StringBlock::initialized()
 	length = string_length;
 }
 
-CONCRETE_INTERNAL(StringObject_add)(const TupleObject &args, const DictObject &kwargs)
+static Object StringAdd(const TupleObject &args, const DictObject &kwargs)
 {
 	auto s1 = args.get_item(0).require<StringObject>();
 	auto s2 = args.get_item(1).require<StringObject>();
@@ -96,7 +104,7 @@ CONCRETE_INTERNAL(StringObject_add)(const TupleObject &args, const DictObject &k
 	return r;
 }
 
-CONCRETE_INTERNAL(StringObject_repr)(const TupleObject &args, const DictObject &kwargs)
+static Object StringRepr(const TupleObject &args, const DictObject &kwargs)
 {
 	auto self = args.get_item(0).require<StringObject>();
 
@@ -132,18 +140,13 @@ CONCRETE_INTERNAL(StringObject_repr)(const TupleObject &args, const DictObject &
 	return StringObject::New(value);
 }
 
-CONCRETE_INTERNAL(StringObject_str)(const TupleObject &args, const DictObject &kwargs)
+static Object StringStr(const TupleObject &args, const DictObject &kwargs)
 {
 	return args.get_item(0);
 }
 
-void StringInit(const TypeObject &type)
-{
-	type.init_builtin(StringObject::New("string"));
-
-	type.protocol().add   = InternalObject::New(internals::StringObject_add);
-	type.protocol().repr  = InternalObject::New(internals::StringObject_repr);
-	type.protocol().str   = InternalObject::New(internals::StringObject_str);
-}
-
 } // namespace
+
+CONCRETE_INTERNAL_FUNCTION(StringType_Add,  StringAdd)
+CONCRETE_INTERNAL_FUNCTION(StringType_Repr, StringRepr)
+CONCRETE_INTERNAL_FUNCTION(StringType_Str,  StringStr)

@@ -110,7 +110,7 @@ protected:
 	}
 } CONCRETE_PACKED;
 
-void CodeInit(const TypeObject &type);
+void CodeTypeInit(const TypeObject &type);
 
 } // namespace
 

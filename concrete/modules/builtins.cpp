@@ -11,7 +11,6 @@
 
 #include <iostream>
 
-#include <concrete/internals.hpp>
 #include <concrete/objects/dict.hpp>
 #include <concrete/objects/internal.hpp>
 #include <concrete/objects/long.hpp>
@@ -27,17 +26,17 @@ DictObject BuiltinsModuleInit(const DictObject &modules)
 
 	dict.set_item(StringObject::New("None"),  Context::None());
 
-	dict.set_item(StringObject::New("id"),    InternalObject::New(internals::BuiltinsModule_id));
-	dict.set_item(StringObject::New("print"), InternalObject::New(internals::BuiltinsModule_print));
-	dict.set_item(StringObject::New("repr"),  InternalObject::New(internals::BuiltinsModule_repr));
-	dict.set_item(StringObject::New("str"),   InternalObject::New(internals::BuiltinsModule_str));
+	dict.set_item(StringObject::New("id"),    InternalObject::New(internal::BuiltinsModule_Id));
+	dict.set_item(StringObject::New("print"), InternalObject::New(internal::BuiltinsModule_Print));
+	dict.set_item(StringObject::New("repr"),  InternalObject::New(internal::BuiltinsModule_Repr));
+	dict.set_item(StringObject::New("str"),   InternalObject::New(internal::BuiltinsModule_Str));
 
 	modules.set_item(StringObject::New("builtins"), ModuleObject::New(dict));
 
 	return dict;
 }
 
-CONCRETE_INTERNAL(BuiltinsModule_id)(const TupleObject &args, const DictObject &kwargs)
+static Object Id(const TupleObject &args, const DictObject &kwargs)
 {
 	return LongObject::New(args.get_item(0).id().offset());
 }
@@ -51,7 +50,7 @@ public:
 
 } CONCRETE_PACKED;
 
-CONCRETE_INTERNAL_CONTINUABLE(BuiltinsModule_print, PrintContinuation): NestedContinuable {
+struct Print: NestedContinuable {
 	bool call(BlockId state_id, Object &, const TupleObject &args, const DictObject &kwargs) const
 	{
 		if (args.size() == 0)
@@ -119,14 +118,19 @@ private:
 	}
 };
 
-CONCRETE_INTERNAL(BuiltinsModule_repr)(const TupleObject &args, const DictObject &kwargs)
+static Object Repr(const TupleObject &args, const DictObject &kwargs)
 {
 	return args.get_item(0).repr();
 }
 
-CONCRETE_INTERNAL_NESTED_CALL(BuiltinsModule_str)(const TupleObject &args, const DictObject &kwargs)
+static NestedCall Str(const TupleObject &args, const DictObject &kwargs)
 {
 	return NestedCall(args.get_item(0).protocol().repr, args, kwargs);
 }
 
 } // namespace
+
+CONCRETE_INTERNAL_FUNCTION   (BuiltinsModule_Id,    Id)
+CONCRETE_INTERNAL_CONTINUABLE(BuiltinsModule_Print, concrete::Print, concrete::PrintContinuation)
+CONCRETE_INTERNAL_FUNCTION   (BuiltinsModule_Repr,  Repr)
+CONCRETE_INTERNAL_NESTED_CALL(BuiltinsModule_Str,   Str)

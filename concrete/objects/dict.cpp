@@ -15,7 +15,7 @@
 
 namespace concrete {
 
-void DictInit(const TypeObject &type)
+void DictTypeInit(const TypeObject &type)
 {
 	type.init_builtin(StringObject::New("dict"));
 

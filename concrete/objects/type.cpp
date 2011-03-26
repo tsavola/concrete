@@ -13,7 +13,7 @@
 
 namespace concrete {
 
-void TypeInit(const TypeObject &type)
+void TypeTypeInit(const TypeObject &type)
 {
 	type.init_builtin(StringObject::New("type"));
 }

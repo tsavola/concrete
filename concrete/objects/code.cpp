@@ -18,6 +18,11 @@
 
 namespace concrete {
 
+void CodeTypeInit(const TypeObject &type)
+{
+	type.init_builtin(StringObject::New("code"));
+}
+
 class CodeLoaderState: Noncopyable {
 public:
 	CodeLoaderState(const uint8_t *data, size_t size): m_data(data), m_size(size), m_position(0)
@@ -141,11 +146,6 @@ CodeObject CodeBlock::Load(const void *data, size_t size)
 	CodeLoaderState state(bytedata + 8, size - 8);
 	CodeLoader Loader(state);
 	return Loader.load_next<CodeObject>();
-}
-
-void CodeInit(const TypeObject &type)
-{
-	type.init_builtin(StringObject::New("code"));
 }
 
 } // namespace

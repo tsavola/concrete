@@ -68,15 +68,6 @@ Object ContinuableCall(ContinuationOp op,
 	return result;
 }
 
-template <typename Continuation, typename Continuable>
-Object ContinuableCall(ContinuationOp op,
-                       BlockId &continuation_id,
-                       const TupleObject *args,
-                       const DictObject *kwargs)
-{
-	return ContinuableCall<Continuation>(op, continuation_id, Continuable(), args, kwargs);
-}
-
 } // namespace
 
 #endif

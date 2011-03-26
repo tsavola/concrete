@@ -14,7 +14,7 @@
 
 namespace concrete {
 
-void ModuleInit(const TypeObject &type)
+void ModuleTypeInit(const TypeObject &type)
 {
 	type.init_builtin(StringObject::New("module"));
 }

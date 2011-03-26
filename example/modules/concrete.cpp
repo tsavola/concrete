@@ -11,14 +11,16 @@
 
 #include <boost/format.hpp>
 
-#include <concrete/internals.hpp>
+#include <concrete/objects/dict.hpp>
 #include <concrete/objects/internal.hpp>
+#include <concrete/objects/object.hpp>
+#include <concrete/objects/tuple.hpp>
 
 using namespace concrete;
 
 namespace example {
 
-CONCRETE_INTERNAL(ConcreteModule_test)(const TupleObject &args, const DictObject &kwargs)
+static Object Test(const TupleObject &args, const DictObject &kwargs)
 {
 	std::cout << boost::format("concrete.test: args=%d kwargs=%d")
 		% args.size() % kwargs.size() << std::endl;
@@ -27,3 +29,5 @@ CONCRETE_INTERNAL(ConcreteModule_test)(const TupleObject &args, const DictObject
 }
 
 } // namespace
+
+CONCRETE_INTERNAL_FUNCTION(ConcreteModule_Test, example::Test)

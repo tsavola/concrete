@@ -95,7 +95,7 @@ TypeBlock *TypeLogic<Ops>::type_block() const
 	return static_cast<TypeBlock *> (ObjectLogic<Ops>::object_block());
 }
 
-void TypeInit(const TypeObject &type);
+void TypeTypeInit(const TypeObject &type);
 
 } // namespace
 

@@ -91,7 +91,7 @@ protected:
 typedef BytesLogic<ObjectOps>         BytesObject;
 typedef BytesLogic<PortableObjectOps> PortableBytesObject;
 
-void BytesInit(const TypeObject &type);
+void BytesTypeInit(const TypeObject &type);
 
 } // namespace
 

@@ -16,25 +16,29 @@
 
 namespace concrete {
 
-static InternalFunction internal_functions[internals::InternalCount];
+static InternalFunction *functions[] = {
+#	define CONCRETE_INTERNAL_SYMBOL(Symbol) internal_symbol::Symbol,
+#	include <concrete/internals.hpp>
+#	undef CONCRETE_INTERNAL_SYMBOL
+};
+
+void InternalTypeInit(const TypeObject &type)
+{
+	type.init_builtin(StringObject::New("internal"));
+}
 
 Object InternalBlock::call(ContinuationOp op,
                            BlockId &continuation,
                            const TupleObject *args,
                            const DictObject *kwargs) const
 {
-	assert(internal_functions[serial]);
-	return internal_functions[serial](op, continuation, args, kwargs);
-}
+	unsigned int index = symbol_id;
 
-void InternalRegister(InternalSerial serial, InternalFunction function) throw ()
-{
-	internal_functions[serial] = function;
-}
+	if (index >= sizeof (functions) / sizeof (functions[0]))
+		throw RuntimeError("internal call undefined");
 
-void InternalInit(const TypeObject &type)
-{
-	type.init_builtin(StringObject::New("internal"));
+	assert(functions[index]);
+	return functions[index](op, continuation, args, kwargs);
 }
 
 } // namespace

@@ -51,18 +51,18 @@ Context::Context()
 
 	none.init_builtin(none_type);
 
-	TypeInit(type_type);
-	ObjectInit(object_type);
-	NoneInit(none_type);
-	StringInit(string_type);
-	LongInit(long_type);
-	BytesInit(bytes_type);
-	TupleInit(tuple_type);
-	DictInit(dict_type);
-	CodeInit(code_type);
-	FunctionInit(function_type);
-	InternalInit(internal_type);
-	ModuleInit(module_type);
+	TypeTypeInit(type_type);
+	ObjectTypeInit(object_type);
+	NoneTypeInit(none_type);
+	StringTypeInit(string_type);
+	LongTypeInit(long_type);
+	BytesTypeInit(bytes_type);
+	TupleTypeInit(tuple_type);
+	DictTypeInit(dict_type);
+	CodeTypeInit(code_type);
+	FunctionTypeInit(function_type);
+	InternalTypeInit(internal_type);
+	ModuleTypeInit(module_type);
 
 	auto modules = DictObject::New();
 	auto builtins = BuiltinsModuleInit(modules);

@@ -14,7 +14,7 @@
 
 namespace concrete {
 
-void BytesInit(const TypeObject &type)
+void BytesTypeInit(const TypeObject &type)
 {
 	type.init_builtin(StringObject::New("bytes"));
 }

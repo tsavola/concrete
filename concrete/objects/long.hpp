@@ -79,7 +79,7 @@ protected:
 typedef LongLogic<ObjectOps>         LongObject;
 typedef LongLogic<PortableObjectOps> PortableLongObject;
 
-void LongInit(const TypeObject &type);
+void LongTypeInit(const TypeObject &type);
 
 } // namespace
 

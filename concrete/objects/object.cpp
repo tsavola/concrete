@@ -32,7 +32,15 @@ Object ObjectProtocol::Str(const Object &self)
 	return self.protocol().str.require<InternalObject>().call(self);
 }
 
-CONCRETE_INTERNAL(Object_repr)(const TupleObject &args, const DictObject &kwargs)
+void ObjectTypeInit(const TypeObject &type)
+{
+	type.init_builtin(StringObject::New("object"));
+
+	type.protocol().repr  = InternalObject::New(internal::ObjectType_Repr);
+	type.protocol().str   = InternalObject::New(internal::ObjectType_Str);
+}
+
+static Object ObjectRepr(const TupleObject &args, const DictObject &kwargs)
 {
 	auto self = args.get_item(0);
 
@@ -42,17 +50,9 @@ CONCRETE_INTERNAL(Object_repr)(const TupleObject &args, const DictObject &kwargs
 		 % self.id().offset()).str());
 }
 
-CONCRETE_INTERNAL_NESTED_CALL(Object_str)(const TupleObject &args, const DictObject &kwargs)
+struct NestedCall ObjectStr(const TupleObject &args, const DictObject &kwargs)
 {
 	return NestedCall(args.get_item(0).protocol().repr, args, kwargs);
-}
-
-void ObjectInit(const TypeObject &type)
-{
-	type.init_builtin(StringObject::New("object"));
-
-	type.protocol().repr  = InternalObject::New(internals::Object_repr);
-	type.protocol().str   = InternalObject::New(internals::Object_str);
 }
 
 template <typename T>
@@ -86,3 +86,6 @@ void ObjectDestroy(ObjectBlock *block, Object type, BlockId id) throw ()
 }
 
 } // namespace
+
+CONCRETE_INTERNAL_FUNCTION   (ObjectType_Repr, ObjectRepr)
+CONCRETE_INTERNAL_NESTED_CALL(ObjectType_Str,  ObjectStr)

@@ -44,7 +44,7 @@ void NoneLogic<Ops>::init_builtin(const TypeObject &type)
 	ObjectLogic<Ops>::object_block()->type_object = type;
 }
 
-void NoneInit(const TypeObject &type);
+void NoneTypeInit(const TypeObject &type);
 
 } // namespace
 

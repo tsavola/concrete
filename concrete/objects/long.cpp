@@ -11,14 +11,22 @@
 
 #include <boost/format.hpp>
 
-#include <concrete/internals.hpp>
 #include <concrete/objects/internal.hpp>
 #include <concrete/objects/string.hpp>
 #include <concrete/objects/type.hpp>
 
 namespace concrete {
 
-CONCRETE_INTERNAL(LongObject_add)(const TupleObject &args, const DictObject &kwargs)
+void LongTypeInit(const TypeObject &type)
+{
+	type.init_builtin(StringObject::New("long"));
+
+	type.protocol().add   = InternalObject::New(internal::LongType_Add);
+	type.protocol().repr  = InternalObject::New(internal::LongType_Repr);
+	type.protocol().str   = InternalObject::New(internal::LongType_Str);
+}
+
+static Object LongAdd(const TupleObject &args, const DictObject &kwargs)
 {
 	int64_t value = 0;
 
@@ -28,22 +36,14 @@ CONCRETE_INTERNAL(LongObject_add)(const TupleObject &args, const DictObject &kwa
 	return LongObject::New(value);
 }
 
-CONCRETE_INTERNAL_FUNCTION(LongObject_str)(const TupleObject &args, const DictObject &kwargs)
+static Object LongStr(const TupleObject &args, const DictObject &kwargs)
 {
 	return StringObject::New(
 		(boost::format("%ld") % args.get_item(0).require<LongObject>().value()).str());
 }
 
-CONCRETE_INTERNAL_REGISTER(LongObject_repr, LongObject_str)
-CONCRETE_INTERNAL_REGISTER(LongObject_str,  LongObject_str)
-
-void LongInit(const TypeObject &type)
-{
-	type.init_builtin(StringObject::New("long"));
-
-	type.protocol().add   = InternalObject::New(internals::LongObject_add);
-	type.protocol().repr  = InternalObject::New(internals::LongObject_repr);
-	type.protocol().str   = InternalObject::New(internals::LongObject_str);
-}
-
 } // namespace
+
+CONCRETE_INTERNAL_FUNCTION(LongType_Add,  LongAdd)
+CONCRETE_INTERNAL_FUNCTION(LongType_Repr, LongStr)
+CONCRETE_INTERNAL_FUNCTION(LongType_Str,  LongStr)

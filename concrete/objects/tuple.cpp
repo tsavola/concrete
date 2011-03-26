@@ -15,7 +15,7 @@
 
 namespace concrete {
 
-void TupleInit(const TypeObject &type)
+void TupleTypeInit(const TypeObject &type)
 {
 	type.init_builtin(StringObject::New("tuple"));
 

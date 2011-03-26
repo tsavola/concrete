@@ -184,7 +184,7 @@ private:
 typedef DictLogic<ObjectOps>         DictObject;
 typedef DictLogic<PortableObjectOps> PortableDictObject;
 
-void DictInit(const TypeObject &type);
+void DictTypeInit(const TypeObject &type);
 
 } // namespace
 
