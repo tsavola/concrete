@@ -19,7 +19,7 @@ void DictTypeInit(const TypeObject &type)
 {
 	type.init_builtin(StringObject::New("dict"));
 
-	Context::BuiltinObjects().dict_empty = DictObject::NewWithCapacity(0);
+	Context::SystemObjects()->dict_empty = DictObject::NewWithCapacity(0);
 }
 
 } // namespace

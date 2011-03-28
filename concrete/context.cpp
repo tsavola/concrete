@@ -15,72 +15,66 @@
 
 namespace concrete {
 
+Context::SystemObjectsBlock::SystemObjectsBlock(const NoneObject &none) throw ():
+	none                    (none),
+	type_type               (TypeObject::NewBuiltin(none)),
+	object_type             (TypeObject::NewBuiltin(none, type_type)),
+	none_type               (TypeObject::NewBuiltin(none, type_type)),
+	string_type             (TypeObject::NewBuiltin(none, type_type)),
+	long_type               (TypeObject::NewBuiltin(none, type_type)),
+	bytes_type              (TypeObject::NewBuiltin(none, type_type)),
+	tuple_type              (TypeObject::NewBuiltin(none, type_type)),
+	tuple_empty             (none),
+	dict_type               (TypeObject::NewBuiltin(none, type_type)),
+	dict_empty              (none),
+	code_type               (TypeObject::NewBuiltin(none, type_type)),
+	function_type           (TypeObject::NewBuiltin(none, type_type)),
+	internal_type           (TypeObject::NewBuiltin(none, type_type)),
+	module_type             (TypeObject::NewBuiltin(none, type_type)),
+	builtins                (none),
+	modules                 (none)
+{
+}
+
 Context::Context()
 {
 	ContextScope scope(*this);
 
 	auto none = NoneObject::NewBuiltin();
-	m_builtin_none = NewBlock<BuiltinNoneBlock>(none);
 
-	auto type_type     = TypeObject::NewBuiltin();
-	auto object_type   = TypeObject::NewBuiltin(type_type);
-	auto none_type     = TypeObject::NewBuiltin(type_type);
-	auto string_type   = TypeObject::NewBuiltin(type_type);
-	auto long_type     = TypeObject::NewBuiltin(type_type);
-	auto bytes_type    = TypeObject::NewBuiltin(type_type);
-	auto tuple_type    = TypeObject::NewBuiltin(type_type);
-	auto dict_type     = TypeObject::NewBuiltin(type_type);
-	auto code_type     = TypeObject::NewBuiltin(type_type);
-	auto function_type = TypeObject::NewBuiltin(type_type);
-	auto internal_type = TypeObject::NewBuiltin(type_type);
-	auto module_type   = TypeObject::NewBuiltin(type_type);
+	m_system_objects = m_arena.new_block<SystemObjectsBlock>(none);
 
-	m_builtin_objects = NewBlock<BuiltinObjectsBlock>(
-		type_type,
-		object_type,
-		none_type,
-		string_type,
-		long_type,
-		bytes_type,
-		tuple_type,
-		dict_type,
-		code_type,
-		function_type,
-		internal_type,
-		module_type);
-
-	none.init_builtin(none_type);
-
-	TypeTypeInit(type_type);
-	ObjectTypeInit(object_type);
-	NoneTypeInit(none_type);
-	StringTypeInit(string_type);
-	LongTypeInit(long_type);
-	BytesTypeInit(bytes_type);
-	TupleTypeInit(tuple_type);
-	DictTypeInit(dict_type);
-	CodeTypeInit(code_type);
-	FunctionTypeInit(function_type);
-	InternalTypeInit(internal_type);
-	ModuleTypeInit(module_type);
+	none.init_builtin       (system_objects()->none_type);
+	TypeTypeInit            (system_objects()->type_type);
+	ObjectTypeInit          (system_objects()->object_type);
+	NoneTypeInit            (system_objects()->none_type);
+	StringTypeInit          (system_objects()->string_type);
+	LongTypeInit            (system_objects()->long_type);
+	BytesTypeInit           (system_objects()->bytes_type);
+	TupleTypeInit           (system_objects()->tuple_type);
+	DictTypeInit            (system_objects()->dict_type);
+	CodeTypeInit            (system_objects()->code_type);
+	FunctionTypeInit        (system_objects()->function_type);
+	InternalTypeInit        (system_objects()->internal_type);
+	ModuleTypeInit          (system_objects()->module_type);
 
 	auto modules = DictObject::New();
-	auto builtins = BuiltinsModuleInit(modules);
 
+	auto builtins = BuiltinsModuleInit(modules);
 	ConcreteModuleInit(modules);
 
-	builtin_objects().builtins = builtins;
-	builtin_objects().modules = modules;
+	system_objects()->builtins = builtins;
+	system_objects()->modules = modules;
 }
 
 Object Context::LoadBuiltinName(const Object &name)
 {
-	return BuiltinObjects().builtins.cast<DictObject>().get_item(name);
+	return SystemObjects()->builtins.cast<DictObject>().get_item(name);
 }
 
 Object Context::ImportBuiltinModule(const Object &name)
 {
-	return BuiltinObjects().modules.cast<DictObject>().get_item(name);
+	return SystemObjects()->modules.cast<DictObject>().get_item(name);
 }
 
 } // namespace

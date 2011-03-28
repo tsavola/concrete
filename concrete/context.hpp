@@ -24,19 +24,16 @@
 namespace concrete {
 
 struct ContextSnapshot: ArenaSnapshot {
-	PortableBlockId builtin_none;
-	PortableBlockId builtin_objects;
+	PortableBlockId system_objects;
 
 	ContextSnapshot() throw ()
 	{
 	}
 
-	ContextSnapshot(const ArenaSnapshot &arena,
-	                BlockId builtin_none,
-	                BlockId builtin_objects) throw ():
-		ArenaSnapshot(arena),
-		builtin_none(builtin_none),
-		builtin_objects(builtin_objects)
+	ContextSnapshot(const ArenaSnapshot &arena_snapshot,
+	                BlockId system_objects) throw ():
+		ArenaSnapshot(arena_snapshot),
+		system_objects(system_objects)
 	{
 	}
 
@@ -47,16 +44,9 @@ struct ContextSnapshot: ArenaSnapshot {
 } CONCRETE_PACKED;
 
 class Context: public Activatable<Context>, Noncopyable {
-	struct BuiltinNoneBlock: Block {
-		const PortableNoneObject none;
-
-		BuiltinNoneBlock(const NoneObject &none): none(none)
-		{
-		}
-	} CONCRETE_PACKED;
-
 public:
-	struct BuiltinObjectsBlock: Block {
+	struct SystemObjectsBlock: Block {
+		const PortableNoneObject none;
 		const PortableTypeObject type_type;
 		const PortableTypeObject object_type;
 		const PortableTypeObject none_type;
@@ -64,83 +54,74 @@ public:
 		const PortableTypeObject long_type;
 		const PortableTypeObject bytes_type;
 		const PortableTypeObject tuple_type;
-		PortableObject tuple_empty;
+		PortableObject           tuple_empty;
 		const PortableTypeObject dict_type;
-		PortableObject dict_empty;
+		PortableObject           dict_empty;
 		const PortableTypeObject code_type;
 		const PortableTypeObject function_type;
 		const PortableTypeObject internal_type;
 		const PortableTypeObject module_type;
+		PortableObject           builtins;
+		PortableObject           modules;
 
-		PortableObject builtins;
-		PortableObject modules;
+		SystemObjectsBlock(const NoneObject &none) throw ();
 
-		BuiltinObjectsBlock(const TypeObject &type_type,
-		                    const TypeObject &object_type,
-		                    const TypeObject &none_type,
-		                    const TypeObject &string_type,
-		                    const TypeObject &long_type,
-		                    const TypeObject &bytes_type,
-		                    const TypeObject &tuple_type,
-		                    const TypeObject &dict_type,
-		                    const TypeObject &code_type,
-		                    const TypeObject &function_type,
-		                    const TypeObject &internal_type,
-		                    const TypeObject &module_type):
-			type_type(type_type),
-			object_type(object_type),
-			none_type(none_type),
-			string_type(string_type),
-			long_type(long_type),
-			bytes_type(bytes_type),
-			tuple_type(tuple_type),
-			dict_type(dict_type),
-			code_type(code_type),
-			function_type(function_type),
-			internal_type(internal_type),
-			module_type(module_type)
-		{
-		}
+	private:
+		SystemObjectsBlock(const SystemObjectsBlock &);
+		const SystemObjectsBlock &operator=(const SystemObjectsBlock &);
+
 	} CONCRETE_PACKED;
+
+	static Arena::Allocation AllocBlock(size_t size)
+	{
+		return Active().m_arena.alloc_block(size);
+	}
+
+	static void FreeBlock(BlockId id) throw ()
+	{
+		Active().m_arena.free_block(id);
+	}
 
 	template <typename T, typename... Args>
 	static BlockId NewBlock(Args... args)
 	{
-		return Active().new_block<T>(args...);
+		return Active().m_arena.new_block<T>(args...);
 	}
 
 	template <typename T, typename... Args>
 	static BlockId NewCustomSizeBlock(size_t size, Args... args)
 	{
-		return Active().new_custom_size_block<T>(size, args...);
+		return Active().m_arena.new_custom_size_block<T>(size, args...);
 	}
 
 	template <typename T>
 	static void DeleteBlock(BlockId id) // doesn't throw unless ~T() does
 	{
-		Active().delete_block<T>(id);
+		Active().m_arena.delete_block<T>(id);
 	}
 
 	template <typename T>
 	static T *BlockPointer(BlockId id)
 	{
-		return Active().block_pointer<T>(id);
+		return Active().m_arena.block_pointer<T>(id);
 	}
 
 	template <typename T>
 	static T *NonthrowingBlockPointer(BlockId id) throw ()
 	{
-		return Active().nonthrowing_block_pointer<T>(id);
+		return Active().m_arena.nonthrowing_block_pointer<T>(id);
 	}
 
-	static const PortableNoneObject &None()
+	static SystemObjectsBlock *SystemObjects()
 	{
-		return Active().builtin_none().none;
+		return Active().system_objects();
 	}
 
-	static BuiltinObjectsBlock &BuiltinObjects()
+	static const SystemObjectsBlock *NonthrowingSystemObjects() throw ()
 	{
-		return Active().builtin_objects();
+		auto &active = Active();
+		return active.m_arena.nonthrowing_block_pointer<SystemObjectsBlock>(
+			active.m_system_objects);
 	}
 
 	static Object LoadBuiltinName(const Object &name);
@@ -148,80 +129,25 @@ public:
 
 	Context();
 
-	Context(const ContextSnapshot &snapshot) throw ():
+	explicit Context(const ContextSnapshot &snapshot) throw ():
 		m_arena(snapshot),
-		m_builtin_none(snapshot.builtin_none),
-		m_builtin_objects(snapshot.builtin_objects)
+		m_system_objects(snapshot.system_objects)
 	{
 	}
 
 	ContextSnapshot snapshot() const throw ()
 	{
-		return ContextSnapshot(m_arena.snapshot(), m_builtin_none, m_builtin_objects);
-	}
-
-	template <typename T, typename... Args>
-	BlockId new_block(Args... args)
-	{
-		return new_custom_size_block<T>(sizeof (T), args...);
-	}
-
-	template <typename T, typename... Args>
-	BlockId new_custom_size_block(size_t size, Args... args)
-	{
-		assert(size >= sizeof (T));
-
-		auto ret = m_arena.alloc(size);
-		new (static_cast<T *> (ret.ptr)) T(args...);
-		return ret.id;
-	}
-
-	template <typename T>
-	void delete_block(BlockId id) // doesn't throw unless ~T() does
-	{
-		auto ptr = nonthrowing_block_pointer<T>(id);
-		if (ptr) {
-			ptr->~T();
-			m_arena.free(id);
-		}
-	}
-
-	template <typename T>
-	T *block_pointer(BlockId id)
-	{
-		return static_cast<T *> (m_arena.pointer(id, sizeof (T)));
-	}
-
-	template <typename T>
-	T *nonthrowing_block_pointer(BlockId id) throw ()
-	{
-		return static_cast<T *> (m_arena.nonthrowing_pointer(id, sizeof (T)));
-	}
-
-	Arena &arena() throw ()
-	{
-		return m_arena;
-	}
-
-	const BuiltinObjectsBlock *nonthrowing_builtin_objects() throw ()
-	{
-		return nonthrowing_block_pointer<BuiltinObjectsBlock>(m_builtin_objects);
+		return ContextSnapshot(m_arena.snapshot(), m_system_objects);
 	}
 
 private:
-	BuiltinNoneBlock &builtin_none()
+	SystemObjectsBlock *system_objects()
 	{
-		return *block_pointer<BuiltinNoneBlock>(m_builtin_none);
-	}
-
-	BuiltinObjectsBlock &builtin_objects()
-	{
-		return *block_pointer<BuiltinObjectsBlock>(m_builtin_objects);
+		return m_arena.block_pointer<SystemObjectsBlock>(m_system_objects);
 	}
 
 	Arena m_arena;
-	BlockId m_builtin_none;
-	BlockId m_builtin_objects;
+	BlockId m_system_objects;
 };
 
 typedef ActiveScope<Context> ContextScope;

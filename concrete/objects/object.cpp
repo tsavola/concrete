@@ -17,6 +17,13 @@
 
 namespace concrete {
 
+ObjectProtocol::ObjectProtocol(const NoneObject &none) throw ():
+	add(none),
+	repr(none),
+	str(none)
+{
+}
+
 Object ObjectProtocol::Add(const Object &self, const Object &other)
 {
 	return self.protocol().add.require<InternalObject>().call(self, other);
@@ -63,8 +70,7 @@ static void destruct(ObjectBlock *block) // doesn't throw unless ~T() does
 
 void ObjectDestroy(ObjectBlock *block, Object type, BlockId id) throw ()
 {
-	auto builtin = Context::Active().nonthrowing_builtin_objects();
-
+	auto builtin = Context::NonthrowingSystemObjects();
 	if (builtin == NULL)
 		return;
 
@@ -82,7 +88,7 @@ void ObjectDestroy(ObjectBlock *block, Object type, BlockId id) throw ()
 	if (type == builtin->module_type)   { destruct<ModuleBlock>(block);   } else
 	                                    { assert(false); return;          }
 
-	Context::Active().arena().free(id);
+	Context::FreeBlock(id);
 }
 
 } // namespace

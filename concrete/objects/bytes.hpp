@@ -42,7 +42,7 @@ class BytesLogic: public ObjectLogic<Ops> {
 public:
 	static TypeObject Type()
 	{
-		return Context::BuiltinObjects().bytes_type;
+		return Context::SystemObjects()->bytes_type;
 	}
 
 	static BytesLogic New(const uint8_t *data, size_t size)

@@ -19,7 +19,7 @@ void TupleTypeInit(const TypeObject &type)
 {
 	type.init_builtin(StringObject::New("tuple"));
 
-	Context::BuiltinObjects().tuple_empty = TupleObject::NewWithSize(0);
+	Context::SystemObjects()->tuple_empty = TupleObject::NewWithSize(0);
 }
 
 } // namespace

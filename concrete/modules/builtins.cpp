@@ -24,7 +24,7 @@ DictObject BuiltinsModuleInit(const DictObject &modules)
 {
 	auto dict = DictObject::New();
 
-	dict.set_item(StringObject::New("None"),  Context::None());
+	dict.set_item(StringObject::New("None"),  Context::SystemObjects()->none);
 
 	dict.set_item(StringObject::New("id"),    InternalObject::New(internal::BuiltinsModule_Id));
 	dict.set_item(StringObject::New("print"), InternalObject::New(internal::BuiltinsModule_Print));

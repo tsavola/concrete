@@ -36,7 +36,7 @@ class ModuleLogic: public ObjectLogic<Ops> {
 public:
 	static TypeObject Type()
 	{
-		return Context::BuiltinObjects().module_type;
+		return Context::SystemObjects()->module_type;
 	}
 
 	static ModuleLogic New(const DictObject &dict)

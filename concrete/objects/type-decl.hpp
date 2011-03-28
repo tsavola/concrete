@@ -30,8 +30,8 @@ class TypeLogic: public ObjectLogic<Ops> {
 public:
 	static TypeObject Type();
 
-	static TypeLogic NewBuiltin();
-	static TypeLogic NewBuiltin(const TypeObject &type);
+	static TypeLogic NewBuiltin(const NoneObject &none);
+	static TypeLogic NewBuiltin(const NoneObject &none, const TypeObject &type);
 	static TypeLogic New(const StringObject &name);
 
 	using ObjectLogic<Ops>::operator==;

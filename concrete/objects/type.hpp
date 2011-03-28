@@ -24,18 +24,26 @@
 namespace concrete {
 
 struct TypeBlock: ObjectBlock {
-	PortableObject name;
+	PortableObject name_object;
 	ObjectProtocol protocol;
 
-	TypeBlock(BlockId type_id, NoRefcountInit): ObjectBlock(type_id, NoRefcountInit())
+	TypeBlock(const NoneObject &none, BlockId type_id, NoRefcountInit no_refcount_init):
+		ObjectBlock(type_id, no_refcount_init),
+		name_object(none),
+		protocol(none)
 	{
 	}
 
-	TypeBlock(const TypeObject &type): ObjectBlock(type)
+	TypeBlock(const NoneObject &none, const TypeObject &type):
+		ObjectBlock(type),
+		name_object(none),
+		protocol(none)
 	{
 	}
 
-	TypeBlock(const TypeObject &type, const StringObject &name): ObjectBlock(type), name(name)
+	TypeBlock(const TypeObject &type, const StringObject &name):
+		ObjectBlock(type),
+		name_object(name)
 	{
 	}
 } CONCRETE_PACKED;
@@ -43,24 +51,24 @@ struct TypeBlock: ObjectBlock {
 template <typename Ops>
 TypeObject TypeLogic<Ops>::Type()
 {
-	return Context::BuiltinObjects().type_type;
+	return Context::SystemObjects()->type_type;
 }
 
 template <typename Ops>
-TypeLogic<Ops> TypeLogic<Ops>::NewBuiltin()
+TypeLogic<Ops> TypeLogic<Ops>::NewBuiltin(const NoneObject &none)
 {
-	auto ret = Context::Active().arena().alloc(sizeof (TypeBlock));
+	auto ret = Context::AllocBlock(sizeof (TypeBlock));
 	auto block = static_cast<TypeBlock *> (ret.ptr);
 	block->refcount = 0;
-	new (block) TypeBlock(ret.id, ObjectBlock::NoRefcountInit());
+	new (block) TypeBlock(none, ret.id, ObjectBlock::NoRefcountInit());
 	return ret.id;
 }
 
 template <typename Ops>
-TypeLogic<Ops> TypeLogic<Ops>::NewBuiltin(const TypeObject &type)
+TypeLogic<Ops> TypeLogic<Ops>::NewBuiltin(const NoneObject &none, const TypeObject &type)
 {
-	auto ret = Context::Active().arena().alloc(sizeof (TypeBlock));
-	new (ret.ptr) TypeBlock(type);
+	auto ret = Context::AllocBlock(sizeof (TypeBlock));
+	new (ret.ptr) TypeBlock(none, type);
 	return ret.id;
 }
 
@@ -73,13 +81,13 @@ TypeLogic<Ops> TypeLogic<Ops>::New(const StringObject &name)
 template <typename Ops>
 void TypeLogic<Ops>::init_builtin(const StringObject &name) const
 {
-	type_block()->name = name;
+	type_block()->name_object = name;
 }
 
 template <typename Ops>
 StringObject TypeLogic<Ops>::name() const
 {
-	return static_cast<PortableStringObject &> (type_block()->name);
+	return static_cast<PortableStringObject &> (type_block()->name_object);
 	// TODO: return type_block()->name.cast<StringObject>();
 }
 

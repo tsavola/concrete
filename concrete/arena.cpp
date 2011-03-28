@@ -33,7 +33,7 @@ Arena::~Arena() throw ()
 	std::free(m_base);
 }
 
-Arena::Allocation Arena::alloc(size_t block_size)
+Arena::Allocation Arena::alloc_block(size_t block_size)
 {
 	assert(block_size >= sizeof (Block));
 
@@ -66,9 +66,9 @@ Arena::Allocation Arena::alloc(size_t block_size)
 	};
 }
 
-void Arena::free(BlockId block_id) throw ()
+void Arena::free_block(BlockId block_id) throw ()
 {
-	auto block = nonthrowing_pointer(block_id, sizeof (Block));
+	auto block = nonthrowing_block_pointer(block_id, sizeof (Block));
 
 	if (block == NULL)
 		return;

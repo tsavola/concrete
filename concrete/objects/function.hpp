@@ -42,7 +42,7 @@ class FunctionLogic: public CallableLogic<Ops> {
 public:
 	static TypeObject Type()
 	{
-		return Context::BuiltinObjects().function_type;
+		return Context::SystemObjects()->function_type;
 	}
 
 	static FunctionLogic New(const CodeObject &code)

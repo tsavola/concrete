@@ -46,12 +46,12 @@ class TupleLogic: public ObjectLogic<Ops> {
 public:
 	static TypeObject Type()
 	{
-		return Context::BuiltinObjects().tuple_type;
+		return Context::SystemObjects()->tuple_type;
 	}
 
 	static TupleLogic New()
 	{
-		return Context::BuiltinObjects().tuple_empty.cast<TupleLogic>();
+		return Context::SystemObjects()->tuple_empty.cast<TupleLogic>();
 	}
 
 	template <typename Item, typename... Tail>

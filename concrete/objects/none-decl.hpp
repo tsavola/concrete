@@ -43,7 +43,7 @@ public:
 		return *this;
 	}
 
-	void init_builtin(const TypeObject &type);
+	void init_builtin(const PortableTypeObject &type);
 
 protected:
 	NoneLogic(BlockId id) throw ():

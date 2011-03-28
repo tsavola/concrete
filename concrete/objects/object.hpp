@@ -29,6 +29,12 @@ struct ObjectProtocol {
 	PortableObject repr;
 	PortableObject str;
 
+	ObjectProtocol()
+	{
+	}
+
+	ObjectProtocol(const NoneObject &none) throw ();
+
 	static Object Add(const Object &self, const Object &other);
 	static Object Repr(const Object &self);
 	static Object Str(const Object &self);
@@ -41,11 +47,14 @@ struct ObjectBlock: Block {
 	PortableObject type_object;
 	Portable<int32_t> refcount;
 
-	ObjectBlock(BlockId type_id, NoRefcountInit): type_object(type_id)
+	ObjectBlock(BlockId type_id, NoRefcountInit no_refcount_init):
+		type_object(type_id)
 	{
 	}
 
-	ObjectBlock(const TypeObject &type): type_object(type), refcount(0)
+	ObjectBlock(const TypeObject &type):
+		type_object(type),
+		refcount(0)
 	{
 	}
 
@@ -59,7 +68,7 @@ struct ObjectBlock: Block {
 template <typename Ops>
 TypeObject ObjectLogic<Ops>::Type()
 {
-	return Context::BuiltinObjects().object_type;
+	return Context::SystemObjects()->object_type;
 }
 
 template <typename Ops>
@@ -69,7 +78,8 @@ ObjectLogic<Ops> ObjectLogic<Ops>::New()
 }
 
 template <typename Ops>
-ObjectLogic<Ops>::ObjectLogic(): m_id(Context::None().m_id)
+ObjectLogic<Ops>::ObjectLogic():
+	m_id(Context::SystemObjects()->none.m_id)
 {
 	ref();
 }

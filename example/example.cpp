@@ -39,10 +39,7 @@ static CodeObject load_code()
 	stream.read(buf.get(), size);
 	stream.close();
 
-	auto code = CodeObject::Load(buf.get(), size);
-	Context::Active().arena().check_error();
-
-	return code;
+	return CodeObject::Load(buf.get(), size);
 }
 
 static ContextSnapshot load_context(int fd)
@@ -163,13 +160,9 @@ static void secondary_work(int count, int input_fd, int output_fd)
 
 		std::cerr << "EXAMPLE: " << getpid() << ": execution begin" << std::endl;
 
-		for (int i = 0; count < 0 || i < count; i++) {
-			bool executing = executor->execute();
-			context.arena().check_error();
-
-			if (!executing)
+		for (int i = 0; count < 0 || i < count; i++)
+			if (!executor->execute())
 				break;
-		}
 
 		std::cerr << "EXAMPLE: " << getpid() << ": execution end" << std::endl;
 

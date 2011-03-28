@@ -57,12 +57,12 @@ class DictLogic: public ObjectLogic<Ops> {
 public:
 	static TypeObject Type()
 	{
-		return Context::BuiltinObjects().dict_type;
+		return Context::SystemObjects()->dict_type;
 	}
 
 	static DictLogic EmptySingleton()
 	{
-		auto empty = Context::BuiltinObjects().dict_empty.cast<DictLogic>();
+		auto empty = Context::SystemObjects()->dict_empty.cast<DictLogic>();
 		assert(empty.capacity() == 0);
 		return empty;
 	}

@@ -27,19 +27,19 @@ struct NoneBlock: ObjectBlock {
 template <typename Ops>
 TypeObject NoneLogic<Ops>::Type()
 {
-	return Context::BuiltinObjects().none_type;
+	return Context::SystemObjects()->none_type;
 }
 
 template <typename Ops>
 NoneLogic<Ops> NoneLogic<Ops>::NewBuiltin()
 {
-	auto ret = Context::Active().arena().alloc(sizeof (NoneBlock));
+	auto ret = Context::AllocBlock(sizeof (NoneBlock));
 	new (ret.ptr) NoneBlock(ret.id);
 	return ret.id;
 }
 
 template <typename Ops>
-void NoneLogic<Ops>::init_builtin(const TypeObject &type)
+void NoneLogic<Ops>::init_builtin(const PortableTypeObject &type)
 {
 	ObjectLogic<Ops>::object_block()->type_object = type;
 }

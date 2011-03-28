@@ -92,7 +92,7 @@ class InternalLogic: public CallableLogic<Ops> {
 public:
 	static TypeObject Type()
 	{
-		return Context::BuiltinObjects().internal_type;
+		return Context::SystemObjects()->internal_type;
 	}
 
 	static InternalLogic New(internal::SymbolId symbol_id)

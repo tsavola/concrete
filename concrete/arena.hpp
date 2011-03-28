@@ -140,7 +140,7 @@ public:
 	{
 	}
 
-	Arena(const ArenaSnapshot &snapshot) throw ():
+	explicit Arena(const ArenaSnapshot &snapshot) throw ():
 		m_base(snapshot.base),
 		m_size(snapshot.size),
 		m_access_error_block(snapshot.access_error_block)
@@ -149,21 +149,26 @@ public:
 
 	~Arena() throw ();
 
-	Allocation alloc(size_t size);
-	void free(BlockId id) throw ();
+	ArenaSnapshot snapshot() const throw ()
+	{
+		return ArenaSnapshot(m_base, m_size, m_access_error_block);
+	}
 
-	Block *pointer(BlockId block_id, size_t minimum_size)
+	Allocation alloc_block(size_t size);
+	void free_block(BlockId id) throw ();
+
+	Block *block_pointer(BlockId block_id, size_t minimum_size)
 	{
 		check_error();
 
-		auto block = nonthrowing_pointer(block_id, minimum_size);
+		auto block = nonthrowing_block_pointer(block_id, minimum_size);
 
 		check_error();
 
 		return block;
 	}
 
-	Block *nonthrowing_pointer(BlockId block_id, size_t minimum_size) throw ()
+	Block *nonthrowing_block_pointer(BlockId block_id, size_t minimum_size) throw ()
 	{
 		assert(minimum_size >= sizeof (Block));
 
@@ -193,19 +198,42 @@ public:
 		return block;
 	}
 
-	void check_error()
+	template <typename T, typename... Args>
+	BlockId new_block(Args... args)
 	{
-		if (m_access_error_block) {
-			auto block_id = m_access_error_block;
-			m_access_error_block = NULL;
+		return new_custom_size_block<T>(sizeof (T), args...);
+	}
 
-			throw AccessError(block_id, true);
+	template <typename T, typename... Args>
+	BlockId new_custom_size_block(size_t size, Args... args)
+	{
+		assert(size >= sizeof (T));
+
+		auto ret = alloc_block(size);
+		new (static_cast<T *> (ret.ptr)) T(args...);
+		return ret.id;
+	}
+
+	template <typename T>
+	void delete_block(BlockId id) // doesn't throw unless ~T() does
+	{
+		auto ptr = nonthrowing_block_pointer<T>(id);
+		if (ptr) {
+			ptr->~T();
+			free_block(id);
 		}
 	}
 
-	ArenaSnapshot snapshot() const throw ()
+	template <typename T>
+	T *block_pointer(BlockId id)
 	{
-		return ArenaSnapshot(m_base, m_size, m_access_error_block);
+		return static_cast<T *> (block_pointer(id, sizeof (T)));
+	}
+
+	template <typename T>
+	T *nonthrowing_block_pointer(BlockId id) throw ()
+	{
+		return static_cast<T *> (nonthrowing_block_pointer(id, sizeof (T)));
 	}
 
 	void dump() const;
@@ -224,6 +252,16 @@ private:
 		}
 
 		return NULL;
+	}
+
+	void check_error()
+	{
+		if (m_access_error_block) {
+			auto block_id = m_access_error_block;
+			m_access_error_block = NULL;
+
+			throw AccessError(block_id, true);
+		}
 	}
 
 	void *m_base;
