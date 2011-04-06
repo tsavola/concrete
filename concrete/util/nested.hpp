@@ -23,10 +23,10 @@
 namespace concrete {
 
 #define CONCRETE_INTERNAL_NESTED_CALL(Name, Function)                         \
-	CONCRETE_INTERNAL_CONTINUABLE(Name,                                   \
-	                              ::concrete::NestedCallContinuable,      \
-	                              ::concrete::NestedContinuation,         \
-	                              Function)
+	CONCRETE_INTERNAL_CONTINUABLE_ARGS(Name,                              \
+	                                   concrete::NestedCallContinuable,   \
+	                                   concrete::NestedContinuation,      \
+	                                   Function)
 
 struct NestedContinuable;
 
@@ -46,41 +46,40 @@ private:
 
 } CONCRETE_PACKED;
 
-struct NestedContinuable {
+class NestedContinuable: public Continuable {
 protected:
-	bool call_nested(BlockId state_id,
-	                 const CallableObject &callable,
+	bool call_nested(const CallableObject &callable,
 	                 Object &result,
 	                 const TupleObject &args,
 	                 const DictObject &kwargs) const
 	{
-		NestedState(state_id)->callable = callable;
+		nested_state()->callable = callable;
 
 		BlockId call_id;
 		result = callable.init_call(call_id, args, kwargs);
-		NestedState(state_id)->call_id = call_id;
+		nested_state()->call_id = call_id;
 
 		return call_id == NULL;
 	}
 
-	bool in_nested_call(BlockId state_id) const
+	bool in_nested_call() const
 	{
-		return NestedState(state_id)->call_id;
+		return nested_state()->call_id;
 	}
 
-	bool resume_nested(BlockId state_id, Object &result) const
+	bool resume_nested(Object &result) const
 	{
-		auto callable = NestedState(state_id)->callable.cast<CallableObject>();
-		BlockId call_id = NestedState(state_id)->call_id;
+		auto callable = nested_state()->callable.cast<CallableObject>();
+		BlockId call_id = nested_state()->call_id;
 		result = callable.resume_call(call_id);
-		NestedState(state_id)->call_id = call_id;
+		nested_state()->call_id = call_id;
 
 		return call_id == NULL;
 	}
 
-	static NestedContinuation *NestedState(BlockId id)
+	NestedContinuation *nested_state() const
 	{
-		return Context::BlockPointer<NestedContinuation>(id);
+		return state_pointer<NestedContinuation>();
 	}
 };
 
@@ -119,28 +118,28 @@ public:
 	const DictObject kwargs;
 };
 
-struct NestedCallContinuable: NestedContinuable {
+class NestedCallContinuable: public NestedContinuable {
 	typedef NestedCall (*Function)(const TupleObject &args, const DictObject &kwargs);
 
-	const Function function;
-
-	explicit NestedCallContinuable(Function function): function(function)
+public:
+	explicit NestedCallContinuable(Function function) throw ():
+		m_function(function)
 	{
 	}
 
-	bool call(BlockId state_id,
-	          Object &result,
-	          const TupleObject &args,
-	          const DictObject &kwargs) const
+	bool call(Object &result, const TupleObject &args, const DictObject &kwargs) const
 	{
-		auto call = function(args, kwargs);
-		return call_nested(state_id, call.callable, result, call.args, call.kwargs);
+		auto call = m_function(args, kwargs);
+		return call_nested(call.callable, result, call.args, call.kwargs);
 	}
 
-	bool resume(BlockId state_id, Object &result) const
+	bool resume(Object &result) const
 	{
-		return resume_nested(state_id, result);
+		return resume_nested(result);
 	}
+
+private:
+	const Function m_function;
 };
 
 } // namespace

@@ -41,7 +41,7 @@ static Object Id(const TupleObject &args, const DictObject &kwargs)
 	return LongObject::New(args.get_item(0).id().value());
 }
 
-class PrintContinuation: public NestedContinuation {
+class PrintState: public NestedContinuation {
 public:
 	Portable<uint32_t> index;
 	PortableObject args;
@@ -50,57 +50,58 @@ public:
 
 } CONCRETE_PACKED;
 
-struct Print: NestedContinuable {
-	bool call(BlockId state_id, Object &, const TupleObject &args, const DictObject &kwargs) const
+class Print: public NestedContinuable {
+public:
+	bool call(Object &result, const TupleObject &args, const DictObject &kwargs) const
 	{
 		if (args.size() == 0)
 			return finish();
 
-		PrintState(state_id)->index = 0;
-		PrintState(state_id)->args = args;
+		state()->index = 0;
+		state()->args = args;
 
-		return evaluate(state_id);
+		return evaluate();
 	}
 
-	bool resume(BlockId state_id, Object &) const
+	bool resume(Object &result) const
 	{
 		Object value;
 
-		if (in_nested_call(state_id)) {
-			if (!resume_nested(state_id, value))
+		if (in_nested_call()) {
+			if (!resume_nested(value))
 				return false;
 		} else {
-			value = PrintState(state_id)->deferred_value;
+			value = state()->deferred_value;
 		}
 
 		std::cout << value.require<StringObject>().string();
 
-		unsigned int index = PrintState(state_id)->index;
-		unsigned int size = PrintState(state_id)->args.cast<TupleObject>().size();
+		unsigned int index = state()->index;
+		unsigned int size = state()->args.cast<TupleObject>().size();
 
 		if (index == size - 1)
 			return finish();
 
 		std::cout << " ";
 
-		PrintState(state_id)->index = ++index;
+		state()->index = ++index;
 
-		return evaluate(state_id);
+		return evaluate();
 	}
 
 private:
-	bool evaluate(BlockId state_id) const
+	bool evaluate() const
 	{
-		unsigned int index = PrintState(state_id)->index;
-		auto self = PrintState(state_id)->args.cast<TupleObject>().get_item(index);
+		unsigned int index = state()->index;
+		auto self = state()->args.cast<TupleObject>().get_item(index);
 		auto callable = self.protocol().str.require<CallableObject>();
 
 		Object value;
 		auto tuple = TupleObject::New(self);
 		auto dict = DictObject::EmptySingleton();
 
-		if (call_nested(state_id, callable, value, tuple, dict))
-			PrintState(state_id)->deferred_value = value;
+		if (call_nested(callable, value, tuple, dict))
+			state()->deferred_value = value;
 
 		return false;
 	}
@@ -112,9 +113,9 @@ private:
 		return true;
 	}
 
-	static PrintContinuation *PrintState(BlockId id)
+	PrintState *state() const
 	{
-		return static_cast<PrintContinuation *> (NestedState(id));
+		return static_cast<PrintState *> (nested_state());
 	}
 };
 
@@ -131,6 +132,6 @@ static NestedCall Str(const TupleObject &args, const DictObject &kwargs)
 } // namespace
 
 CONCRETE_INTERNAL_FUNCTION   (BuiltinsModule_Id,    Id)
-CONCRETE_INTERNAL_CONTINUABLE(BuiltinsModule_Print, concrete::Print, concrete::PrintContinuation)
+CONCRETE_INTERNAL_CONTINUABLE(BuiltinsModule_Print, Print, PrintState)
 CONCRETE_INTERNAL_FUNCTION   (BuiltinsModule_Repr,  Repr)
 CONCRETE_INTERNAL_NESTED_CALL(BuiltinsModule_Str,   Str)

@@ -17,6 +17,7 @@
 #include <concrete/objects/dict.hpp>
 #include <concrete/objects/object.hpp>
 #include <concrete/objects/tuple.hpp>
+#include <concrete/util/noncopyable.hpp>
 
 namespace concrete {
 
@@ -26,10 +27,28 @@ enum ContinuationOp {
 	CleanupContinuation,
 };
 
-template <typename Continuation, typename Continuable>
+class Continuable: Noncopyable {
+public:
+	void set_state(BlockId id) throw ()
+	{
+		m_state_id = id;
+	}
+
+protected:
+	template <typename T>
+	T *state_pointer() const
+	{
+		return Context::BlockPointer<T>(m_state_id);
+	}
+
+private:
+	BlockId m_state_id;
+};
+
+template <typename ContinuationType, typename ContinuableType>
 Object ContinuableCall(ContinuationOp op,
-                       BlockId &continuation_id,
-                       const Continuable &continuable,
+                       BlockId &state_id,
+                       ContinuableType &continuable,
                        const TupleObject *args,
                        const DictObject *kwargs)
 {
@@ -38,31 +57,34 @@ Object ContinuableCall(ContinuationOp op,
 
 	switch (op) {
 	case InitContinuation:
-		assert(continuation_id == NULL);
+		assert(state_id == NULL);
 		assert(args && kwargs);
 
-		continuation_id = Context::NewBlock<Continuation>();
-		done = continuable.call(continuation_id, result, *args, *kwargs);
+		state_id = Context::NewBlock<ContinuationType>();
+		continuable.set_state(state_id);
+		done = continuable.call(result, *args, *kwargs);
 		break;
 
 	case ResumeContinuation:
-		assert(continuation_id);
+		assert(state_id);
 
-		done = continuable.resume(continuation_id, result);
+		continuable.set_state(state_id);
+		done = continuable.resume(result);
 		break;
 
 	case CleanupContinuation:
-		assert(continuation_id);
+		assert(state_id);
 
+		continuable.set_state(state_id);
 		done = true;
 		break;
 	}
 
 	if (done) {
-		BlockId id = continuation_id;
-		continuation_id = NULL;
+		BlockId id = state_id;
+		state_id = NULL;
 
-		Context::DeleteBlock<Continuation>(id);
+		Context::DeleteBlock<ContinuationType>(id);
 	}
 
 	return result;

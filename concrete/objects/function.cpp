@@ -27,9 +27,9 @@ void FunctionTypeInit(const TypeObject &type)
 	type.init_builtin(StringObject::New("function"));
 }
 
-class CallContinuation: public Block {
+class CallState: public Block {
 public:
-	~CallContinuation() throw ()
+	~CallState() throw ()
 	{
 		if (frame_id)
 			Executor::Active().destroy_frame(frame_id);
@@ -39,39 +39,43 @@ public:
 
 } CONCRETE_PACKED;
 
-struct Call {
-	const CodeObject code;
+class Call: public Continuable {
+public:
+	explicit Call(const CodeObject &code) throw ():
+		m_code(code)
+	{
+	}
 
-	bool call(BlockId state_id,
-	          Object &result,
-	          const TupleObject &args,
-	          const DictObject &kwargs) const
+	bool call(Object &result, const TupleObject &args, const DictObject &kwargs) const
 	{
 		auto dict = DictObject::NewWithCapacity(args.size() + kwargs.size());
 
 		for (unsigned int i = 0; i < args.size(); i++)
-			dict.set_item(code.varnames().get_item(i), args.get_item(i));
+			dict.set_item(m_code.varnames().get_item(i), args.get_item(i));
 
 		kwargs.copy_to(dict);
 
-		BlockId frame_id = Executor::Active().new_frame(code, dict);
-		State(state_id)->frame_id = frame_id;
+		BlockId frame_id = Executor::Active().new_frame(m_code, dict);
+		state()->frame_id = frame_id;
 
 		return false;
 	}
 
-	bool resume(BlockId state_id, Object &result) const
+	bool resume(Object &result) const
 	{
-		BlockId frame_id = State(state_id)->frame_id;
+		BlockId frame_id = state()->frame_id;
 		result = Executor::Active().frame_result(frame_id);
 
 		return true;
 	}
 
-	static CallContinuation *State(BlockId id)
+private:
+	CallState *state() const
 	{
-		return Context::BlockPointer<CallContinuation>(id);
+		return state_pointer<CallState>();
 	}
+
+	const CodeObject m_code;
 };
 
 Object FunctionBlock::call(ContinuationOp op,
@@ -79,7 +83,8 @@ Object FunctionBlock::call(ContinuationOp op,
                            const TupleObject *args,
                            const DictObject *kwargs) const
 {
-	return ContinuableCall<CallContinuation>(op, state_id, Call { code }, args, kwargs);
+	Call call(code);
+	return ContinuableCall<CallState>(op, state_id, call, args, kwargs);
 }
 
 } // namespace

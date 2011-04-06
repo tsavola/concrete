@@ -54,19 +54,33 @@ namespace internal_symbol {
 		return Function(*args, *kwargs);                              \
 	}
 
-#define CONCRETE_INTERNAL_CONTINUABLE(Symbol, Continuable, Continuation, ...) \
+#define CONCRETE_INTERNAL_CONTINUABLE(Symbol,                                 \
+                                      ContinuableType,                        \
+                                      ContinuationType)                       \
 	concrete::Object concrete::internal_symbol::Symbol(                   \
 		ContinuationOp op,                                            \
-		BlockId &continuation,                                        \
+		BlockId &continuation_id,                                     \
 		const TupleObject *args,                                      \
 		const DictObject *kwargs)                                     \
 	{                                                                     \
-		return ContinuableCall<Continuation>(                         \
-			op,                                                   \
-			continuation,                                         \
-			Continuable(__VA_ARGS__),                             \
-			args,                                                 \
-			kwargs);                                              \
+		ContinuableType continuable;                                  \
+		return ContinuableCall<ContinuationType>(                     \
+			op, continuation_id, continuable, args, kwargs);      \
+	}
+
+#define CONCRETE_INTERNAL_CONTINUABLE_ARGS(Symbol,                            \
+                                           ContinuableType,                   \
+                                           ContinuationType,                  \
+                                           ContinuableArgs...)                \
+	concrete::Object concrete::internal_symbol::Symbol(                   \
+		ContinuationOp op,                                            \
+		BlockId &continuation_id,                                     \
+		const TupleObject *args,                                      \
+		const DictObject *kwargs)                                     \
+	{                                                                     \
+		ContinuableType continuable(ContinuableArgs);                 \
+		return ContinuableCall<ContinuationType>(                     \
+			op, continuation_id, continuable, args, kwargs);      \
 	}
 
 struct InternalBlock: CallableBlock {
