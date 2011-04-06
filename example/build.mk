@@ -10,7 +10,7 @@ CPPFLAGS	+= -DEXAMPLE_BYTECODE="\""$(O_PY_BYTECODE)"\""
 
 CONCRETE	:= $(O)/lib/libconcrete.a
 DEPENDS		+= $(CONCRETE)
-LIBS		+= $(CONCRETE) -levent
+LIBS		+= $(CONCRETE) -levent -lanl
 
 include build/test.mk
 
