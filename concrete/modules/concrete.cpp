@@ -18,8 +18,9 @@ namespace concrete {
 
 void ConcreteModuleInit(const DictObject &modules)
 {
-	auto dict = DictObject::NewWithCapacity(1);
+	auto dict = DictObject::New();
 
+	dict.set_item(StringObject::New("fork"), InternalObject::New(internal::ConcreteModule_Fork));
 	dict.set_item(StringObject::New("test"), InternalObject::New(internal::ConcreteModule_Test));
 
 	modules.set_item(StringObject::New("concrete"), ModuleObject::New(dict));
