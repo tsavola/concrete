@@ -17,23 +17,28 @@
 #include <concrete/objects/none-decl.hpp>
 #include <concrete/objects/object-decl.hpp>
 #include <concrete/objects/type-decl.hpp>
+#include <concrete/resource.hpp>
 #include <concrete/util/activatable.hpp>
 #include <concrete/util/noncopyable.hpp>
 #include <concrete/util/packed.hpp>
+#include <concrete/util/trace.hpp>
 
 namespace concrete {
 
 struct ContextSnapshot: ArenaSnapshot {
 	PortableBlockId system_objects;
+	ResourceSnapshot resources;
 
 	ContextSnapshot() throw ()
 	{
 	}
 
-	ContextSnapshot(const ArenaSnapshot &arena_snapshot,
-	                BlockId system_objects) throw ():
-		ArenaSnapshot(arena_snapshot),
-		system_objects(system_objects)
+	ContextSnapshot(const ArenaSnapshot &arena,
+	                BlockId system_objects,
+	                const ResourceSnapshot &resources) throw ():
+		ArenaSnapshot(arena),
+		system_objects(system_objects),
+		resources(resources)
 	{
 	}
 
@@ -127,17 +132,42 @@ public:
 	static Object LoadBuiltinName(const Object &name);
 	static Object ImportBuiltinModule(const Object &name);
 
+	template <typename T, typename... Args>
+	static ResourceManager::Allocation<T> NewResource(Args... args)
+	{
+		return Active().m_resource_manager.new_resource<T>(args...);
+	}
+
+	template <typename T, typename... Args>
+	static T &Resource(ResourceId id)
+	{
+		return Active().m_resource_manager.resource<T>(id);
+	}
+
+	static void DeleteResource(ResourceId id) throw ()
+	{
+		Active().m_resource_manager.delete_resource(id);
+	}
+
+	static bool ResourceLost(ResourceId id) throw ()
+	{
+		return Active().m_resource_manager.resource_lost(id);
+	}
+
 	Context();
 
-	explicit Context(const ContextSnapshot &snapshot) throw ():
+	explicit Context(const ContextSnapshot &snapshot):
 		m_arena(snapshot),
-		m_system_objects(snapshot.system_objects)
+		m_system_objects(snapshot.system_objects),
+		m_resource_manager(snapshot.resources)
 	{
 	}
 
 	ContextSnapshot snapshot() const throw ()
 	{
-		return ContextSnapshot(m_arena.snapshot(), m_system_objects);
+		return ContextSnapshot(m_arena.snapshot(),
+		                       m_system_objects,
+		                       m_resource_manager.snapshot());
 	}
 
 private:
@@ -148,6 +178,7 @@ private:
 
 	Arena m_arena;
 	BlockId m_system_objects;
+	ResourceManager m_resource_manager;
 };
 
 typedef ActiveScope<Context> ContextScope;
