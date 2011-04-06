@@ -54,7 +54,7 @@ static Object ObjectRepr(const TupleObject &args, const DictObject &kwargs)
 	return StringObject::New(
 		(boost::format("<%s object at 0x%lx>")
 		 % self.type().name().data()
-		 % self.id().offset()).str());
+		 % self.id().value()).str());
 }
 
 struct NestedCall ObjectStr(const TupleObject &args, const DictObject &kwargs)

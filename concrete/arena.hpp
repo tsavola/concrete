@@ -175,7 +175,7 @@ public:
 		if (block_id == NULL)
 			return set_access_error(block_id);
 
-		size_t offset = block_id.offset();
+		size_t offset = block_id.value();
 
 #ifndef NDEBUG
 		if (offset & (sizeof (uint32_t) - 1))

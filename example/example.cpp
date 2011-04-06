@@ -123,8 +123,8 @@ static void dump(const ContextSnapshot &snapshot)
 static void dump(const ExecutorSnapshot &snapshot)
 {
 	std::cerr << "EXAMPLE: " << getpid() << ": executor snapshot = "
-	          << int32_t(snapshot.initial_frame_id.offset()) << " "
-	          << int32_t(snapshot.current_frame_id.offset()) << std::endl;
+	          << int32_t(snapshot.initial_frame_id.value()) << " "
+	          << int32_t(snapshot.current_frame_id.value()) << std::endl;
 }
 
 static void initial_work(int count, int input_fd, int output_fd)

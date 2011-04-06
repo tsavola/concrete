@@ -73,7 +73,7 @@ void Arena::free_block(BlockId block_id) throw ()
 	if (block == NULL)
 		return;
 
-	size_t offset = block_id.offset();
+	size_t offset = block_id.value();
 	size_t aligned_size = AlignedSize(block->block_size());
 
 	if (offset + aligned_size == m_size) {

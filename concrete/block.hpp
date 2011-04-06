@@ -10,13 +10,12 @@
 #ifndef CONCRETE_BLOCK_HPP
 #define CONCRETE_BLOCK_HPP
 
-#include <cassert>
-#include <cstddef>
 #include <cstdint>
 
 #include <concrete/arena-fwd.hpp>
-#include <concrete/util/portable.hpp>
+#include <concrete/util/id.hpp>
 #include <concrete/util/packed.hpp>
+#include <concrete/util/portable.hpp>
 
 namespace concrete {
 
@@ -51,148 +50,11 @@ private:
 
 } CONCRETE_PACKED;
 
-struct BlockIdOps {
-	static const BlockOffset &Load(const BlockOffset &offset) throw ()
-	{
-		return offset;
-	}
+typedef IdOps<BlockOffset>         BlockIdOps;
+typedef PortableIdOps<BlockOffset> PortableBlockIdOps;
 
-	static const BlockOffset &Store(const BlockOffset &offset) throw ()
-	{
-		return offset;
-	}
-};
-
-struct PortableBlockIdOps {
-	static BlockOffset Load(BlockOffset offset) throw ()
-	{
-		return PortableOps<BlockOffset, sizeof (offset)>::Load(offset);
-	}
-
-	static BlockOffset Store(BlockOffset offset) throw ()
-	{
-		return PortableOps<BlockOffset, sizeof (offset)>::Store(offset);
-	}
-};
-
-template <typename Ops>
-class BlockIdLogic {
-	friend class Arena;
-
-	// use nullptr_t in the future
-	typedef decltype (NULL) Null;
-
-public:
-	BlockIdLogic() throw ():
-		m_raw_offset(NoRawOffset())
-	{
-	}
-
-	BlockIdLogic(const BlockIdLogic &other) throw ():
-		m_raw_offset(other.m_raw_offset)
-	{
-	}
-
-	template <typename OtherOps>
-	BlockIdLogic(const BlockIdLogic<OtherOps> &other) throw ():
-		m_raw_offset(Ops::Store(other.offset()))
-	{
-	}
-
-	BlockIdLogic(const Null &null) throw ():
-		m_raw_offset(NoRawOffset())
-	{
-		assert(!null);
-	}
-
-	BlockIdLogic &operator=(const BlockIdLogic &other) throw ()
-	{
-		m_raw_offset = other.m_raw_offset;
-		return *this;
-	}
-
-	template <typename OtherOps>
-	BlockIdLogic &operator=(const BlockIdLogic<OtherOps> &other) throw ()
-	{
-		m_raw_offset = Ops::Store(other.offset());
-		return *this;
-	}
-
-	BlockIdLogic &operator=(const Null &null) throw ()
-	{
-		assert(!null);
-
-		m_raw_offset = NoRawOffset();
-		return *this;
-	}
-
-	bool operator==(const BlockIdLogic &other) const throw ()
-	{
-		return m_raw_offset == other.m_raw_offset;
-	}
-
-	bool operator!=(const BlockIdLogic &other) const throw ()
-	{
-		return m_raw_offset != other.m_raw_offset;
-	}
-
-	template <typename OtherOps>
-	bool operator==(const BlockIdLogic<OtherOps> &other) const throw ()
-	{
-		return offset() == other.offset();
-	}
-
-	template <typename OtherOps>
-	bool operator!=(const BlockIdLogic<OtherOps> &other) const throw ()
-	{
-		return offset() != other.offset();
-	}
-
-	bool operator==(const Null &null) const throw ()
-	{
-		assert(!null);
-
-		return m_raw_offset == NoRawOffset();
-	}
-
-	bool operator!=(const Null &null) const throw ()
-	{
-		assert(!null);
-
-		return m_raw_offset != NoRawOffset();
-	}
-
-	operator bool() const throw ()
-	{
-		return m_raw_offset != NoRawOffset();
-	}
-
-	BlockOffset offset() const throw ()
-	{
-		return Ops::Load(m_raw_offset);
-	}
-
-private:
-	static BlockOffset NoRawOffset() throw ()
-	{
-		return Ops::Store(~BlockOffset(0));
-	}
-
-	static BlockIdLogic New(BlockOffset offset) throw ()
-	{
-		assert(offset != NoRawOffset());
-
-		BlockIdLogic id;
-		id.m_raw_offset = Ops::Store(offset);
-		return id;
-	}
-
-	BlockOffset m_raw_offset;
-
-} CONCRETE_PACKED;
-
-typedef BlockIdLogic<BlockIdOps>         BlockId;
-typedef BlockIdLogic<PortableBlockIdOps> PortableBlockId;
+typedef IdLogic<BlockOffset, BlockIdOps>         BlockId;
+typedef IdLogic<BlockOffset, PortableBlockIdOps> PortableBlockId;
 
 } // namespace
 

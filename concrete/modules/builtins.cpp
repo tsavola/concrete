@@ -38,7 +38,7 @@ DictObject BuiltinsModuleInit(const DictObject &modules)
 
 static Object Id(const TupleObject &args, const DictObject &kwargs)
 {
-	return LongObject::New(args.get_item(0).id().offset());
+	return LongObject::New(args.get_item(0).id().value());
 }
 
 class PrintContinuation: public NestedContinuation {

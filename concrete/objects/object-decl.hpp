@@ -125,7 +125,7 @@ private:
 
 	ObjectBlock *nonthrowing_object_block() const throw ();
 
-	BlockIdLogic<Ops> m_id;
+	IdLogic<BlockOffset, Ops> m_id;
 
 } CONCRETE_PACKED;
 
