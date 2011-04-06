@@ -154,6 +154,11 @@ public:
 		return Active().m_resource_manager.resource_lost(id);
 	}
 
+	static void WaitEvent(int fd, short events)
+	{
+		Active().m_resource_manager.wait_event(fd, events);
+	}
+
 	Context();
 
 	explicit Context(const ContextSnapshot &snapshot):
@@ -168,6 +173,11 @@ public:
 		return ContextSnapshot(m_arena.snapshot(),
 		                       m_system_objects,
 		                       m_resource_manager.snapshot());
+	}
+
+	void poll_events()
+	{
+		m_resource_manager.poll_events();
 	}
 
 private:

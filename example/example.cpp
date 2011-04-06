@@ -160,9 +160,12 @@ static void secondary_work(int count, int input_fd, int output_fd)
 
 		std::cerr << "EXAMPLE: " << getpid() << ": execution begin" << std::endl;
 
-		for (int i = 0; count < 0 || i < count; i++)
+		for (int i = 0; count < 0 || i < count; i++) {
 			if (!executor->execute())
 				break;
+
+			context.poll_events();
+		}
 
 		std::cerr << "EXAMPLE: " << getpid() << ": execution end" << std::endl;
 

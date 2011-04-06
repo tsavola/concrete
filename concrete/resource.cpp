@@ -9,8 +9,13 @@
 
 #include "resource.hpp"
 
+#include <cassert>
 #include <map>
 #include <utility>
+
+#include <event.h>
+
+#include <concrete/util/trace.hpp>
 
 namespace concrete {
 
@@ -20,20 +25,30 @@ class ResourceManager::Impl {
 public:
 	Impl():
 		m_lost_begin(0),
-		m_lost_end(0)
+		m_lost_end(0),
+		m_event_base(event_base_new()),
+		m_suspended(false)
 	{
+		if (m_event_base == NULL)
+			throw ResourceError();
 	}
 
 	Impl(const ResourceSnapshot &snapshot):
 		m_lost_begin(snapshot.begin),
-		m_lost_end(snapshot.end)
+		m_lost_end(snapshot.end),
+		m_event_base(event_base_new()),
+		m_suspended(false)
 	{
+		if (m_event_base == NULL)
+			throw ResourceError();
 	}
 
 	~Impl() throw ()
 	{
 		for (auto i = m_resources.begin(); i != m_resources.end(); ++i)
 			delete i->second;
+
+		event_base_free(m_event_base);
 	}
 
 	ResourceSnapshot snapshot() const throw ()
@@ -104,10 +119,40 @@ public:
 		return id.value() >= m_lost_begin && id.value() < m_lost_end;
 	}
 
+	void wait_event(int fd, short events)
+	{
+		assert(!m_suspended);
+
+		if (event_base_once(m_event_base, fd, events, event_callback, this, NULL) < 0)
+			throw ResourceError();
+
+		m_suspended = true;
+
+		ConcreteTrace(("suspended"));
+	}
+
+	void poll_events()
+	{
+		if (m_suspended && event_base_loop(m_event_base, EVLOOP_ONCE) < 0)
+			throw ResourceError();
+	}
+
 private:
+	static void event_callback(int fd, short events, void *arg)
+	{
+		auto impl = reinterpret_cast<Impl *> (arg);
+
+		assert(impl->m_suspended);
+		impl->m_suspended = false;
+
+		ConcreteTrace(("resumed"));
+	}
+
 	const ResourceKey m_lost_begin;
 	const ResourceKey m_lost_end;
 	ResourceMap m_resources;
+	struct event_base *const m_event_base;
+	bool m_suspended;
 };
 
 ResourceManager::ResourceManager():
@@ -148,6 +193,16 @@ void ResourceManager::delete_resource(ResourceId id) throw ()
 bool ResourceManager::resource_lost(ResourceId id) const throw ()
 {
 	return m_impl->resource_lost(id);
+}
+
+void ResourceManager::wait_event(int fd, short events)
+{
+	m_impl->wait_event(fd, events);
+}
+
+void ResourceManager::poll_events()
+{
+	m_impl->poll_events();
 }
 
 } // namespace

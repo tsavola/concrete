@@ -112,6 +112,9 @@ public:
 	void delete_resource(ResourceId id) throw ();
 	bool resource_lost(ResourceId id) const throw ();
 
+	void wait_event(int fd, short events);
+	void poll_events();
+
 private:
 	ResourceId append_resource(Resource *resource);
 	Resource *find_resource(ResourceId id) const throw ();
