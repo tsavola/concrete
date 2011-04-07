@@ -50,15 +50,11 @@ private:
 	const size_t m_size;
 };
 
-class AccessError: public std::exception {
+class AccessError: public IntegrityError {
 public:
 	AccessError(BlockId block_id, bool deferred) throw ():
-		m_block_id(block_id),
+		IntegrityError(block_id),
 		m_deferred(deferred)
-	{
-	}
-
-	virtual ~AccessError() throw ()
 	{
 	}
 
@@ -70,13 +66,7 @@ public:
 			return "Bad block access";
 	}
 
-	BlockId block_id() const throw ()
-	{
-		return m_block_id;
-	}
-
 private:
-	const BlockId m_block_id;
 	const bool m_deferred;
 };
 
@@ -128,6 +118,8 @@ struct ArenaSnapshot {
 } CONCRETE_PACKED;
 
 class Arena: Noncopyable {
+	friend class IntegrityError;
+
 public:
 	struct Allocation {
 		Block *ptr;

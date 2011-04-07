@@ -119,7 +119,7 @@ public:
 			return resume_write(result);
 
 		default:
-			throw RuntimeError("invalid state");
+			throw IntegrityError(state());
 		}
 	}
 

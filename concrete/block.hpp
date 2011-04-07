@@ -11,6 +11,7 @@
 #define CONCRETE_BLOCK_HPP
 
 #include <cstdint>
+#include <exception>
 
 #include <concrete/arena-fwd.hpp>
 #include <concrete/util/id.hpp>
@@ -55,6 +56,34 @@ typedef PortableIdOps<BlockOffset> PortableBlockIdOps;
 
 typedef IdLogic<BlockOffset, BlockIdOps>         BlockId;
 typedef IdLogic<BlockOffset, PortableBlockIdOps> PortableBlockId;
+
+class IntegrityError: public std::exception {
+public:
+	explicit IntegrityError(const Block *block) throw ();
+
+	virtual ~IntegrityError() throw ()
+	{
+	}
+
+	virtual const char *what() const throw ()
+	{
+		return "Block integrity violation";
+	}
+
+	BlockId block_id() const throw ()
+	{
+		return m_block_id;
+	}
+
+protected:
+	IntegrityError(BlockId block_id) throw ():
+		m_block_id(block_id)
+	{
+	}
+
+private:
+	const BlockId m_block_id;
+};
 
 } // namespace
 

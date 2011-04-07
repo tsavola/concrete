@@ -21,13 +21,6 @@
 
 namespace concrete {
 
-#ifdef CONCRETE_BLOCK_MAGIC
-static void __attribute__ ((constructor)) block_magic_warning()
-{
-	std::cerr << "Warning: Block magic enabled\n";
-}
-#endif
-
 Arena::~Arena() throw ()
 {
 	std::free(m_base);

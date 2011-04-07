@@ -49,6 +49,8 @@ struct ContextSnapshot: ArenaSnapshot {
 } CONCRETE_PACKED;
 
 class Context: public Activatable<Context>, Noncopyable {
+	friend class IntegrityError;
+
 public:
 	struct SystemObjectsBlock: Block {
 		const PortableNoneObject none;

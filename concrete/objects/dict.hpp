@@ -10,6 +10,7 @@
 #ifndef CONCRETE_OBJECTS_DICT_HPP
 #define CONCRETE_OBJECTS_DICT_HPP
 
+#include <algorithm>
 #include <cassert>
 
 #include <concrete/block.hpp>
@@ -33,14 +34,22 @@ struct DictBlock: ObjectBlock {
 	Portable<uint32_t> size;
 	Item items[0];
 
-	DictBlock(const TypeObject &type): ObjectBlock(type), size(0)
+	DictBlock(const TypeObject &type):
+		ObjectBlock(type),
+		size(0)
 	{
 	}
 
 	~DictBlock() throw ()
 	{
-		for (unsigned int i = size; i-- > 0; )
+		for (unsigned int i = std::min(uint32_t(size), capacity()); i-- > 0; )
 			items[i].~Item();
+	}
+
+	void verify_integrity() const
+	{
+		if (uint32_t(size) > capacity())
+			throw IntegrityError(this);
 	}
 
 	unsigned int capacity() const throw ()
@@ -160,7 +169,9 @@ protected:
 
 	DictBlock *dict_block() const
 	{
-		return static_cast<DictBlock *> (ObjectLogic<Ops>::object_block());
+		auto block = static_cast<DictBlock *> (ObjectLogic<Ops>::object_block());
+		block->verify_integrity();
+		return block;
 	}
 
 private:
