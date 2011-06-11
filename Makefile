@@ -6,7 +6,7 @@ CXXFLAGS	+= -std=gnu++0x
 
 LIBRARIES	:= concrete
 BINARIES	:= example/server
-TESTS		:= example test
+TESTS		:= example
 
 .DEFAULT_GOAL := build
 
@@ -15,7 +15,6 @@ build: concrete
 concrete: concrete-static
 example: concrete
 example/server: concrete
-test: concrete
 
 include build/project.mk
 

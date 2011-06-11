@@ -4,7 +4,6 @@ Dependencies:
   libevent 1.4
   svn           (for downloading boost)
   python 3.1    (for compiling to bytecode)
-  libgtest      (for unit tests)
 
   For Mac OSX:
     Install gcc46 and boost from macports (http://www.macports.org).
