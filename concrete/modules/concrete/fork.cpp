@@ -31,11 +31,6 @@ namespace concrete {
 
 class ForkState: public Block {
 public:
-	ForkState() throw ():
-		forked(false)
-	{
-	}
-
 	~ForkState() throw ()
 	{
 		reset();
@@ -72,7 +67,7 @@ public:
 	Portable<ResourceId> socket_id;
 	Portable<ResourceId> buffer_id;
 	Portable<uint8_t> mode;
-	Portable<uint8_t> forked;
+	Portable<bool> forked;
 
 } CONCRETE_PACKED;
 
