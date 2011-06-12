@@ -38,15 +38,15 @@ DictObject BuiltinsModuleInit(const DictObject &modules)
 
 static Object Id(const TupleObject &args, const DictObject &kwargs)
 {
-	return LongObject::New(args.get_item(0).id().value());
+	return LongObject::New(args.get_item(0).id());
 }
 
 class PrintState: public NestedContinuation {
 public:
 	Portable<uint32_t> index;
-	PortableObject args;
+	Portable<Object> args;
 
-	PortableObject deferred_value;
+	Portable<Object> deferred_value;
 
 } CONCRETE_PACKED;
 
@@ -77,7 +77,7 @@ public:
 		std::cout << value.require<StringObject>().string();
 
 		unsigned int index = state()->index;
-		unsigned int size = state()->args.cast<TupleObject>().size();
+		unsigned int size = state()->args->cast<TupleObject>().size();
 
 		if (index == size - 1)
 			return finish();
@@ -93,8 +93,8 @@ private:
 	bool evaluate() const
 	{
 		unsigned int index = state()->index;
-		auto self = state()->args.cast<TupleObject>().get_item(index);
-		auto callable = self.protocol().str.require<CallableObject>();
+		auto self = state()->args->cast<TupleObject>().get_item(index);
+		auto callable = self.protocol().str->require<CallableObject>();
 
 		Object value;
 		auto tuple = TupleObject::New(self);

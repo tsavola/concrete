@@ -37,9 +37,9 @@ static std::string type_name(const T &object)
 	return str;
 }
 
-static inline ContextSnapshot load_context(int fd)
+static inline Context::Snapshot load_context(int fd)
 {
-	ContextSnapshot snapshot;
+	Context::Snapshot snapshot;
 	ssize_t length;
 
 	length = snapshot.head_size();
@@ -60,7 +60,7 @@ static inline ContextSnapshot load_context(int fd)
 	return snapshot;
 }
 
-static inline bool load_executor(ExecutorSnapshot &snapshot, int fd)
+static inline bool load_executor(Executor::Snapshot &snapshot, int fd)
 {
 	ssize_t length = read(fd, snapshot.ptr(), snapshot.size());
 

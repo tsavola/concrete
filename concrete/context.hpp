@@ -14,187 +14,121 @@
 
 #include <concrete/arena.hpp>
 #include <concrete/block.hpp>
-#include <concrete/objects/none-decl.hpp>
-#include <concrete/objects/object-decl.hpp>
-#include <concrete/objects/type-decl.hpp>
+#include <concrete/objects/none.hpp>
+#include <concrete/objects/object-partial.hpp>
+#include <concrete/objects/type.hpp>
 #include <concrete/resource.hpp>
 #include <concrete/util/activatable.hpp>
 #include <concrete/util/noncopyable.hpp>
 #include <concrete/util/packed.hpp>
-#include <concrete/util/trace.hpp>
 
 namespace concrete {
-
-struct ContextSnapshot: ArenaSnapshot {
-	PortableBlockId system_objects;
-	ResourceSnapshot resources;
-
-	ContextSnapshot() throw ()
-	{
-	}
-
-	ContextSnapshot(const ArenaSnapshot &arena,
-	                BlockId system_objects,
-	                const ResourceSnapshot &resources) throw ():
-		ArenaSnapshot(arena),
-		system_objects(system_objects),
-		resources(resources)
-	{
-	}
-
-	size_t head_size() const throw ()
-	{
-		return sizeof (ContextSnapshot) - sizeof (ArenaSnapshot) + ArenaSnapshot::head_size();
-	}
-} CONCRETE_PACKED;
 
 class Context: public Activatable<Context>, Noncopyable {
 	friend class IntegrityError;
 
 public:
+	struct Snapshot: Arena::Snapshot {
+		ResourceManager::Snapshot resources;
+		Portable<BlockId> system_objects;
+
+		Snapshot() throw ();
+
+		Snapshot(const Arena::Snapshot &arena,
+		         const ResourceManager::Snapshot &resources,
+		         BlockId system_objects) throw ();
+
+		size_t head_size() const throw ();
+
+	} CONCRETE_PACKED;
+
 	struct SystemObjectsBlock: Block {
-		const PortableNoneObject none;
-		const PortableTypeObject type_type;
-		const PortableTypeObject object_type;
-		const PortableTypeObject none_type;
-		const PortableTypeObject string_type;
-		const PortableTypeObject long_type;
-		const PortableTypeObject bytes_type;
-		const PortableTypeObject tuple_type;
-		PortableObject           tuple_empty;
-		const PortableTypeObject dict_type;
-		PortableObject           dict_empty;
-		const PortableTypeObject code_type;
-		const PortableTypeObject function_type;
-		const PortableTypeObject internal_type;
-		const PortableTypeObject module_type;
-		PortableObject           builtins;
-		PortableObject           modules;
+		const Portable<NoneObject> none;
+		const Portable<TypeObject> type_type;
+		const Portable<TypeObject> object_type;
+		const Portable<TypeObject> none_type;
+		const Portable<TypeObject> string_type;
+		const Portable<TypeObject> long_type;
+		const Portable<TypeObject> bytes_type;
+		const Portable<TypeObject> tuple_type;
+		Portable<Object>           tuple_empty;
+		const Portable<TypeObject> dict_type;
+		Portable<Object>           dict_empty;
+		const Portable<TypeObject> code_type;
+		const Portable<TypeObject> function_type;
+		const Portable<TypeObject> internal_type;
+		const Portable<TypeObject> module_type;
+		Portable<Object>           builtins;
+		Portable<Object>           modules;
 
 		SystemObjectsBlock(const NoneObject &none) throw ();
 
 	private:
 		SystemObjectsBlock(const SystemObjectsBlock &);
+
 		const SystemObjectsBlock &operator=(const SystemObjectsBlock &);
 
 	} CONCRETE_PACKED;
 
-	static Arena::Allocation AllocBlock(size_t size)
-	{
-		return Active().m_arena.alloc_block(size);
-	}
+	static Arena::Allocation AllocBlock(size_t size);
 
-	static void FreeBlock(BlockId id) throw ()
-	{
-		Active().m_arena.free_block(id);
-	}
+	static void FreeBlock(BlockId id) throw ();
 
-	template <typename T, typename... Args>
-	static BlockId NewBlock(Args... args)
-	{
-		return Active().m_arena.new_block<T>(args...);
-	}
+	template <typename BlockType, typename... Args>
+	static BlockId NewBlock(Args... args);
 
-	template <typename T, typename... Args>
-	static BlockId NewCustomSizeBlock(size_t size, Args... args)
-	{
-		return Active().m_arena.new_custom_size_block<T>(size, args...);
-	}
+	template <typename BlockType, typename... Args>
+	static BlockId NewCustomSizeBlock(size_t size, Args... args);
 
-	template <typename T>
-	static void DeleteBlock(BlockId id) // doesn't throw unless ~T() does
-	{
-		Active().m_arena.delete_block<T>(id);
-	}
+	template <typename BlockType>
+	static void DeleteBlock(BlockId id); // doesn't throw unless ~T() does
 
-	template <typename T>
-	static T *BlockPointer(BlockId id)
-	{
-		return Active().m_arena.block_pointer<T>(id);
-	}
+	template <typename BlockType>
+	static BlockType *BlockPointer(BlockId id);
 
-	template <typename T>
-	static T *NonthrowingBlockPointer(BlockId id) throw ()
-	{
-		return Active().m_arena.nonthrowing_block_pointer<T>(id);
-	}
+	template <typename BlockType>
+	static BlockType *NonthrowingBlockPointer(BlockId id) throw ();
 
-	static SystemObjectsBlock *SystemObjects()
-	{
-		return Active().system_objects();
-	}
+	template <typename ResourceType, typename... Args>
+	static ResourceManager::Allocation<ResourceType> NewResource(Args... args);
 
-	static const SystemObjectsBlock *NonthrowingSystemObjects() throw ()
-	{
-		auto &active = Active();
-		return active.m_arena.nonthrowing_block_pointer<SystemObjectsBlock>(
-			active.m_system_objects);
-	}
+	template <typename ResourceType, typename... Args>
+	static ResourceType &Resource(ResourceId id);
+
+	static void DeleteResource(ResourceId id) throw ();
+
+	static bool ResourceLost(ResourceId id) throw ();
+
+	static void WaitEvent(int fd, short events);
+
+	static SystemObjectsBlock *SystemObjects();
+
+	static const SystemObjectsBlock *NonthrowingSystemObjects() throw ();
 
 	static Object LoadBuiltinName(const Object &name);
+
 	static Object ImportBuiltinModule(const Object &name);
-
-	template <typename T, typename... Args>
-	static ResourceManager::Allocation<T> NewResource(Args... args)
-	{
-		return Active().m_resource_manager.new_resource<T>(args...);
-	}
-
-	template <typename T, typename... Args>
-	static T &Resource(ResourceId id)
-	{
-		return Active().m_resource_manager.resource<T>(id);
-	}
-
-	static void DeleteResource(ResourceId id) throw ()
-	{
-		Active().m_resource_manager.delete_resource(id);
-	}
-
-	static bool ResourceLost(ResourceId id) throw ()
-	{
-		return Active().m_resource_manager.resource_lost(id);
-	}
-
-	static void WaitEvent(int fd, short events)
-	{
-		Active().m_resource_manager.wait_event(fd, events);
-	}
 
 	Context();
 
-	explicit Context(const ContextSnapshot &snapshot):
-		m_arena(snapshot),
-		m_system_objects(snapshot.system_objects),
-		m_resource_manager(snapshot.resources)
-	{
-	}
+	explicit Context(const Snapshot &snapshot);
 
-	ContextSnapshot snapshot() const throw ()
-	{
-		return ContextSnapshot(m_arena.snapshot(),
-		                       m_system_objects,
-		                       m_resource_manager.snapshot());
-	}
+	Snapshot snapshot() const throw ();
 
-	void poll_events()
-	{
-		m_resource_manager.poll_events();
-	}
+	void poll_events();
 
 private:
-	SystemObjectsBlock *system_objects()
-	{
-		return m_arena.block_pointer<SystemObjectsBlock>(m_system_objects);
-	}
+	SystemObjectsBlock *system_objects();
 
 	Arena m_arena;
-	BlockId m_system_objects;
 	ResourceManager m_resource_manager;
+	BlockId m_system_objects;
 };
 
 typedef ActiveScope<Context> ContextScope;
 
 } // namespace
+
+#include "context-inline.hpp"
 
 #endif

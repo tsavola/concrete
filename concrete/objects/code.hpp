@@ -12,7 +12,6 @@
 
 #include <cstddef>
 
-#include <concrete/block.hpp>
 #include <concrete/objects/bytes.hpp>
 #include <concrete/objects/object.hpp>
 #include <concrete/objects/tuple.hpp>
@@ -20,97 +19,37 @@
 
 namespace concrete {
 
-template <typename Ops> class CodeLogic;
-
-typedef CodeLogic<ObjectOps>         CodeObject;
-typedef CodeLogic<PortableObjectOps> PortableCodeObject;
-
-struct CodeBlock: ObjectBlock {
-	Portable<uint32_t> stacksize;
-	PortableBytesObject code;
-	PortableTupleObject consts;
-	PortableTupleObject names;
-	PortableTupleObject varnames;
-
-	CodeBlock(const TypeObject &type,
-	          unsigned int stacksize,
-	          const BytesObject &code,
-	          const TupleObject &consts,
-	          const TupleObject &names,
-	          const TupleObject &varnames):
-		ObjectBlock(type),
-		stacksize(stacksize),
-		code(code),
-		consts(consts),
-		names(names),
-		varnames(varnames)
-	{
-	}
-
-	static CodeObject Load(const void *data, size_t size);
-
-} CONCRETE_PACKED;
-
-template <typename Ops>
-class CodeLogic: public ObjectLogic<Ops> {
-	friend class ObjectLogic<ObjectOps>;
-	friend class ObjectLogic<PortableObjectOps>;
+class CodeObject: public Object {
+	friend class Object;
 
 public:
-	static TypeObject Type()
-	{
-		return Context::SystemObjects()->code_type;
-	}
+	static TypeObject Type();
+	static CodeObject New(unsigned int stacksize,
+	                      const BytesObject &code,
+	                      const TupleObject &consts,
+	                      const TupleObject &names,
+	                      const TupleObject &varnames);
+	static CodeObject Load(const void *data, size_t size);
 
-	static CodeLogic New(unsigned int stacksize,
-	                     const BytesObject &code,
-	                     const TupleObject &consts,
-	                     const TupleObject &names,
-	                     const TupleObject &varnames)
-	{
-		return Context::NewBlock<CodeBlock>(Type(), stacksize, code, consts, names, varnames);
-	}
+	CodeObject(const CodeObject &other) throw ();
+	CodeObject &operator=(const CodeObject &other) throw ();
 
-	static CodeLogic Load(const void *data, size_t size)
-	{
-		return CodeBlock::Load(data, size);
-	}
-
-	using ObjectLogic<Ops>::operator==;
-	using ObjectLogic<Ops>::operator!=;
-
-	template <typename OtherOps>
-	CodeLogic(const CodeLogic<OtherOps> &other) throw ():
-		ObjectLogic<Ops>(other)
-	{
-	}
-
-	template <typename OtherOps>
-	CodeLogic &operator=(const CodeLogic<OtherOps> &other) throw ()
-	{
-		ObjectLogic<Ops>::operator=(other);
-		return *this;
-	}
-
-	unsigned int stacksize() const { return code_block()->stacksize; }
-	BytesObject code() const       { return code_block()->code; }
-	TupleObject consts() const     { return code_block()->consts; }
-	TupleObject names() const      { return code_block()->names; }
-	TupleObject varnames() const   { return code_block()->varnames; }
+	unsigned int stacksize() const;
+	BytesObject code() const;
+	TupleObject consts() const;
+	TupleObject names() const;
+	TupleObject varnames() const;
 
 protected:
-	CodeLogic(BlockId id) throw ():
-		ObjectLogic<Ops>(id)
-	{
-	}
+	struct Content;
 
-	CodeBlock *code_block() const
-	{
-		return static_cast<CodeBlock *> (ObjectLogic<Ops>::object_block());
-	}
-} CONCRETE_PACKED;
+private:
+	CodeObject(BlockId id) throw ();
 
-void CodeTypeInit(const TypeObject &type);
+	Content *content() const;
+};
+
+void CodeObjectTypeInit(const TypeObject &type);
 
 } // namespace
 

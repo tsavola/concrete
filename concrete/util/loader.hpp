@@ -10,7 +10,7 @@
 #ifndef CONCRETE_UTIL_LOADER_HPP
 #define CONCRETE_UTIL_LOADER_HPP
 
-#include <cstdint>
+#include <cstddef>
 
 #include <concrete/exception.hpp>
 #include <concrete/util/noncopyable.hpp>
@@ -21,7 +21,8 @@ namespace concrete {
 template <typename State>
 class Loader: Noncopyable {
 public:
-	Loader(State &state) throw (): m_state(state)
+	Loader(State &state) throw ():
+		m_state(state)
 	{
 	}
 
@@ -33,7 +34,7 @@ public:
 	template <typename T>
 	T load()
 	{
-		return PortableOps<T, sizeof (T)>::Load(*load_raw<T>(1));
+		return PortByteorder(*load_raw<T>(1));
 	}
 
 	const char *load_chars(size_t count)

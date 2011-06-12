@@ -33,6 +33,26 @@ BufferResource::~BufferResource() throw ()
 	delete[] m_data;
 }
 
+char *BufferResource::data() throw ()
+{
+	return m_data;
+}
+
+const char *BufferResource::data() const throw ()
+{
+	return m_data;
+}
+
+size_t BufferResource::size() const throw ()
+{
+	return m_size;
+}
+
+size_t BufferResource::remaining() const throw ()
+{
+	return m_size - m_transferred;
+}
+
 bool BufferResource::read(FileResource &file)
 {
 	auto len = file.read(m_data + m_transferred, m_size - m_transferred);

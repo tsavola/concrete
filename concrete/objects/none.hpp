@@ -10,41 +10,32 @@
 #ifndef CONCRETE_OBJECTS_NONE_HPP
 #define CONCRETE_OBJECTS_NONE_HPP
 
-#include "none-decl.hpp"
-
-#include <concrete/objects/object.hpp>
-#include <concrete/objects/type-decl.hpp>
-#include <concrete/util/packed.hpp>
+#include <concrete/objects/object-partial.hpp>
 
 namespace concrete {
 
-struct NoneBlock: ObjectBlock {
-	NoneBlock(BlockId none_id): ObjectBlock(none_id, NoRefcountInit())
-	{
-	}
-} CONCRETE_PACKED;
+class NoneObject: public Object {
+	friend class Object;
 
-template <typename Ops>
-TypeObject NoneLogic<Ops>::Type()
-{
-	return Context::SystemObjects()->none_type;
-}
+public:
+	static TypeObject Type();
+	static NoneObject NewBuiltin();
 
-template <typename Ops>
-NoneLogic<Ops> NoneLogic<Ops>::NewBuiltin()
-{
-	auto ret = Context::AllocBlock(sizeof (NoneBlock));
-	new (ret.ptr) NoneBlock(ret.id);
-	return ret.id;
-}
+	NoneObject(const NoneObject &other) throw ();
+	NoneObject &operator=(const NoneObject &other) throw ();
 
-template <typename Ops>
-void NoneLogic<Ops>::init_builtin(const PortableTypeObject &type)
-{
-	ObjectLogic<Ops>::object_block()->type_object = type;
-}
+	void init_builtin(const Portable<TypeObject> &type);
 
-void NoneTypeInit(const TypeObject &type);
+protected:
+	struct Content;
+
+private:
+	NoneObject(BlockId id) throw ();
+
+	Content *content() const;
+};
+
+void NoneObjectTypeInit(const TypeObject &type);
 
 } // namespace
 

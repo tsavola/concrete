@@ -12,74 +12,32 @@
 
 #include <cstdint>
 
-#include <concrete/block.hpp>
 #include <concrete/objects/object.hpp>
-#include <concrete/util/portable.hpp>
-#include <concrete/util/packed.hpp>
 
 namespace concrete {
 
-struct LongBlock: ObjectBlock {
-	Portable<int64_t> value;
-
-	LongBlock(const TypeObject &type, int64_t value): ObjectBlock(type), value(value)
-	{
-	}
-} CONCRETE_PACKED;
-
-template <typename Ops>
-class LongLogic: public ObjectLogic<Ops> {
-	friend class ObjectLogic<ObjectOps>;
-	friend class ObjectLogic<PortableObjectOps>;
+class LongObject: public Object {
+	friend class Object;
 
 public:
-	static TypeObject Type()
-	{
-		return Context::SystemObjects()->long_type;
-	}
+	static TypeObject Type();
+	static LongObject New(int64_t value);
 
-	static LongLogic New(int64_t value)
-	{
-		return Context::NewBlock<LongBlock>(Type(), value);
-	}
+	LongObject(const LongObject &other) throw ();
+	LongObject &operator=(const LongObject &other) throw ();
 
-	using ObjectLogic<Ops>::operator==;
-	using ObjectLogic<Ops>::operator!=;
-
-	template <typename OtherOps>
-	LongLogic(const LongLogic<OtherOps> &other) throw ():
-		ObjectLogic<Ops>(other)
-	{
-	}
-
-	template <typename OtherOps>
-	LongLogic &operator=(const LongLogic<OtherOps> &other) throw ()
-	{
-		ObjectLogic<Ops>::operator=(other);
-		return *this;
-	}
-
-	int64_t value() const
-	{
-		return long_block()->value;
-	}
+	int64_t value() const;
 
 protected:
-	LongLogic(BlockId id) throw ():
-		ObjectLogic<Ops>(id)
-	{
-	}
+	struct Content;
 
-	LongBlock *long_block() const
-	{
-		return static_cast<LongBlock *> (ObjectLogic<Ops>::object_block());
-	}
-} CONCRETE_PACKED;
+private:
+	LongObject(BlockId id) throw ();
 
-typedef LongLogic<ObjectOps>         LongObject;
-typedef LongLogic<PortableObjectOps> PortableLongObject;
+	Content *content() const;
+};
 
-void LongTypeInit(const TypeObject &type);
+void LongObjectTypeInit(const TypeObject &type);
 
 } // namespace
 

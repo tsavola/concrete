@@ -10,90 +10,45 @@
 #ifndef CONCRETE_OBJECTS_STRING_HPP
 #define CONCRETE_OBJECTS_STRING_HPP
 
-#include "string-decl.hpp"
-
 #include <cstddef>
-#include <cstdint>
-#include <cstring>
+#include <string>
 
-#include <concrete/context.hpp>
-#include <concrete/objects/object.hpp>
-#include <concrete/objects/type-decl.hpp>
-#include <concrete/util/packed.hpp>
+#include <concrete/objects/object-partial.hpp>
 
 namespace concrete {
 
-struct StringBlock: ObjectBlock {
-	Portable<uint32_t> length;
-	char data[0];
+class StringObject: public Object {
+	friend class Object;
 
-	StringBlock(const TypeObject &type, const char *data);
-	StringBlock(const TypeObject &type);
+public:
+	static TypeObject Type();
 
-	void initialized();
+	static StringObject New(const char *data, size_t size);
+	static StringObject New(const char *string);
+	static StringObject New(const std::string &string);
+	static StringObject NewUninitialized(size_t size);
 
-	size_t size() const throw ()
-	{
-		return block_size() - sizeof (StringBlock) - 1;
-	}
-} CONCRETE_PACKED;
+	StringObject(const StringObject &other) throw ();
+	StringObject &operator=(const StringObject &other) throw ();
 
-template <typename Ops>
-TypeObject StringLogic<Ops>::Type()
-{
-	return Context::SystemObjects()->string_type;
-}
+	void init_uninitialized();
 
-template <typename Ops>
-StringLogic<Ops> StringLogic<Ops>::New(const char *data, size_t size)
-{
-	return Context::NewCustomSizeBlock<StringBlock>(sizeof (StringBlock) + size + 1, Type(), data);
-}
+	bool equals(const StringObject &other) const;
+	size_t size() const;
+	size_t length() const;
+	char *data() const;
+	std::string string() const;
 
-template <typename Ops>
-StringLogic<Ops> StringLogic<Ops>::NewUninitialized(size_t size)
-{
-	return Context::NewCustomSizeBlock<StringBlock>(sizeof (StringBlock) + size + 1, Type());
-}
+protected:
+	struct Content;
 
-template <typename Ops>
-void StringLogic<Ops>::initialized()
-{
-	string_block()->initialized();
-}
+private:
+	StringObject(BlockId id) throw ();
 
-template <typename Ops>
-size_t StringLogic<Ops>::size() const
-{
-	return string_block()->size();
-}
+	Content *content() const;
+};
 
-template <typename Ops>
-size_t StringLogic<Ops>::length() const
-{
-	return string_block()->length;
-}
-
-template <typename Ops>
-char *StringLogic<Ops>::data() const
-{
-	return string_block()->data;
-}
-
-template <typename Ops>
-std::string StringLogic<Ops>::string() const
-{
-	auto block = string_block();
-	return std::string(block->data, block->size());
-}
-
-template <typename Ops>
-StringBlock *StringLogic<Ops>::string_block() const
-{
-	return static_cast<StringBlock *> (ObjectLogic<Ops>::object_block());
-}
-
-void StringTypeInit(const TypeObject &type);
+void StringObjectTypeInit(const TypeObject &type);
 
 } // namespace
 

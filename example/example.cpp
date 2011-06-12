@@ -49,7 +49,7 @@ static CodeObject load_code()
 	return CodeObject::Load(buf.get(), size);
 }
 
-static void save_context(const ContextSnapshot &snapshot, int fd)
+static void save_context(const Context::Snapshot &snapshot, int fd)
 {
 	ssize_t length;
 
@@ -64,7 +64,7 @@ static void save_context(const ContextSnapshot &snapshot, int fd)
 		throw std::runtime_error("write context snapshot data");
 }
 
-static void save_executor(const ExecutorSnapshot &snapshot, int fd)
+static void save_executor(const Executor::Snapshot &snapshot, int fd)
 {
 	ssize_t length = snapshot.size();
 
@@ -72,7 +72,7 @@ static void save_executor(const ExecutorSnapshot &snapshot, int fd)
 		throw std::runtime_error("write executor snapshot");
 }
 
-static void dump(const ContextSnapshot &snapshot)
+static void dump(const Context::Snapshot &snapshot)
 {
 	std::cerr << "EXAMPLE: " << getpid() << ": arena size = " << snapshot.data_size() << std::endl;
 
@@ -82,11 +82,11 @@ static void dump(const ContextSnapshot &snapshot)
 	std::cerr << "EXAMPLE: " << getpid() << ": arena checksum = " << crc32.checksum() << std::endl;
 }
 
-static void dump(const ExecutorSnapshot &snapshot)
+static void dump(const Executor::Snapshot &snapshot)
 {
 	std::cerr << "EXAMPLE: " << getpid() << ": executor snapshot = "
-	          << int32_t(snapshot.initial_frame_id.value()) << " "
-	          << int32_t(snapshot.current_frame_id.value()) << std::endl;
+	          << int32_t(snapshot.initial_frame_id) << " "
+	          << int32_t(snapshot.current_frame_id) << std::endl;
 }
 
 static void initial_work(int count, int input_fd, int output_fd)
@@ -105,7 +105,7 @@ static void secondary_work(int count, int input_fd, int output_fd)
 	dump(context.snapshot());
 
 	try {
-		ExecutorSnapshot executor_snapshot;
+		Executor::Snapshot executor_snapshot;
 		boost::scoped_ptr<Executor> executor;
 
 		if (load_executor(executor_snapshot, input_fd)) {

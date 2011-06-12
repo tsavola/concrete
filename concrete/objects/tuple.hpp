@@ -10,129 +10,44 @@
 #ifndef CONCRETE_OBJECTS_TUPLE_HPP
 #define CONCRETE_OBJECTS_TUPLE_HPP
 
-#include <concrete/block.hpp>
-#include <concrete/exception.hpp>
 #include <concrete/objects/object.hpp>
-#include <concrete/util/packed.hpp>
 
 namespace concrete {
 
-struct TupleBlock: ObjectBlock {
-	PortableObject items[0];
-
-	TupleBlock(const TypeObject &type): ObjectBlock(type)
-	{
-		for (unsigned int i = 0; i < size(); i++)
-			new (&items[i]) PortableObject();
-	}
-
-	~TupleBlock() throw ()
-	{
-		for (unsigned int i = size(); i-- > 0; )
-			items[i].~PortableObject();
-	}
-
-	unsigned int size() const throw ()
-	{
-		return (block_size() - sizeof (TupleBlock)) / sizeof (PortableObject);
-	}
-} CONCRETE_PACKED;
-
-template <typename Ops>
-class TupleLogic: public ObjectLogic<Ops> {
-	friend class ObjectLogic<ObjectOps>;
-	friend class ObjectLogic<PortableObjectOps>;
+class TupleObject: public Object {
+	friend class Object;
 
 public:
-	static TypeObject Type()
-	{
-		return Context::SystemObjects()->tuple_type;
-	}
+	static TypeObject Type();
 
-	static TupleLogic New()
-	{
-		return Context::SystemObjects()->tuple_empty.cast<TupleLogic>();
-	}
+	static TupleObject New();
+	template <typename Item, typename... Tail> static TupleObject New(Item, Tail...);
+	static TupleObject NewWithSize(unsigned int size);
 
-	template <typename Item, typename... Tail>
-	static TupleLogic New(Item first_item, Tail... other_items)
-	{
-		auto tuple = NewWithSize(1 + sizeof...(Tail));
-		tuple.init_items(0, first_item, other_items...);
-		return tuple;
-	}
+	TupleObject(const TupleObject &other) throw ();
+	TupleObject &operator=(const TupleObject &other) throw ();
 
-	static TupleLogic NewWithSize(unsigned int size)
-	{
-		return Context::NewCustomSizeBlock<TupleBlock>(
-			sizeof (TupleBlock) + sizeof (PortableObject) * size,
-			Type());
-	}
+	void init_item(unsigned int index, const Object &item);
 
-	using ObjectLogic<Ops>::operator==;
-	using ObjectLogic<Ops>::operator!=;
+	template <typename Item, typename... Tail> void init_items(unsigned int index, Item, Tail...);
+	void init_items(unsigned int index);
 
-	template <typename OtherOps>
-	TupleLogic(const TupleLogic<OtherOps> &other) throw ():
-		ObjectLogic<Ops>(other)
-	{
-	}
-
-	template <typename OtherOps>
-	TupleLogic &operator=(const TupleLogic<OtherOps> &other) throw ()
-	{
-		ObjectLogic<Ops>::operator=(other);
-		return *this;
-	}
-
-	void init_item(unsigned int index, const Object &item)
-	{
-		auto block = tuple_block();
-		assert(index < block->size());
-		block->items[index] = item;
-	}
-
-	void init_items(unsigned int first_index)
-	{
-	}
-
-	template <typename Item, typename... Tail>
-	void init_items(unsigned int first_index, Item first_item, Tail... other_items)
-	{
-		init_item(first_index, first_item);
-		init_items(first_index + 1, other_items...);
-	}
-
-	unsigned int size() const
-	{
-		return tuple_block()->size();
-	}
-
-	Object get_item(unsigned int index) const
-	{
-		auto block = tuple_block();
-		if (index >= block->size())
-			throw RuntimeError("tuple index out of bounds");
-		return block->items[index];
-	}
+	unsigned int size() const;
+	Object get_item(unsigned int index) const;
 
 protected:
-	TupleLogic(BlockId id) throw ():
-		ObjectLogic<Ops>(id)
-	{
-	}
+	struct Content;
 
-	TupleBlock *tuple_block() const
-	{
-		return static_cast<TupleBlock *> (ObjectLogic<Ops>::object_block());
-	}
-} CONCRETE_PACKED;
+private:
+	TupleObject(BlockId id) throw ();
 
-typedef TupleLogic<ObjectOps>         TupleObject;
-typedef TupleLogic<PortableObjectOps> PortableTupleObject;
+	Content *content() const;
+};
 
-void TupleTypeInit(const TypeObject &type);
+void TupleObjectTypeInit(const TypeObject &type);
 
 } // namespace
+
+#include "tuple-inline.hpp"
 
 #endif

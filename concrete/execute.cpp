@@ -14,7 +14,15 @@
 
 #include <concrete/block.hpp>
 #include <concrete/exception.hpp>
-#include <concrete/objects.hpp>
+#include <concrete/objects/callable.hpp>
+#include <concrete/objects/code.hpp>
+#include <concrete/objects/dict.hpp>
+#include <concrete/objects/function.hpp>
+#include <concrete/objects/long.hpp>
+#include <concrete/objects/module.hpp>
+#include <concrete/objects/none.hpp>
+#include <concrete/objects/object.hpp>
+#include <concrete/objects/tuple.hpp>
 #include <concrete/opcodes.hpp>
 #include <concrete/util/loader.hpp>
 #include <concrete/util/noncopyable.hpp>
@@ -25,22 +33,22 @@
 namespace concrete {
 
 struct ExecutionFrame: Block {
-	const PortableCodeObject code;
+	const Portable<CodeObject> code;
 	Portable<uint32_t> code_position;
 
-	const PortableDictObject dict;
+	const Portable<DictObject> dict;
 
-	const PortableBlockId parent_frame_id;
+	const Portable<BlockId> parent_frame_id;
 
-	PortableBlockId call_continuation;
-	PortableObject call_callable;
+	Portable<BlockId> call_continuation;
+	Portable<Object> call_callable;
 
 	Portable<uint32_t> stack_pointer;
-	PortableObject stack_objects[0];      // must be last
+	Portable<Object> stack_objects[0];      // must be last
 
 	ExecutionFrame(const CodeObject &code,
 	               const DictObject &dict,
-	               BlockId parent_frame_id = NULL):
+	               BlockId parent_frame_id = 0):
 		code(code),
 		code_position(0),
 		dict(dict),
@@ -52,24 +60,24 @@ struct ExecutionFrame: Block {
 	~ExecutionFrame() throw ()
 	{
 		if (call_continuation) {
-			ConcreteTrace(("call cleanup enter: callable=%d") % call_callable.id().value());
+			ConcreteTrace(("call cleanup enter: callable=%d") % call_callable.id());
 
-			call_callable.cast<CallableObject>().cleanup_call(call_continuation);
+			call_callable->cast<CallableObject>().cleanup_call(call_continuation);
 
-			ConcreteTrace(("call cleanup leave: callable=%d") % call_callable.id().value());
+			ConcreteTrace(("call cleanup leave: callable=%d") % call_callable.id());
 		}
 
 		for (unsigned int i = stack_pointer; i-- > 0; )
-			stack_objects[i].~PortableObject();
+			stack_objects[i].~Portable<Object>();
 	}
 
 	void push_stack(const Object &object)
 	{
 		unsigned int i = stack_pointer;
-		if (i >= code.stacksize())
+		if (i >= code->stacksize())
 			throw RuntimeError("stack overflow");
 
-		new (&stack_objects[i]) PortableObject(object);
+		new (&stack_objects[i]) Portable<Object>(object);
 		stack_pointer = ++i;
 	}
 
@@ -81,14 +89,14 @@ struct ExecutionFrame: Block {
 
 		stack_pointer = --i;
 		Object object(stack_objects[i]);
-		stack_objects[i].~PortableObject();
+		stack_objects[i].~Portable<Object>();
 
 		return object;
 	}
 
 	static size_t BlockSize(const CodeObject &code)
 	{
-		return sizeof (ExecutionFrame) + sizeof (PortableObject) * code.stacksize();
+		return sizeof (ExecutionFrame) + sizeof (Portable<Object>) * code.stacksize();
 	}
 } CONCRETE_PACKED;
 
@@ -104,10 +112,10 @@ public:
 		m_initial_frame_id = frame_id;
 		m_current_frame_id = frame_id;
 
-		ConcreteTrace(("frame new initial %d") % m_initial_frame_id.value());
+		ConcreteTrace(("frame new initial %d") % m_initial_frame_id);
 	}
 
-	explicit ExecutionState(const ExecutorSnapshot &snapshot) throw ():
+	explicit ExecutionState(const Executor::Snapshot &snapshot) throw ():
 		m_initial_frame_id(snapshot.initial_frame_id),
 		m_current_frame_id(snapshot.current_frame_id)
 	{
@@ -115,14 +123,14 @@ public:
 
 	~ExecutionState() throw ()
 	{
-		ConcreteTrace(("frame destroy initial %d") % m_initial_frame_id.value());
+		ConcreteTrace(("frame destroy initial %d") % m_initial_frame_id);
 
 		Context::DeleteBlock<ExecutionFrame>(m_initial_frame_id);
 	}
 
-	ExecutorSnapshot snapshot() const throw ()
+	Executor::Snapshot snapshot() const throw ()
 	{
-		return ExecutorSnapshot(m_initial_frame_id, m_current_frame_id);
+		return Executor::Snapshot(m_initial_frame_id, m_current_frame_id);
 	}
 
 	/*
@@ -138,28 +146,28 @@ public:
 
 		m_current_frame_id = new_frame_id;
 
-		ConcreteTrace(("frame new %d: code=%d") % new_frame_id.value() % code.id().value());
+		ConcreteTrace(("frame new %d: code=%d") % new_frame_id % code.id());
 
 		return new_frame_id;
 	}
 
 	void exit_frame()
 	{
-		ConcreteTrace(("frame exit %d") % m_current_frame_id.value());
+		ConcreteTrace(("frame exit %d") % m_current_frame_id);
 
 		m_current_frame_id = current_frame()->parent_frame_id;
 	}
 
 	Object frame_result(BlockId frame_id)
 	{
-		ConcreteTrace(("frame result %d") % frame_id.value());
+		ConcreteTrace(("frame result %d") % frame_id);
 
 		return Frame(frame_id)->pop_stack();
 	}
 
 	void destroy_frame(BlockId frame_id) throw ()
 	{
-		ConcreteTrace(("frame destroy %d") % frame_id.value());
+		ConcreteTrace(("frame destroy %d") % frame_id);
 
 		Context::DeleteBlock<ExecutionFrame>(frame_id);
 	}
@@ -209,16 +217,16 @@ public:
 	void init_call(const Object &callable, const TupleObject &args, const DictObject &kwargs)
 	{
 		BlockId frame_id = m_current_frame_id;
-		BlockId continuation;
+		BlockId continuation = 0;
 
 		ConcreteTrace(("call init enter: callable=%d frame=%d")
-		              % callable.id().value() % frame_id.value());
+		              % callable.id() % frame_id);
 
 		auto result = callable.require<CallableObject>().init_call(continuation, args, kwargs);
 
 		ConcreteTrace(("call init leave: callable=%d frame=%d done=%s return=%d")
-		              % callable.id().value() % frame_id.value()
-		              % (continuation ? "false" : "true") % result.id().value());
+		              % callable.id() % frame_id
+		              % (continuation ? "false" : "true") % result.id());
 
 		auto frame = Frame(frame_id);
 
@@ -239,24 +247,24 @@ public:
 		frame = Frame(frame_id);
 		continuation = frame->call_continuation;
 
-		if (continuation == NULL)
+		if (continuation == 0)
 			return false;
 
-		auto callable = frame->call_callable;
+		Object callable = frame->call_callable;
 
 		ConcreteTrace(("call resume enter: callable=%d frame=%d")
-		              % callable.id().value() % frame_id.value());
+		              % callable.id() % frame_id);
 
 		auto result = callable.cast<CallableObject>().resume_call(continuation);
 
 		ConcreteTrace(("call resume leave: callable=%d frame=%d done=%d return=%d")
-		              % callable.id().value() % frame_id.value()
-		              % (continuation ? "false" : "true") % result.id().value());
+		              % callable.id() % frame_id
+		              % (continuation ? "false" : "true") % result.id());
 
 		frame = Frame(frame_id);
 		frame->call_continuation = continuation;
 
-		if (continuation == NULL) {
+		if (continuation == 0) {
 			frame->call_callable = Object();
 			frame->push_stack(result);
 		}
@@ -320,7 +328,7 @@ public:
 	{
 	}
 
-	explicit Impl(const ExecutorSnapshot &snapshot) throw ():
+	explicit Impl(const Snapshot &snapshot) throw ():
 		ExecutionState(snapshot),
 		m_loader(*this)
 	{
@@ -491,11 +499,43 @@ private:
 	BytecodeLoader m_loader;
 };
 
-Executor::Executor(const CodeObject &code): m_impl(new Impl(code))
+Executor::Snapshot::Snapshot() throw ()
 {
 }
 
-Executor::Executor(const ExecutorSnapshot &snapshot): m_impl(new Impl(snapshot))
+Executor::Snapshot::Snapshot(BlockId initial_frame_id, BlockId current_frame_id) throw ():
+	initial_frame_id(initial_frame_id),
+	current_frame_id(current_frame_id)
+{
+}
+
+size_t Executor::Snapshot::size() const throw ()
+{
+	return sizeof (*this);
+}
+
+const void *Executor::Snapshot::ptr() const throw ()
+{
+	return reinterpret_cast<const void *> (this);
+}
+
+void *Executor::Snapshot::ptr() throw ()
+{
+	return reinterpret_cast<void *> (this);
+}
+
+Executor &Executor::Active() throw ()
+{
+	return Activatable<Executor>::Active();
+}
+
+Executor::Executor(const CodeObject &code):
+	m_impl(new Impl(code))
+{
+}
+
+Executor::Executor(const Snapshot &snapshot):
+	m_impl(new Impl(snapshot))
 {
 }
 
@@ -505,7 +545,7 @@ Executor::~Executor() throw ()
 	delete m_impl;
 }
 
-ExecutorSnapshot Executor::snapshot() const throw ()
+Executor::Snapshot Executor::snapshot() const throw ()
 {
 	return m_impl->snapshot();
 }

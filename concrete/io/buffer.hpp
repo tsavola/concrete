@@ -23,25 +23,10 @@ public:
 	BufferResource(void *data, size_t size);
 	virtual ~BufferResource() throw ();
 
-	char *data() throw ()
-	{
-		return m_data;
-	}
-
-	const char *data() const throw ()
-	{
-		return m_data;
-	}
-
-	size_t size() const throw ()
-	{
-		return m_size;
-	}
-
-	size_t remaining() const throw ()
-	{
-		return m_size - m_transferred;
-	}
+	char *data() throw ();
+	const char *data() const throw ();
+	size_t size() const throw ();
+	size_t remaining() const throw ();
 
 	bool read(FileResource &source);
 	bool write(FileResource &target);

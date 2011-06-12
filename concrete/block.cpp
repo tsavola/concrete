@@ -9,22 +9,50 @@
 
 #include "block.hpp"
 
+#include <concrete/arena.hpp>
 #include <concrete/context.hpp>
+#include <concrete/util/backtrace.hpp>
+#include <concrete/util/byteorder.hpp>
 
 namespace concrete {
 
+Block::Block() throw ()
+{
+}
+
+Block &Block::operator=(const Block &other) throw ()
+{
+	return *this;
+}
+
+BlockSize Block::block_size() const throw ()
+{
+	return PortByteorder(m_portable_size);
+}
+
+IntegrityError::IntegrityError(BlockId block_id) throw ():
+	m_block_id(block_id)
+{
+}
+
 IntegrityError::IntegrityError(const Block *block) throw ():
-	m_block_id(BlockId::New(reinterpret_cast<const char *> (block) -
-	                        reinterpret_cast<const char *> (Context::Active().m_arena.m_base)))
+	m_block_id(Context::Active().m_arena.block_id(block))
 {
 	Backtrace();
 }
 
-#ifdef CONCRETE_BLOCK_MAGIC
-static void __attribute__ ((constructor)) block_magic_warning()
+IntegrityError::~IntegrityError() throw ()
 {
-	std::cerr << "Warning: Block magic enabled\n";
 }
-#endif
+
+const char *IntegrityError::what() const throw ()
+{
+	return "Block integrity violation";
+}
+
+BlockId IntegrityError::block_id() const throw ()
+{
+	return m_block_id;
+}
 
 } // namespace

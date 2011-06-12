@@ -7,13 +7,12 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#ifndef CONCRETE_ARENA_FWD_HPP
-#define CONCRETE_ARENA_FWD_HPP
-
 namespace concrete {
 
-class Arena;
+template <typename ObjectType>
+bool TypeCheck<ObjectType>::operator()(const TypeObject &type)
+{
+	return type == ObjectType::Type();
+}
 
 } // namespace
-
-#endif

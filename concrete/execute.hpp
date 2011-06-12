@@ -21,36 +21,6 @@
 
 namespace concrete {
 
-struct ExecutorSnapshot {
-	PortableBlockId initial_frame_id;
-	PortableBlockId current_frame_id;
-
-	ExecutorSnapshot() throw ()
-	{
-	}
-
-	ExecutorSnapshot(BlockId initial_frame_id, BlockId current_frame_id) throw ():
-		initial_frame_id(initial_frame_id),
-		current_frame_id(current_frame_id)
-	{
-	}
-
-	size_t size() const throw ()
-	{
-		return sizeof (*this);
-	}
-
-	const void *ptr() const throw ()
-	{
-		return reinterpret_cast<const void *> (this);
-	}
-
-	void *ptr() throw ()
-	{
-		return reinterpret_cast<void *> (this);
-	}
-} CONCRETE_PACKED;
-
 class Executor: Activatable<Executor>, Noncopyable {
 	friend class Activatable<Executor>;
 	friend class ActiveScope<Executor>;
@@ -58,16 +28,26 @@ class Executor: Activatable<Executor>, Noncopyable {
 	class Impl;
 
 public:
-	static Executor &Active() throw ()
-	{
-		return Activatable<Executor>::Active();
-	}
+	struct Snapshot {
+		Portable<BlockId> initial_frame_id;
+		Portable<BlockId> current_frame_id;
+
+		Snapshot() throw ();
+		Snapshot(BlockId initial_frame_id, BlockId current_frame_id) throw ();
+
+		size_t size() const throw ();
+		const void *ptr() const throw ();
+		void *ptr() throw ();
+
+	} CONCRETE_PACKED;
+
+	static Executor &Active() throw ();
 
 	explicit Executor(const CodeObject &code);
-	explicit Executor(const ExecutorSnapshot &snapshot);
+	explicit Executor(const Snapshot &snapshot);
 	~Executor() throw ();
 
-	ExecutorSnapshot snapshot() const throw ();
+	Snapshot snapshot() const throw ();
 
 	bool execute();
 

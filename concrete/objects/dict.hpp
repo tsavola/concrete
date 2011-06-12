@@ -10,192 +10,40 @@
 #ifndef CONCRETE_OBJECTS_DICT_HPP
 #define CONCRETE_OBJECTS_DICT_HPP
 
-#include <algorithm>
-#include <cassert>
-
-#include <concrete/block.hpp>
-#include <concrete/exception.hpp>
 #include <concrete/objects/object.hpp>
-#include <concrete/objects/string.hpp>
-#include <concrete/util/packed.hpp>
 
 namespace concrete {
 
-struct DictBlock: ObjectBlock {
-	struct Item {
-		PortableObject key;
-		PortableObject value;
-
-		Item(const Object &key, const Object &value): key(key), value(value)
-		{
-		}
-	} CONCRETE_PACKED;
-
-	Portable<uint32_t> size;
-	Item items[0];
-
-	DictBlock(const TypeObject &type):
-		ObjectBlock(type),
-		size(0)
-	{
-	}
-
-	~DictBlock() throw ()
-	{
-		for (unsigned int i = std::min(uint32_t(size), capacity()); i-- > 0; )
-			items[i].~Item();
-	}
-
-	void verify_integrity() const
-	{
-		if (uint32_t(size) > capacity())
-			throw IntegrityError(this);
-	}
-
-	unsigned int capacity() const throw ()
-	{
-		return (block_size() - sizeof (DictBlock)) / sizeof (Item);
-	}
-} CONCRETE_PACKED;
-
-template <typename Ops>
-class DictLogic: public ObjectLogic<Ops> {
-	friend class ObjectLogic<ObjectOps>;
-	friend class ObjectLogic<PortableObjectOps>;
+class DictObject: public Object {
+	friend class Object;
 
 public:
-	static TypeObject Type()
-	{
-		return Context::SystemObjects()->dict_type;
-	}
+	static TypeObject Type();
 
-	static DictLogic EmptySingleton()
-	{
-		auto empty = Context::SystemObjects()->dict_empty.cast<DictLogic>();
-		assert(empty.capacity() == 0);
-		return empty;
-	}
+	static DictObject EmptySingleton();
+	static DictObject New();
+	static DictObject NewWithCapacity(unsigned int capacity);
 
-	static DictLogic New()
-	{
-		return NewWithCapacity(16);
-	}
+	DictObject(const DictObject &other) throw ();
+	DictObject &operator=(const DictObject &other) throw ();
 
-	static DictLogic NewWithCapacity(unsigned int capacity)
-	{
-		return Context::NewCustomSizeBlock<DictBlock>(
-			sizeof (DictBlock) + sizeof (DictBlock::Item) * capacity,
-			Type());
-	}
-
-	using ObjectLogic<Ops>::operator==;
-	using ObjectLogic<Ops>::operator!=;
-
-	template <typename OtherOps>
-	DictLogic(const DictLogic<OtherOps> &other) throw ():
-		ObjectLogic<Ops>(other)
-	{
-	}
-
-	template <typename OtherOps>
-	DictLogic &operator=(const DictLogic<OtherOps> &other) throw ()
-	{
-		ObjectLogic<Ops>::operator=(other);
-		return *this;
-	}
-
-	unsigned int size() const
-	{
-		return dict_block()->size;
-	}
-
-	void set_item(const Object &key, const Object &value) const
-	{
-		key.require<StringObject>();
-
-		auto block = dict_block();
-		auto i = find_item(block, key);
-
-		if (i < block->size) {
-			block->items[i].value = value;
-			return;
-		}
-
-		if (i == block->capacity())
-			throw RuntimeError("dict capacity exceeded");
-
-		new (&block->items[i]) DictBlock::Item(key, value);
-		block->size = i + 1;
-	}
-
-	Object get_item(const Object &key) const
-	{
-		Object value;
-
-		if (!get_item(key, value))
-			throw KeyError(key);
-
-		return value;
-	}
-
-	bool get_item(const Object &key, Object &value) const
-	{
-		if (!key.check<StringObject>())
-			return false;
-
-		auto block = dict_block();
-		auto i = find_item(block, key);
-
-		if (i == block->size)
-			return false;
-
-		value = block->items[i].value;
-		return true;
-	}
-
-	void copy_to(const DictLogic &target) const
-	{
-		for (unsigned int i = 0; i < size(); i++) {
-			auto block = dict_block();
-			target.set_item(block->items[i].key, block->items[i].value);
-		}
-	}
+	unsigned int size() const;
+	void set_item(const Object &key, const Object &value) const;
+	Object get_item(const Object &key) const;
+	bool get_item(const Object &key, Object &value) const;
+	void copy_to(const DictObject &target) const;
 
 protected:
-	DictLogic(BlockId id) throw ():
-		ObjectLogic<Ops>(id)
-	{
-	}
-
-	DictBlock *dict_block() const
-	{
-		auto block = static_cast<DictBlock *> (ObjectLogic<Ops>::object_block());
-		block->verify_integrity();
-		return block;
-	}
+	struct Content;
 
 private:
-	static unsigned int find_item(DictBlock *block, const Object &key)
-	{
-		unsigned int i;
+	DictObject(BlockId id) throw ();
 
-		for (i = 0; i < block->size; i++)
-			if (key.cast<StringObject>().equals(block->items[i].key.cast<StringObject>()))
-				break;
+	unsigned int capacity() const;
+	Content *content() const;
+};
 
-		return i;
-	}
-
-	unsigned int capacity() const
-	{
-		return dict_block()->capacity();
-	}
-} CONCRETE_PACKED;
-
-typedef DictLogic<ObjectOps>         DictObject;
-typedef DictLogic<PortableObjectOps> PortableDictObject;
-
-void DictTypeInit(const TypeObject &type);
+void DictObjectTypeInit(const TypeObject &type);
 
 } // namespace
 

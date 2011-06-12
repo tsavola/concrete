@@ -43,6 +43,11 @@ FileResource::~FileResource() throw ()
 	close(m_fd);
 }
 
+int FileResource::fd() const throw ()
+{
+	return m_fd;
+}
+
 void FileResource::wait_readability()
 {
 	Context::WaitEvent(fd(), EV_READ);

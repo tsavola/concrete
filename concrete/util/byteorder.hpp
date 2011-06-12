@@ -34,20 +34,55 @@
 
 namespace concrete {
 
-template <typename T, unsigned int N> struct Byteorder;
+#ifdef CONCRETE_LITTLE_ENDIAN
+template <typename T, unsigned int N>
+struct PortableByteorder {
+	static T Adapt(const T &x) throw ()
+	{
+		return x;
+	}
+};
+#else
+template <typename T, unsigned int N> struct PortableByteorder;
 
-template <typename T> struct Byteorder<T, 1> {
-	static inline T Swap(const T &x) throw () { return x; }
+template <typename T>
+struct PortableByteorder<T, 1> {
+	static T Adapt(const T &x) throw ()
+	{
+		return x;
+	}
 };
-template <typename T> struct Byteorder<T, 2> {
-	static inline T Swap(const T &x) throw () { return bswap_16(x); }
+
+template <typename T>
+struct PortableByteorder<T, 2> {
+	static T Adapt(const T &x) throw ()
+	{
+		return bswap_16(x);
+	}
 };
-template <typename T> struct Byteorder<T, 4> {
-	static inline T Swap(const T &x) throw () { return bswap_32(x); }
+
+template <typename T>
+struct PortableByteorder<T, 4> {
+	static T Adapt(const T &x) throw ()
+	{
+		return bswap_32(x);
+	}
 };
-template <typename T> struct Byteorder<T, 8> {
-	static inline T Swap(const T &x) throw () { return bswap_64(x); }
+
+template <typename T>
+struct PortableByteorder<T, 8> {
+	static T Adapt(const T &x) throw ()
+	{
+		return bswap_64(x);
+	}
 };
+#endif
+
+template <typename T>
+T PortByteorder(const T &x) throw ()
+{
+	return PortableByteorder<T, sizeof (T)>::Adapt(x);
+}
 
 } // namespace
 

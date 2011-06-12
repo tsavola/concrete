@@ -7,20 +7,22 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#ifndef CONCRETE_OBJECTS_OBJECT_FWD_HPP
-#define CONCRETE_OBJECTS_OBJECT_FWD_HPP
+#ifndef CONCRETE_OBJECTS_LONG_CONTENT_HPP
+#define CONCRETE_OBJECTS_LONG_CONTENT_HPP
 
-#include <concrete/block.hpp>
+#include "long.hpp"
+
+#include <concrete/objects/object-content.hpp>
+#include <concrete/util/portable.hpp>
 
 namespace concrete {
 
-typedef BlockIdOps         ObjectOps;
-typedef PortableBlockIdOps PortableObjectOps;
+struct LongObject::Content: Object::Content {
+	Portable<int64_t> value;
 
-template <typename Ops> class ObjectLogic;
+	Content(const TypeObject &type, int64_t value);
 
-typedef ObjectLogic<ObjectOps>         Object;
-typedef ObjectLogic<PortableObjectOps> PortableObject;
+} CONCRETE_PACKED;
 
 } // namespace
 

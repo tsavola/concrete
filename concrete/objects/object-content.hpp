@@ -7,35 +7,32 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#ifndef CONCRETE_OBJECTS_OBJECT_HPP
-#define CONCRETE_OBJECTS_OBJECT_HPP
+#ifndef CONCRETE_OBJECTS_OBJECT_CONTENT_HPP
+#define CONCRETE_OBJECTS_OBJECT_CONTENT_HPP
 
-#include "object-partial.hpp"
+#include "object.hpp"
+
+#include <cstdint>
 
 #include <concrete/block.hpp>
-#include <concrete/util/noncopyable.hpp>
 #include <concrete/util/packed.hpp>
 #include <concrete/util/portable.hpp>
 
 namespace concrete {
 
-class NoneObject;
 class TypeObject;
 
-struct Object::Protocol: Noncopyable {
-	Portable<Object> add;
-	Portable<Object> repr;
-	Portable<Object> str;
+struct Object::Content: Block {
+	struct NoRefcountInit {};
 
-	Protocol();
-	Protocol(const NoneObject &none) throw ();
+	Portable<int32_t> refcount;
+	Portable<Object> type;
+
+	Content(BlockId type_id, NoRefcountInit no_refcount_init);
+	explicit Content(const TypeObject &type);
 
 } CONCRETE_PACKED;
 
-void ObjectTypeInit(const TypeObject &type);
-
 } // namespace
-
-#include "object-inline.hpp"
 
 #endif

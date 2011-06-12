@@ -49,7 +49,8 @@ CONCRETE_THREAD_LOCAL Impl *Activatable<Impl>::m_active;
 template <typename Activatable>
 class ActiveScope: Noncopyable {
 public:
-	explicit ActiveScope(Activatable &activatable) throw (): m_activatable(activatable)
+	explicit ActiveScope(Activatable &activatable) throw ():
+		m_activatable(activatable)
 	{
 		m_activatable.activate();
 	}

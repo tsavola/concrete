@@ -10,104 +10,59 @@
 #ifndef CONCRETE_RESOURCE_HPP
 #define CONCRETE_RESOURCE_HPP
 
-#include <cstddef>
 #include <cstdint>
-#include <memory>
+#include <exception>
 
-#include <concrete/util/backtrace.hpp>
-#include <concrete/util/id.hpp>
 #include <concrete/util/noncopyable.hpp>
+#include <concrete/util/portable.hpp>
 
 namespace concrete {
 
-typedef uint32_t ResourceKey;
-
-typedef IdOps<ResourceKey>         ResourceIdOps;
-typedef PortableIdOps<ResourceKey> PortableResourceIdOps;
-
-typedef IdLogic<ResourceKey, ResourceIdOps>         ResourceId;
-typedef IdLogic<ResourceKey, PortableResourceIdOps> PortableResourceId;
-
-struct ResourceSnapshot {
-	Portable<ResourceKey> begin;
-	Portable<ResourceKey> end;
-
-	ResourceSnapshot() throw ():
-		begin(0),
-		end(0)
-	{
-	}
-
-	ResourceSnapshot(ResourceKey begin, ResourceKey end) throw ():
-		begin(begin),
-		end(end)
-	{
-	}
-} CONCRETE_PACKED;
+typedef uint32_t ResourceId;
 
 class Resource: Noncopyable {
 public:
-	virtual ~Resource() throw ()
-	{
-	}
+	virtual ~Resource() throw ();
 };
 
 class ResourceError: public std::exception {
 public:
-	ResourceError() throw ()
-	{
-		Backtrace();
-	}
+	ResourceError() throw ();
+	virtual ~ResourceError() throw ();
 
-	virtual ~ResourceError() throw ()
-	{
-	}
-
-	virtual const char *what() const throw ()
-	{
-		return "Resource access error";
-	}
+	virtual const char *what() const throw ();
 };
 
 class ResourceManager: Noncopyable {
 	class Impl;
 
 public:
-	template <typename T>
+	struct Snapshot {
+		Portable<ResourceId> begin;
+		Portable<ResourceId> end;
+
+		Snapshot() throw ();
+		Snapshot(ResourceId begin, ResourceId end) throw ();
+
+	} CONCRETE_PACKED;
+
+	template <typename ResourceType>
 	struct Allocation {
 		ResourceId id;
-		T &resource;
+		ResourceType &resource;
 	};
 
 	ResourceManager();
-	explicit ResourceManager(const ResourceSnapshot &snapshot);
+	explicit ResourceManager(const Snapshot &snapshot);
 	~ResourceManager() throw ();
 
-	ResourceSnapshot snapshot() const throw ();
+	Snapshot snapshot() const throw ();
 
-	template <typename T, typename... Args>
-	Allocation<T> new_resource(Args... args)
-	{
-		std::auto_ptr<T> resource(new T(args...));
-		auto id = append_resource(resource.get());
-		auto ptr = resource.get();
-		resource.release();
-		return Allocation<T> { id, *ptr };
-	}
+	template <typename ResourceType, typename... Args>
+	Allocation<ResourceType> new_resource(Args... args);
 
-	template <typename T>
-	T &resource(ResourceId id) const
-	{
-		auto plain = find_resource(id);
-		if (plain == NULL)
-			throw ResourceError();
-
-		auto typed = dynamic_cast<T *> (plain);
-		if (typed == NULL)
-			throw ResourceError();
-
-		return *typed;
-	}
+	template <typename ResourceType>
+	ResourceType &resource(ResourceId id) const;
 
 	void delete_resource(ResourceId id) throw ();
 	bool resource_lost(ResourceId id) const throw ();
@@ -123,5 +78,7 @@ private:
 };
 
 } // namespace
+
+#include "resource-inline.hpp"
 
 #endif

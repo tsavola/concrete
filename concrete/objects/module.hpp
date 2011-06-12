@@ -10,77 +10,33 @@
 #ifndef CONCRETE_OBJECTS_MODULE_HPP
 #define CONCRETE_OBJECTS_MODULE_HPP
 
-#include <concrete/block.hpp>
-#include <concrete/objects/code.hpp>
 #include <concrete/objects/dict.hpp>
 #include <concrete/objects/object.hpp>
-#include <concrete/util/packed.hpp>
 
 namespace concrete {
 
-struct ModuleBlock: ObjectBlock {
-	const PortableDictObject dict;
-
-	ModuleBlock(const TypeObject &type, const DictObject &dict):
-		ObjectBlock(type),
-		dict(dict)
-	{
-	}
-} CONCRETE_PACKED;
-
-template <typename Ops>
-class ModuleLogic: public ObjectLogic<Ops> {
-	friend class ObjectLogic<ObjectOps>;
-	friend class ObjectLogic<PortableObjectOps>;
+class ModuleObject: public Object {
+	friend class Object;
 
 public:
-	static TypeObject Type()
-	{
-		return Context::SystemObjects()->module_type;
-	}
+	static TypeObject Type();
+	static ModuleObject New(const DictObject &dict);
 
-	static ModuleLogic New(const DictObject &dict)
-	{
-		return Context::NewBlock<ModuleBlock>(Type(), dict);
-	}
+	ModuleObject(const ModuleObject &other) throw ();
+	ModuleObject &operator=(const ModuleObject &other) throw ();
 
-	using ObjectLogic<Ops>::operator==;
-	using ObjectLogic<Ops>::operator!=;
+	DictObject dict() const;
 
-	template <typename OtherOps>
-	ModuleLogic(const ModuleLogic<OtherOps> &other) throw ():
-		ObjectLogic<Ops>(other)
-	{
-	}
+public:
+	struct Content;
 
-	template <typename OtherOps>
-	ModuleLogic &operator=(const ModuleLogic<OtherOps> &other) throw ()
-	{
-		ObjectLogic<Ops>::operator=(other);
-		return *this;
-	}
+private:
+	ModuleObject(BlockId id) throw ();
 
-	DictObject dict() const
-	{
-		return module_block()->dict;
-	}
+	Content *content() const;
+};
 
-protected:
-	ModuleLogic(BlockId id) throw ():
-		ObjectLogic<Ops>(id)
-	{
-	}
-
-	ModuleBlock *module_block() const
-	{
-		return static_cast<ModuleBlock *> (ObjectLogic<Ops>::object_block());
-	}
-} CONCRETE_PACKED;
-
-typedef ModuleLogic<ObjectOps>         ModuleObject;
-typedef ModuleLogic<PortableObjectOps> PortableModuleObject;
-
-void ModuleTypeInit(const TypeObject &type);
+void ModuleObjectTypeInit(const TypeObject &type);
 
 } // namespace
 

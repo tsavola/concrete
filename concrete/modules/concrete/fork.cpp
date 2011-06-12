@@ -23,7 +23,9 @@
 #include <concrete/objects/long.hpp>
 #include <concrete/objects/module.hpp>
 #include <concrete/objects/tuple.hpp>
+#include <concrete/util/portable.hpp>
 #include <concrete/resource.hpp>
+#include <concrete/util/trace.hpp>
 
 namespace concrete {
 
@@ -43,17 +45,17 @@ public:
 	{
 		if (resolve_id) {
 			Context::DeleteResource(resolve_id);
-			resolve_id = NULL;
+			resolve_id = 0;
 		}
 
 		if (socket_id) {
 			Context::DeleteResource(socket_id);
-			socket_id = NULL;
+			socket_id = 0;
 		}
 
 		if (buffer_id) {
 			Context::DeleteResource(buffer_id);
-			buffer_id = NULL;
+			buffer_id = 0;
 		}
 	}
 
@@ -64,11 +66,11 @@ public:
 		       Context::ResourceLost(buffer_id);
 	}
 
-	PortableObject host;
-	PortableObject port;
-	PortableResourceId resolve_id;
-	PortableResourceId socket_id;
-	PortableResourceId buffer_id;
+	Portable<Object> host;
+	Portable<Object> port;
+	Portable<ResourceId> resolve_id;
+	Portable<ResourceId> socket_id;
+	Portable<ResourceId> buffer_id;
 	Portable<uint8_t> mode;
 	Portable<uint8_t> forked;
 
@@ -129,8 +131,8 @@ private:
 		ConcreteTrace(("fork: init resolve"));
 
 		auto resolve = Context::NewResource<ResolveResource>(
-			state()->host.cast<StringObject>().string(),
-			state()->port.cast<StringObject>().string());
+			state()->host->cast<StringObject>().string(),
+			state()->port->cast<StringObject>().string());
 
 		state()->resolve_id = resolve.id;
 		state()->mode = ResolveMode;

@@ -10,101 +10,50 @@
 #ifndef CONCRETE_OBJECTS_TYPE_HPP
 #define CONCRETE_OBJECTS_TYPE_HPP
 
-#include "type-decl.hpp"
-
-#include <concrete/block.hpp>
-#include <concrete/context.hpp>
-#include <concrete/objects/none-decl.hpp>
-#include <concrete/objects/object.hpp>
-#include <concrete/objects/string-decl.hpp>
-#include <concrete/util/portable.hpp>
-#include <concrete/util/packed.hpp>
-#include <concrete/util/trace.hpp>
+#include <concrete/objects/object-partial.hpp>
 
 namespace concrete {
 
-struct TypeBlock: ObjectBlock {
-	PortableObject name_object;
-	ObjectProtocol protocol;
+class NoneObject;
+class StringObject;
 
-	TypeBlock(const NoneObject &none, BlockId type_id, NoRefcountInit no_refcount_init):
-		ObjectBlock(type_id, no_refcount_init),
-		name_object(none),
-		protocol(none)
-	{
-	}
+class TypeObject: public Object {
+	friend class Object;
+	friend struct Object::Content;
 
-	TypeBlock(const NoneObject &none, const TypeObject &type):
-		ObjectBlock(type),
-		name_object(none),
-		protocol(none)
-	{
-	}
+public:
+	static TypeObject Type();
 
-	TypeBlock(const TypeObject &type, const StringObject &name):
-		ObjectBlock(type),
-		name_object(name)
-	{
-	}
-} CONCRETE_PACKED;
+	static TypeObject NewBuiltin(const NoneObject &none);
+	static TypeObject NewBuiltin(const NoneObject &none, const TypeObject &type);
+	static TypeObject New(const StringObject &name);
 
-template <typename Ops>
-TypeObject TypeLogic<Ops>::Type()
-{
-	return Context::SystemObjects()->type_type;
-}
+	TypeObject(const TypeObject &other) throw ();
+	TypeObject &operator=(const TypeObject &other) throw ();
 
-template <typename Ops>
-TypeLogic<Ops> TypeLogic<Ops>::NewBuiltin(const NoneObject &none)
-{
-	auto ret = Context::AllocBlock(sizeof (TypeBlock));
-	auto block = static_cast<TypeBlock *> (ret.ptr);
-	block->refcount = 0;
-	new (block) TypeBlock(none, ret.id, ObjectBlock::NoRefcountInit());
-	return ret.id;
-}
+	void init_builtin(const StringObject &name) const;
 
-template <typename Ops>
-TypeLogic<Ops> TypeLogic<Ops>::NewBuiltin(const NoneObject &none, const TypeObject &type)
-{
-	auto ret = Context::AllocBlock(sizeof (TypeBlock));
-	new (ret.ptr) TypeBlock(none, type);
-	return ret.id;
-}
+	StringObject name() const;
+	Object::Protocol &protocol() const;
 
-template <typename Ops>
-TypeLogic<Ops> TypeLogic<Ops>::New(const StringObject &name)
-{
-	return Context::NewBlock<TypeBlock>(Type(), name);
-}
+protected:
+	struct Content;
 
-template <typename Ops>
-void TypeLogic<Ops>::init_builtin(const StringObject &name) const
-{
-	type_block()->name_object = name;
-}
+private:
+	TypeObject(BlockId id) throw ();
 
-template <typename Ops>
-StringObject TypeLogic<Ops>::name() const
-{
-	return static_cast<PortableStringObject &> (type_block()->name_object);
-	// TODO: return type_block()->name.cast<StringObject>();
-}
+	Content *content() const;
+};
 
-template <typename Ops>
-ObjectProtocol &TypeLogic<Ops>::protocol() const
-{
-	return type_block()->protocol;
-}
+void TypeObjectTypeInit(const TypeObject &type);
 
-template <typename Ops>
-TypeBlock *TypeLogic<Ops>::type_block() const
-{
-	return static_cast<TypeBlock *> (ObjectLogic<Ops>::object_block());
-}
-
-void TypeTypeInit(const TypeObject &type);
+template <typename ObjectType>
+struct TypeCheck {
+	bool operator()(const TypeObject &type);
+};
 
 } // namespace
+
+#include "type-inline.hpp"
 
 #endif

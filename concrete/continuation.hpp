@@ -29,6 +29,11 @@ enum ContinuationOp {
 
 class Continuable: Noncopyable {
 public:
+	Continuable():
+		m_state_id(0)
+	{
+	}
+
 	void set_state(BlockId id) throw ()
 	{
 		m_state_id = id;
@@ -57,7 +62,7 @@ Object ContinuableCall(ContinuationOp op,
 
 	switch (op) {
 	case InitContinuation:
-		assert(state_id == NULL);
+		assert(state_id == 0);
 		assert(args && kwargs);
 
 		state_id = Context::NewBlock<ContinuationType>();
@@ -82,7 +87,7 @@ Object ContinuableCall(ContinuationOp op,
 
 	if (done) {
 		BlockId id = state_id;
-		state_id = NULL;
+		state_id = 0;
 
 		Context::DeleteBlock<ContinuationType>(id);
 	}

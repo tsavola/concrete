@@ -10,78 +10,32 @@
 #ifndef CONCRETE_OBJECTS_FUNCTION_HPP
 #define CONCRETE_OBJECTS_FUNCTION_HPP
 
-#include <concrete/block.hpp>
-#include <concrete/continuation.hpp>
 #include <concrete/objects/callable.hpp>
 #include <concrete/objects/code.hpp>
-#include <concrete/objects/object.hpp>
-#include <concrete/util/packed.hpp>
 
 namespace concrete {
 
-struct FunctionBlock: CallableBlock {
-	const PortableCodeObject code;
-
-	FunctionBlock(const TypeObject &type, const CodeObject &code):
-		CallableBlock(type),
-		code(code)
-	{
-	}
-
-	Object call(ContinuationOp op,
-	            BlockId &continuation,
-	            const TupleObject *args,
-	            const DictObject *kwargs) const;
-} CONCRETE_PACKED;
-
-template <typename Ops>
-class FunctionLogic: public CallableLogic<Ops> {
-	friend class ObjectLogic<ObjectOps>;
-	friend class ObjectLogic<PortableObjectOps>;
+class FunctionObject: public CallableObject {
+	friend class Object;
+	friend class CallableObject;
 
 public:
-	static TypeObject Type()
-	{
-		return Context::SystemObjects()->function_type;
-	}
+	static TypeObject Type();
+	static FunctionObject New(const CodeObject &code);
 
-	static FunctionLogic New(const CodeObject &code)
-	{
-		return Context::NewBlock<FunctionBlock>(Type(), code);
-	}
-
-	using CallableLogic<Ops>::operator==;
-	using CallableLogic<Ops>::operator!=;
-
-	template <typename OtherOps>
-	FunctionLogic(const FunctionLogic<OtherOps> &other) throw ():
-		CallableLogic<Ops>(other)
-	{
-	}
-
-	template <typename OtherOps>
-	FunctionLogic &operator=(const FunctionLogic<OtherOps> &other) throw ()
-	{
-		CallableLogic<Ops>::operator=(other);
-		return *this;
-	}
+	FunctionObject(const FunctionObject &other) throw ();
+	FunctionObject &operator=(const FunctionObject &other) throw ();
 
 protected:
-	FunctionLogic(BlockId id) throw ():
-		CallableLogic<Ops>(id)
-	{
-	}
+	struct Content;
 
-	FunctionBlock *function_block() const
-	{
-		return static_cast<FunctionBlock *> (CallableLogic<Ops>::callable_block());
-	}
-} CONCRETE_PACKED;
+	FunctionObject(BlockId id) throw ();
 
-typedef FunctionLogic<ObjectOps>         FunctionObject;
-typedef FunctionLogic<PortableObjectOps> PortableFunctionObject;
+private:
+	Content *content() const;
+};
 
-void FunctionTypeInit(const TypeObject &type);
+void FunctionObjectTypeInit(const TypeObject &type);
 
 } // namespace
 

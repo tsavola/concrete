@@ -15,12 +15,31 @@
 
 #include <event.h>
 
+#include <concrete/util/backtrace.hpp>
 #include <concrete/util/trace.hpp>
 
 namespace concrete {
 
+Resource::~Resource() throw ()
+{
+}
+
+ResourceError::ResourceError() throw ()
+{
+	Backtrace();
+}
+
+ResourceError::~ResourceError() throw ()
+{
+}
+
+const char *ResourceError::what() const throw ()
+{
+	return "Resource access error";
+}
+
 class ResourceManager::Impl {
-	typedef std::map<ResourceKey, Resource *> ResourceMap;
+	typedef std::map<ResourceId, Resource *> ResourceMap;
 
 public:
 	Impl():
@@ -33,7 +52,7 @@ public:
 			throw ResourceError();
 	}
 
-	Impl(const ResourceSnapshot &snapshot):
+	Impl(const Snapshot &snapshot):
 		m_lost_begin(snapshot.begin),
 		m_lost_end(snapshot.end),
 		m_event_base(event_base_new()),
@@ -51,10 +70,10 @@ public:
 		event_base_free(m_event_base);
 	}
 
-	ResourceSnapshot snapshot() const throw ()
+	Snapshot snapshot() const throw ()
 	{
-		ResourceKey begin = m_lost_begin;
-		ResourceKey end = m_lost_end;
+		ResourceId begin = m_lost_begin;
+		ResourceId end = m_lost_end;
 
 		if (begin == end) {
 			if (m_resources.empty()) {
@@ -69,29 +88,31 @@ public:
 				end = m_resources.rbegin()->first + 1;
 		}
 
-		return ResourceSnapshot(begin, end);
+		return Snapshot(begin, end);
 	}
 
 	ResourceId append_resource(Resource *resource)
 	{
-		typedef std::pair<ResourceKey, Resource *> Pair;
+		typedef std::pair<ResourceId, Resource *> Pair;
 
-		ResourceKey key = 0;
+		ResourceId id = 1;
 		auto i = m_resources.end();
 
 		if (!m_resources.empty()) {
 			--i;
-			key = i->first + 1;
+			id = i->first + 1;
 		}
 
-		m_resources.insert(i, Pair(key, resource));
+		m_resources.insert(i, Pair(id, resource));
 
-		return ResourceId::New(key);
+		assert(id);
+
+		return id;
 	}
 
 	Resource *find_resource(ResourceId id) const throw ()
 	{
-		auto i = m_resources.find(id.value());
+		auto i = m_resources.find(id);
 		if (i == m_resources.end())
 			return NULL;
 
@@ -100,10 +121,10 @@ public:
 
 	void delete_resource(ResourceId id) throw ()
 	{
-		if (id == NULL)
+		if (id == 0)
 			return;
 
-		auto i = m_resources.find(id.value());
+		auto i = m_resources.find(id);
 		if (i == m_resources.end())
 			return;
 
@@ -113,10 +134,10 @@ public:
 
 	bool resource_lost(ResourceId id) const throw ()
 	{
-		if (id == NULL)
+		if (id == 0)
 			return false;
 
-		return id.value() >= m_lost_begin && id.value() < m_lost_end;
+		return id >= m_lost_begin && id < m_lost_end;
 	}
 
 	void wait_event(int fd, short events)
@@ -148,19 +169,31 @@ private:
 		ConcreteTrace(("resumed"));
 	}
 
-	const ResourceKey m_lost_begin;
-	const ResourceKey m_lost_end;
+	const ResourceId m_lost_begin;
+	const ResourceId m_lost_end;
 	ResourceMap m_resources;
 	struct event_base *const m_event_base;
 	bool m_suspended;
 };
+
+ResourceManager::Snapshot::Snapshot() throw ():
+	begin(0),
+	end(0)
+{
+}
+
+ResourceManager::Snapshot::Snapshot(ResourceId begin, ResourceId end) throw ():
+	begin(begin),
+	end(end)
+{
+}
 
 ResourceManager::ResourceManager():
 	m_impl(new Impl)
 {
 }
 
-ResourceManager::ResourceManager(const ResourceSnapshot &snapshot):
+ResourceManager::ResourceManager(const Snapshot &snapshot):
 	m_impl(new Impl(snapshot))
 {
 }
@@ -170,7 +203,7 @@ ResourceManager::~ResourceManager() throw ()
 	delete m_impl;
 }
 
-ResourceSnapshot ResourceManager::snapshot() const throw ()
+ResourceManager::Snapshot ResourceManager::snapshot() const throw ()
 {
 	return m_impl->snapshot();
 }

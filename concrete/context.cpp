@@ -11,9 +11,36 @@
 
 #include <concrete/modules/builtins.hpp>
 #include <concrete/modules/concrete.hpp>
-#include <concrete/objects.hpp>
+#include <concrete/objects/bytes.hpp>
+#include <concrete/objects/code.hpp>
+#include <concrete/objects/dict.hpp>
+#include <concrete/objects/function.hpp>
+#include <concrete/objects/internal.hpp>
+#include <concrete/objects/long.hpp>
+#include <concrete/objects/module.hpp>
+#include <concrete/objects/object.hpp>
+#include <concrete/objects/string.hpp>
+#include <concrete/objects/tuple.hpp>
 
 namespace concrete {
+
+Context::Snapshot::Snapshot() throw ()
+{
+}
+
+Context::Snapshot::Snapshot(const Arena::Snapshot &arena,
+                            const ResourceManager::Snapshot &resources,
+                            BlockId system_objects) throw ():
+	Arena::Snapshot(arena),
+	resources(resources),
+	system_objects(system_objects)
+{
+}
+
+size_t Context::Snapshot::head_size() const throw ()
+{
+	return sizeof (Snapshot) - sizeof (Arena::Snapshot) + Arena::Snapshot::head_size();
+}
 
 Context::SystemObjectsBlock::SystemObjectsBlock(const NoneObject &none) throw ():
 	none                    (none),
@@ -36,6 +63,52 @@ Context::SystemObjectsBlock::SystemObjectsBlock(const NoneObject &none) throw ()
 {
 }
 
+Arena::Allocation Context::AllocBlock(size_t size)
+{
+	return Active().m_arena.alloc_block(size);
+}
+
+void Context::FreeBlock(BlockId id) throw ()
+{
+	Active().m_arena.free_block(id);
+}
+
+void Context::DeleteResource(ResourceId id) throw ()
+{
+	Active().m_resource_manager.delete_resource(id);
+}
+
+bool Context::ResourceLost(ResourceId id) throw ()
+{
+	return Active().m_resource_manager.resource_lost(id);
+}
+
+void Context::WaitEvent(int fd, short events)
+{
+	Active().m_resource_manager.wait_event(fd, events);
+}
+
+Context::SystemObjectsBlock *Context::SystemObjects()
+{
+	return Active().system_objects();
+}
+
+const Context::SystemObjectsBlock *Context::NonthrowingSystemObjects() throw ()
+{
+	auto &active = Active();
+	return active.m_arena.nonthrowing_block_pointer<SystemObjectsBlock>(active.m_system_objects);
+}
+
+Object Context::LoadBuiltinName(const Object &name)
+{
+	return SystemObjects()->builtins->cast<DictObject>().get_item(name);
+}
+
+Object Context::ImportBuiltinModule(const Object &name)
+{
+	return SystemObjects()->modules->cast<DictObject>().get_item(name);
+}
+
 Context::Context()
 {
 	ContextScope scope(*this);
@@ -45,18 +118,19 @@ Context::Context()
 	m_system_objects = m_arena.new_block<SystemObjectsBlock>(none);
 
 	none.init_builtin       (system_objects()->none_type);
-	TypeTypeInit            (system_objects()->type_type);
+
+	TypeObjectTypeInit      (system_objects()->type_type);
 	ObjectTypeInit          (system_objects()->object_type);
-	NoneTypeInit            (system_objects()->none_type);
-	StringTypeInit          (system_objects()->string_type);
-	LongTypeInit            (system_objects()->long_type);
-	BytesTypeInit           (system_objects()->bytes_type);
-	TupleTypeInit           (system_objects()->tuple_type);
-	DictTypeInit            (system_objects()->dict_type);
-	CodeTypeInit            (system_objects()->code_type);
-	FunctionTypeInit        (system_objects()->function_type);
-	InternalTypeInit        (system_objects()->internal_type);
-	ModuleTypeInit          (system_objects()->module_type);
+	NoneObjectTypeInit      (system_objects()->none_type);
+	StringObjectTypeInit    (system_objects()->string_type);
+	LongObjectTypeInit      (system_objects()->long_type);
+	BytesObjectTypeInit     (system_objects()->bytes_type);
+	TupleObjectTypeInit     (system_objects()->tuple_type);
+	DictObjectTypeInit      (system_objects()->dict_type);
+	CodeObjectTypeInit      (system_objects()->code_type);
+	FunctionObjectTypeInit  (system_objects()->function_type);
+	InternalObjectTypeInit  (system_objects()->internal_type);
+	ModuleObjectTypeInit    (system_objects()->module_type);
 
 	auto modules = DictObject::New();
 
@@ -67,14 +141,28 @@ Context::Context()
 	system_objects()->modules = modules;
 }
 
-Object Context::LoadBuiltinName(const Object &name)
+Context::Context(const Snapshot &snapshot):
+	m_arena(snapshot),
+	m_resource_manager(snapshot.resources),
+	m_system_objects(snapshot.system_objects)
 {
-	return SystemObjects()->builtins.cast<DictObject>().get_item(name);
 }
 
-Object Context::ImportBuiltinModule(const Object &name)
+Context::Snapshot Context::snapshot() const throw ()
 {
-	return SystemObjects()->modules.cast<DictObject>().get_item(name);
+	return Snapshot(m_arena.snapshot(),
+	                m_resource_manager.snapshot(),
+	                m_system_objects);
+}
+
+void Context::poll_events()
+{
+	m_resource_manager.poll_events();
+}
+
+Context::SystemObjectsBlock *Context::system_objects()
+{
+	return m_arena.block_pointer<SystemObjectsBlock>(m_system_objects);
 }
 
 } // namespace

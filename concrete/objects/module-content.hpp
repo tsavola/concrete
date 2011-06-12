@@ -7,17 +7,22 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#ifndef CONCRETE_OBJECTS_STRING_FWD_HPP
-#define CONCRETE_OBJECTS_STRING_FWD_HPP
+#ifndef CONCRETE_OBJECTS_MODULE_CONTENT_HPP
+#define CONCRETE_OBJECTS_MODULE_CONTENT_HPP
 
-#include <concrete/objects/object-fwd.hpp>
+#include "module.hpp"
+
+#include <concrete/objects/object-content.hpp>
+#include <concrete/util/portable.hpp>
 
 namespace concrete {
 
-template <typename Ops> class StringLogic;
+struct ModuleObject::Content: Object::Content {
+	const Portable<DictObject> dict;
 
-typedef StringLogic<ObjectOps>         StringObject;
-typedef StringLogic<PortableObjectOps> PortableStringObject;
+	Content(const TypeObject &type, const DictObject &dict);
+
+} CONCRETE_PACKED;
 
 } // namespace
 

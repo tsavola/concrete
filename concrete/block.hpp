@@ -13,73 +13,42 @@
 #include <cstdint>
 #include <exception>
 
-#include <concrete/arena-fwd.hpp>
-#include <concrete/util/id.hpp>
 #include <concrete/util/packed.hpp>
 #include <concrete/util/portable.hpp>
 
 namespace concrete {
 
+class Arena;
+
 typedef uint32_t BlockSize;
-typedef uint32_t BlockOffset;
+typedef uint32_t BlockId;
 
 class Block {
 	friend class Arena;
 
 public:
-	Block() throw ()
-	{
-	}
+	Block() throw ();
+	Block &operator=(const Block &other) throw ();
 
-	Block &operator=(const Block &other) throw ()
-	{
-		return *this;
-	}
-
-	BlockSize block_size() const throw ()
-	{
-		return m_size;
-	}
+	BlockSize block_size() const throw ();
 
 private:
 	Block(const Block &);
 
-#ifdef CONCRETE_BLOCK_MAGIC
-	Portable<uint32_t> m_magic;
-#endif
-	Portable<BlockSize> m_size;
+	BlockSize m_portable_size;
 
 } CONCRETE_PACKED;
-
-typedef IdOps<BlockOffset>         BlockIdOps;
-typedef PortableIdOps<BlockOffset> PortableBlockIdOps;
-
-typedef IdLogic<BlockOffset, BlockIdOps>         BlockId;
-typedef IdLogic<BlockOffset, PortableBlockIdOps> PortableBlockId;
 
 class IntegrityError: public std::exception {
 public:
 	explicit IntegrityError(const Block *block) throw ();
+	virtual ~IntegrityError() throw ();
 
-	virtual ~IntegrityError() throw ()
-	{
-	}
-
-	virtual const char *what() const throw ()
-	{
-		return "Block integrity violation";
-	}
-
-	BlockId block_id() const throw ()
-	{
-		return m_block_id;
-	}
+	virtual const char *what() const throw ();
+	BlockId block_id() const throw ();
 
 protected:
-	IntegrityError(BlockId block_id) throw ():
-		m_block_id(block_id)
-	{
-	}
+	explicit IntegrityError(BlockId block_id) throw ();
 
 private:
 	const BlockId m_block_id;

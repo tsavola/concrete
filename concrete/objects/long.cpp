@@ -7,23 +7,66 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#include "long.hpp"
+#include "long-content.hpp"
 
 #include <boost/format.hpp>
 
+#include <concrete/context.hpp>
 #include <concrete/objects/internal.hpp>
 #include <concrete/objects/string.hpp>
 #include <concrete/objects/type.hpp>
 
 namespace concrete {
 
-void LongTypeInit(const TypeObject &type)
+void LongObjectTypeInit(const TypeObject &type)
 {
 	type.init_builtin(StringObject::New("long"));
 
 	type.protocol().add   = InternalObject::New(internal::LongType_Add);
 	type.protocol().repr  = InternalObject::New(internal::LongType_Repr);
 	type.protocol().str   = InternalObject::New(internal::LongType_Str);
+}
+
+LongObject::Content::Content(const TypeObject &type, int64_t value):
+	Object::Content(type),
+	value(value)
+{
+}
+
+TypeObject LongObject::Type()
+{
+	return Context::SystemObjects()->long_type;
+}
+
+LongObject LongObject::New(int64_t value)
+{
+	return Context::NewBlock<Content>(Type(), value);
+}
+
+LongObject::LongObject(BlockId id) throw ():
+	Object(id)
+{
+}
+
+LongObject::LongObject(const LongObject &other) throw ():
+	Object(other)
+{
+}
+
+LongObject &LongObject::operator=(const LongObject &other) throw ()
+{
+	Object::operator=(other);
+	return *this;
+}
+
+int64_t LongObject::value() const
+{
+	return content()->value;
+}
+
+LongObject::Content *LongObject::content() const
+{
+	return content_pointer<Content>();
 }
 
 static Object LongAdd(const TupleObject &args, const DictObject &kwargs)

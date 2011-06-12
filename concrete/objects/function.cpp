@@ -7,22 +7,16 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#include "function.hpp"
+#include "function-content.hpp"
 
-#include <concrete/block.hpp>
-#include <concrete/continuation.hpp>
 #include <concrete/execute.hpp>
-#include <concrete/objects/dict.hpp>
 #include <concrete/objects/string.hpp>
-#include <concrete/objects/tuple.hpp>
 #include <concrete/objects/type.hpp>
 #include <concrete/util/packed.hpp>
-#include <concrete/util/portable.hpp>
-#include <concrete/util/trace.hpp>
 
 namespace concrete {
 
-void FunctionTypeInit(const TypeObject &type)
+void FunctionObjectTypeInit(const TypeObject &type)
 {
 	type.init_builtin(StringObject::New("function"));
 }
@@ -35,7 +29,7 @@ public:
 			Executor::Active().destroy_frame(frame_id);
 	}
 
-	PortableBlockId frame_id;
+	Portable<BlockId> frame_id;
 
 } CONCRETE_PACKED;
 
@@ -78,13 +72,50 @@ private:
 	const CodeObject m_code;
 };
 
-Object FunctionBlock::call(ContinuationOp op,
-                           BlockId &state_id,
-                           const TupleObject *args,
-                           const DictObject *kwargs) const
+FunctionObject::Content::Content(const TypeObject &type, const CodeObject &code):
+	CallableObject::Content(type),
+	code(code)
+{
+}
+
+Object FunctionObject::Content::call(ContinuationOp op,
+                                     BlockId &state_id,
+                                     const TupleObject *args,
+                                     const DictObject *kwargs) const
 {
 	Call call(code);
 	return ContinuableCall<CallState>(op, state_id, call, args, kwargs);
+}
+
+TypeObject FunctionObject::Type()
+{
+	return Context::SystemObjects()->function_type;
+}
+
+FunctionObject FunctionObject::New(const CodeObject &code)
+{
+	return Context::NewBlock<Content>(Type(), code);
+}
+
+FunctionObject::FunctionObject(BlockId id) throw ():
+	CallableObject(id)
+{
+}
+
+FunctionObject::FunctionObject(const FunctionObject &other) throw ():
+	CallableObject(other)
+{
+}
+
+FunctionObject &FunctionObject::operator=(const FunctionObject &other) throw ()
+{
+	CallableObject::operator=(other);
+	return *this;
+}
+
+FunctionObject::Content *FunctionObject::content() const
+{
+	return content_pointer<Content>();
 }
 
 } // namespace

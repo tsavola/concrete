@@ -23,10 +23,7 @@ public:
 	explicit FileResource(int fd);
 	virtual ~FileResource() throw ();
 
-	int fd() const throw ()
-	{
-		return m_fd;
-	}
+	int fd() const throw ();
 
 	void wait_readability();
 	ssize_t read(void *buf, size_t bufsize);

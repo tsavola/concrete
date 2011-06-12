@@ -25,7 +25,7 @@ static void handle(int fd)
 	ContextScope scope(context);
 
 	try {
-		ExecutorSnapshot executor_snapshot;
+		Executor::Snapshot executor_snapshot;
 
 		if (!load_executor(executor_snapshot, fd))
 			return;

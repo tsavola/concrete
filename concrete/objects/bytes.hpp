@@ -12,86 +12,34 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <cstring>
 
-#include <concrete/block.hpp>
 #include <concrete/objects/object.hpp>
-#include <concrete/util/packed.hpp>
 
 namespace concrete {
 
-struct BytesBlock: ObjectBlock {
-	uint8_t data[0];
-
-	BytesBlock(const TypeObject &type, const uint8_t *data_): ObjectBlock(type)
-	{
-		std::memcpy(data, data_, size());
-	}
-
-	size_t size() const throw ()
-	{
-		return block_size() - sizeof (BytesBlock);
-	}
-} CONCRETE_PACKED;
-
-template <typename Ops>
-class BytesLogic: public ObjectLogic<Ops> {
-	friend class ObjectLogic<ObjectOps>;
-	friend class ObjectLogic<PortableObjectOps>;
+class BytesObject: public Object {
+	friend class Object;
 
 public:
-	static TypeObject Type()
-	{
-		return Context::SystemObjects()->bytes_type;
-	}
+	static TypeObject Type();
+	static BytesObject New(const uint8_t *data, size_t size);
 
-	static BytesLogic New(const uint8_t *data, size_t size)
-	{
-		return Context::NewCustomSizeBlock<BytesBlock>(sizeof (BytesBlock) + size, Type(), data);
-	}
+	BytesObject(const BytesObject &other) throw ();
+	BytesObject &operator=(const BytesObject &other) throw ();
 
-	using ObjectLogic<Ops>::operator==;
-	using ObjectLogic<Ops>::operator!=;
-
-	template <typename OtherOps>
-	BytesLogic(const BytesLogic<OtherOps> &other) throw ():
-		ObjectLogic<Ops>(other)
-	{
-	}
-
-	template <typename OtherOps>
-	BytesLogic &operator=(const BytesLogic<OtherOps> &other) throw ()
-	{
-		ObjectLogic<Ops>::operator=(other);
-		return *this;
-	}
-
-	size_t size() const
-	{
-		return bytes_block()->size();
-	}
-
-	const uint8_t *data() const
-	{
-		return bytes_block()->data;
-	}
+	size_t size() const;
+	const uint8_t *data() const;
 
 protected:
-	BytesLogic(BlockId id) throw ():
-		ObjectLogic<Ops>(id)
-	{
-	}
+	struct Content;
 
-	BytesBlock *bytes_block() const
-	{
-		return static_cast<BytesBlock *> (ObjectLogic<Ops>::object_block());
-	}
-} CONCRETE_PACKED;
+private:
+	BytesObject(BlockId id) throw ();
 
-typedef BytesLogic<ObjectOps>         BytesObject;
-typedef BytesLogic<PortableObjectOps> PortableBytesObject;
+	Content *content() const;
+};
 
-void BytesTypeInit(const TypeObject &type);
+void BytesObjectTypeInit(const TypeObject &type);
 
 } // namespace
 

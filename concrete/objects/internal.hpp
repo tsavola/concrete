@@ -10,18 +10,10 @@
 #ifndef CONCRETE_OBJECTS_INTERNAL_HPP
 #define CONCRETE_OBJECTS_INTERNAL_HPP
 
-#include <cassert>
-#include <cstdint>
-
-#include <concrete/block.hpp>
-#include <concrete/context.hpp>
 #include <concrete/continuation.hpp>
 #include <concrete/objects/callable.hpp>
 #include <concrete/objects/dict.hpp>
-#include <concrete/objects/object.hpp>
 #include <concrete/objects/tuple.hpp>
-#include <concrete/util/packed.hpp>
-#include <concrete/util/portable.hpp>
 
 namespace concrete {
 
@@ -43,6 +35,33 @@ namespace internal_symbol {
 #	include <concrete/internals.hpp>
 #	undef CONCRETE_INTERNAL_SYMBOL
 }
+
+class InternalObject: public CallableObject {
+	friend class Object;
+	friend class CallableObject;
+
+public:
+	static TypeObject Type();
+	static InternalObject New(internal::SymbolId symbol_id);
+
+	InternalObject(const InternalObject &other) throw ();
+	InternalObject &operator=(const InternalObject &other) throw ();
+
+	template <typename... Args> Object call(Args... args) const;
+
+protected:
+	struct Content;
+
+	InternalObject(BlockId id) throw ();
+
+private:
+	Object call_args(const TupleObject &args) const;
+	Content *content() const;
+};
+
+void InternalObjectTypeInit(const TypeObject &type);
+
+} // namespace
 
 #define CONCRETE_INTERNAL_FUNCTION(Symbol, Function)                          \
 	concrete::Object concrete::internal_symbol::Symbol(                   \
@@ -83,87 +102,6 @@ namespace internal_symbol {
 			op, continuation_id, continuable, args, kwargs);      \
 	}
 
-struct InternalBlock: CallableBlock {
-	const Portable<uint16_t> symbol_id;
-
-	InternalBlock(const TypeObject &type, internal::SymbolId symbol_id):
-		CallableBlock(type),
-		symbol_id(symbol_id)
-	{
-	}
-
-	Object call(ContinuationOp op,
-	            BlockId &continuation,
-	            const TupleObject *args,
-	            const DictObject *kwargs) const;
-} CONCRETE_PACKED;
-
-template <typename Ops>
-class InternalLogic: public CallableLogic<Ops> {
-	friend class ObjectLogic<ObjectOps>;
-	friend class ObjectLogic<PortableObjectOps>;
-
-public:
-	static TypeObject Type()
-	{
-		return Context::SystemObjects()->internal_type;
-	}
-
-	static InternalLogic New(internal::SymbolId symbol_id)
-	{
-		return Context::NewBlock<InternalBlock>(Type(), symbol_id);
-	}
-
-	using CallableLogic<Ops>::operator==;
-	using CallableLogic<Ops>::operator!=;
-
-	template <typename OtherOps>
-	InternalLogic(const InternalLogic<OtherOps> &other) throw ():
-		CallableLogic<Ops>(other)
-	{
-	}
-
-	template <typename OtherOps>
-	InternalLogic &operator=(const InternalLogic<OtherOps> &other) throw ()
-	{
-		CallableLogic<Ops>::operator=(other);
-		return *this;
-	}
-
-	template <typename... Args>
-	Object call(Args... args)
-	{
-		BlockId continuation;
-
-		auto tuple = TupleObject::New(args...);
-		auto dict = DictObject::EmptySingleton();
-		auto value = internal_block()->call(InitContinuation, continuation, &tuple, &dict);
-
-		if (continuation) {
-			internal_block()->call(CleanupContinuation, continuation, NULL, NULL);
-			throw RuntimeError("non-trivial protocol method called from native code");
-		}
-
-		return value;
-	}
-
-protected:
-	InternalLogic(BlockId id) throw ():
-		CallableLogic<Ops>(id)
-	{
-	}
-
-	InternalBlock *internal_block() const
-	{
-		return static_cast<InternalBlock *> (CallableLogic<Ops>::callable_block());
-	}
-} CONCRETE_PACKED;
-
-typedef InternalLogic<ObjectOps>         InternalObject;
-typedef InternalLogic<PortableObjectOps> PortableInternalObject;
-
-void InternalTypeInit(const TypeObject &type);
-
-} // namespace
+#include "internal-inline.hpp"
 
 #endif

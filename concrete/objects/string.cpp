@@ -7,18 +7,20 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#include "string.hpp"
+#include "string-content.hpp"
 
+#include <cstdint>
 #include <cstdint>
 #include <cstring>
 
+#include <concrete/context.hpp>
 #include <concrete/exception.hpp>
 #include <concrete/objects/internal.hpp>
 #include <concrete/objects/type.hpp>
 
 namespace concrete {
 
-void StringTypeInit(const TypeObject &type)
+void StringObjectTypeInit(const TypeObject &type)
 {
 	type.init_builtin(StringObject::New("string"));
 
@@ -27,22 +29,19 @@ void StringTypeInit(const TypeObject &type)
 	type.protocol().str   = InternalObject::New(internal::StringType_Str);
 }
 
-StringBlock::StringBlock(const TypeObject &type, const char *data_): ObjectBlock(type)
+StringObject::Content::Content(const TypeObject &type, const char *data_):
+	Object::Content(type)
 {
-	auto data_size = size();
-
-	std::memcpy(data, data_, data_size);
-	data[data_size] = '\0';
-
-	initialized();
+	std::memcpy(data, data_, size());
+	init();
 }
 
-StringBlock::StringBlock(const TypeObject &type): ObjectBlock(type)
+StringObject::Content::Content(const TypeObject &type):
+	Object::Content(type)
 {
-	data[size()] = '\0';
 }
 
-void StringBlock::initialized()
+void StringObject::Content::init()
 {
 	auto data_size = size();
 	size_t string_length = 0;
@@ -76,7 +75,99 @@ void StringBlock::initialized()
 		}
 	}
 
+	data[data_size] = '\0';
+
 	length = string_length;
+}
+
+size_t StringObject::Content::size() const throw ()
+{
+	return block_size() - sizeof (Content) - 1;
+}
+
+TypeObject StringObject::Type()
+{
+	return Context::SystemObjects()->string_type;
+}
+
+StringObject StringObject::New(const char *data, size_t size)
+{
+	return Context::NewCustomSizeBlock<Content>(sizeof (Content) + size + 1, Type(), data);
+}
+
+StringObject StringObject::New(const char *string)
+{
+	return New(string, std::strlen(string));
+}
+
+StringObject StringObject::New(const std::string &string)
+{
+	return New(string.data(), string.length());
+}
+
+StringObject StringObject::NewUninitialized(size_t size)
+{
+	return Context::NewCustomSizeBlock<Content>(sizeof (Content) + size + 1, Type());
+}
+
+StringObject::StringObject(BlockId id) throw ():
+	Object(id)
+{
+}
+
+StringObject::StringObject(const StringObject &other) throw ():
+	Object(other)
+{
+}
+
+StringObject &StringObject::operator=(const StringObject &other) throw ()
+{
+	Object::operator=(other);
+	return *this;
+}
+
+void StringObject::init_uninitialized()
+{
+	content()->init();
+}
+
+bool StringObject::equals(const StringObject &other) const
+{
+	if (operator==(other))
+		return true;
+
+	auto b1 = content();
+	auto b2 = other.content();
+
+	return b1->size() == b1->size() && std::memcmp(b1->data, b2->data, b1->size()) == 0;
+}
+
+size_t StringObject::size() const
+{
+	return content()->size();
+}
+
+size_t StringObject::length() const
+{
+	return content()->length;
+}
+
+char *StringObject::data() const
+{
+	auto c = content();
+	c->data[c->size()] = '\0';
+	return c->data;
+}
+
+std::string StringObject::string() const
+{
+	auto c = content();
+	return std::string(c->data, c->size());
+}
+
+StringObject::Content *StringObject::content() const
+{
+	return content_pointer<Content>();
 }
 
 static Object StringAdd(const TupleObject &args, const DictObject &kwargs)
@@ -99,7 +190,7 @@ static Object StringAdd(const TupleObject &args, const DictObject &kwargs)
 	std::memcpy(rdata, s1.data(), s1size);
 	std::memcpy(rdata + s1size, s2.data(), s2size);
 
-	r.initialized();
+	r.init_uninitialized();
 
 	return r;
 }

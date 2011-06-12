@@ -22,12 +22,6 @@
 
 namespace concrete {
 
-#define CONCRETE_INTERNAL_NESTED_CALL(Name, Function)                         \
-	CONCRETE_INTERNAL_CONTINUABLE_ARGS(Name,                              \
-	                                   concrete::NestedCallContinuable,   \
-	                                   concrete::NestedContinuation,      \
-	                                   Function)
-
 struct NestedContinuable;
 
 class NestedContinuation: public Block, Noncopyable {
@@ -37,12 +31,12 @@ public:
 	~NestedContinuation() throw ()
 	{
 		if (call_id)
-			callable.cast<CallableObject>().cleanup_call(call_id);
+			callable->cast<CallableObject>().cleanup_call(call_id);
 	}
 
 private:
-	PortableObject callable;
-	PortableBlockId call_id;
+	Portable<Object> callable;
+	Portable<BlockId> call_id;
 
 } CONCRETE_PACKED;
 
@@ -55,11 +49,12 @@ protected:
 	{
 		nested_state()->callable = callable;
 
-		BlockId call_id;
+		BlockId call_id = 0;
+
 		result = callable.init_call(call_id, args, kwargs);
 		nested_state()->call_id = call_id;
 
-		return call_id == NULL;
+		return call_id == 0;
 	}
 
 	bool in_nested_call() const
@@ -69,12 +64,12 @@ protected:
 
 	bool resume_nested(Object &result) const
 	{
-		auto callable = nested_state()->callable.cast<CallableObject>();
+		auto callable = nested_state()->callable->cast<CallableObject>();
 		BlockId call_id = nested_state()->call_id;
 		result = callable.resume_call(call_id);
 		nested_state()->call_id = call_id;
 
-		return call_id == NULL;
+		return call_id == 0;
 	}
 
 	NestedContinuation *nested_state() const
@@ -143,5 +138,11 @@ private:
 };
 
 } // namespace
+
+#define CONCRETE_INTERNAL_NESTED_CALL(Name, Function)                         \
+	CONCRETE_INTERNAL_CONTINUABLE_ARGS(Name,                              \
+	                                   concrete::NestedCallContinuable,   \
+	                                   concrete::NestedContinuation,      \
+	                                   Function)
 
 #endif

@@ -7,17 +7,19 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#ifndef CONCRETE_OBJECTS_NONE_FWD_HPP
-#define CONCRETE_OBJECTS_NONE_FWD_HPP
+#ifndef CONCRETE_OBJECTS_CALLABLE_CONTENT_HPP
+#define CONCRETE_OBJECTS_CALLABLE_CONTENT_HPP
 
-#include <concrete/objects/object-fwd.hpp>
+#include "callable.hpp"
+
+#include <concrete/objects/object-content.hpp>
 
 namespace concrete {
 
-template <typename Ops> class NoneLogic;
+struct CallableObject::Content: Object::Content {
+	explicit Content(const TypeObject &type);
 
-typedef NoneLogic<ObjectOps>         NoneObject;
-typedef NoneLogic<PortableObjectOps> PortableNoneObject;
+} CONCRETE_PACKED;
 
 } // namespace
 
