@@ -128,7 +128,7 @@ public:
 private:
 	void init_resolve() const
 	{
-		ConcreteTrace(("fork: init resolve"));
+		Trace("fork: init resolve");
 
 		auto resolve = Context::NewResource<ResolveResource>(
 			state()->host->cast<StringObject>().string(),
@@ -142,7 +142,7 @@ private:
 
 	void resume_resolve() const
 	{
-		ConcreteTrace(("fork: resume resolve"));
+		Trace("fork: resume resolve");
 
 		auto &resolve = Context::Resource<ResolveResource>(state()->resolve_id);
 
@@ -155,7 +155,7 @@ private:
 
 	void init_connect(const struct addrinfo *addrinfo) const
 	{
-		ConcreteTrace(("fork: init connect"));
+		Trace("fork: init connect");
 
 		int family;
 		socklen_t addrlen = 0;
@@ -186,7 +186,7 @@ private:
 
 	void resume_connect() const
 	{
-		ConcreteTrace(("fork: resume connect"));
+		Trace("fork: resume connect");
 
 		auto &socket = Context::Resource<SocketResource>(state()->socket_id);
 
@@ -198,7 +198,7 @@ private:
 
 	void init_write() const
 	{
-		ConcreteTrace(("fork: init write"));
+		Trace("fork: init write");
 
 		auto context = Context::Active().snapshot();
 		auto executor = Executor::Active().snapshot();
@@ -229,7 +229,7 @@ private:
 
 	bool resume_write(Object &result) const
 	{
-		ConcreteTrace(("fork: resume write"));
+		Trace("fork: resume write");
 
 		auto &socket = Context::Resource<SocketResource>(state()->socket_id);
 		auto &buffer = Context::Resource<BufferResource>(state()->buffer_id);

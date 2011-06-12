@@ -11,22 +11,37 @@
 #define CONCRETE_UTIL_TRACE_HPP
 
 #ifdef CONCRETE_TRACE
-
 # include <iostream>
 # include <boost/format.hpp>
-
-# define ConcreteTrace(args) \
-	do { \
-		try { \
-			std::cerr << "TRACE: " << (boost::format args) << std::endl; \
-		} catch (...) {} \
-	} while (0)
-
-#else
-
-# define ConcreteTrace(args) \
-	do {} while (0)
-
 #endif
+
+namespace concrete {
+
+#ifdef CONCRETE_TRACE
+template <typename Format>
+inline Format TraceFormat(Format format)
+{
+	return format;
+}
+
+template <typename Format, typename FirstArg, typename... OtherArgs>
+inline Format TraceFormat(Format format, FirstArg first_arg, OtherArgs... other_args)
+{
+	return TraceFormat(format % first_arg, other_args...);
+}
+
+template <typename... Args>
+void Trace(const char *format, Args... args) throw ()
+{
+	try {
+		std::cerr << "TRACE: " << TraceFormat(boost::format(format), args...) << std::endl;
+	} catch (...) {
+	}
+}
+#else
+template <typename... Args> inline void Trace(const char *, Args...) throw () {}
+#endif
+
+} // namespace
 
 #endif

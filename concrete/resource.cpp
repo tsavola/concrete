@@ -149,7 +149,7 @@ public:
 
 		m_suspended = true;
 
-		ConcreteTrace(("suspended"));
+		Trace("suspended");
 	}
 
 	void poll_events()
@@ -166,7 +166,7 @@ private:
 		assert(impl->m_suspended);
 		impl->m_suspended = false;
 
-		ConcreteTrace(("resumed"));
+		Trace("resumed");
 	}
 
 	const ResourceId m_lost_begin;
