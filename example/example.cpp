@@ -171,7 +171,8 @@ static void wait_worker(pid_t pid)
 	std::cerr << "EXAMPLE: worker " << pid << " exited with status " << status << std::endl;
 }
 
-static int main()
+#if 1
+static void main()
 {
 	int fd12[2];
 	int fd23[2];
@@ -193,13 +194,37 @@ static int main()
 	wait_worker(p1);
 	wait_worker(p2);
 	wait_worker(p3);
-
-	return 0;
 }
+#else
+static void main()
+{
+	Context context;
+	ContextScope scope(context);
+
+	try {
+		Executor executor(load_code());
+
+		std::cerr << "EXAMPLE: " << getpid() << ": execution begin" << std::endl;
+
+		while (executor.execute())
+			context.poll_events();
+
+		std::cerr << "EXAMPLE: " << getpid() << ": execution end" << std::endl;
+
+	} catch (const Exception &e) {
+		std::cerr << "EXAMPLE: " << getpid() << ": " << type_name(e) << ": " << e.what()
+		          << std::endl;
+
+	} catch (const std::exception &e) {
+		std::cerr << "EXAMPLE: " << getpid() << ": exception: " << e.what() << std::endl;
+	}
+}
+#endif
 
 } // namespace
 
 int main()
 {
-	return example::main();
+	example::main();
+	return 0;
 }
