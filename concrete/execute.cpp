@@ -239,11 +239,8 @@ public:
 	bool resume_call()
 	{
 		BlockId frame_id = m_current_frame_id;
-		ExecutionFrame *frame;
-		BlockId continuation;
-
-		frame = Frame(frame_id);
-		continuation = frame->call_continuation;
+		ExecutionFrame *frame = Frame(frame_id);
+		BlockId continuation = frame->call_continuation;
 
 		if (continuation == 0)
 			return false;

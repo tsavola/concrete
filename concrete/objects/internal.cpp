@@ -76,7 +76,7 @@ InternalObject &InternalObject::operator=(const InternalObject &other) throw ()
 
 Object InternalObject::call_args(const TupleObject &args) const
 {
-	BlockId continuation;
+	BlockId continuation = 0;
 	auto kwargs = DictObject::EmptySingleton();
 	auto value = content()->call(InitContinuation, continuation, &args, &kwargs);
 
