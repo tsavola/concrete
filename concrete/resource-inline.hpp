@@ -15,7 +15,7 @@ namespace concrete {
 template <typename ResourceType, typename... Args>
 ResourceManager::Allocation<ResourceType> ResourceManager::new_resource(Args... args)
 {
-	std::auto_ptr<ResourceType> resource(new ResourceType(args...));
+	std::unique_ptr<ResourceType> resource(new ResourceType(args...));
 	auto id = append_resource(resource.get());
 	auto ptr = resource.get();
 	resource.release();
