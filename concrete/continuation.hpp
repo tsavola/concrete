@@ -10,10 +10,7 @@
 #ifndef CONCRETE_CONTINUATION_HPP
 #define CONCRETE_CONTINUATION_HPP
 
-#include <cassert>
-
 #include <concrete/block.hpp>
-#include <concrete/context.hpp>
 #include <concrete/objects/dict.hpp>
 #include <concrete/objects/object.hpp>
 #include <concrete/objects/tuple.hpp>
@@ -29,22 +26,12 @@ enum ContinuationOp {
 
 class Continuable: Noncopyable {
 public:
-	Continuable():
-		m_state_id(0)
-	{
-	}
+	Continuable();
 
-	void set_state(BlockId id) throw ()
-	{
-		m_state_id = id;
-	}
+	void set_state(BlockId state_id) throw ();
 
 protected:
-	template <typename T>
-	T *state_pointer() const
-	{
-		return Context::BlockPointer<T>(m_state_id);
-	}
+	template <typename StateType> StateType *state_pointer() const;
 
 private:
 	BlockId m_state_id;
@@ -55,46 +42,10 @@ Object ContinuableCall(ContinuationOp op,
                        BlockId &state_id,
                        ContinuableType &continuable,
                        const TupleObject *args,
-                       const DictObject *kwargs)
-{
-	bool done = false;
-	Object result;
-
-	switch (op) {
-	case InitContinuation:
-		assert(state_id == 0);
-		assert(args && kwargs);
-
-		state_id = Context::NewBlock<ContinuationType>();
-		continuable.set_state(state_id);
-		done = continuable.call(result, *args, *kwargs);
-		break;
-
-	case ResumeContinuation:
-		assert(state_id);
-
-		continuable.set_state(state_id);
-		done = continuable.resume(result);
-		break;
-
-	case CleanupContinuation:
-		assert(state_id);
-
-		continuable.set_state(state_id);
-		done = true;
-		break;
-	}
-
-	if (done) {
-		BlockId id = state_id;
-		state_id = 0;
-
-		Context::DeleteBlock<ContinuationType>(id);
-	}
-
-	return result;
-}
+                       const DictObject *kwargs);
 
 } // namespace
+
+#include "continuation-inline.hpp"
 
 #endif
