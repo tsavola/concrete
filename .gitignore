@@ -3,5 +3,5 @@ debug/
 optimize/
 doc/Doxyfile.version
 doc/html/
-*.py[co]
+TAGS
 config.mk

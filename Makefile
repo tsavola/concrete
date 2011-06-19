@@ -8,7 +8,7 @@ LIBRARIES	:= concrete
 BINARIES	:= example/server
 TESTS		:= example
 
-.DEFAULT_GOAL := build
+.DEFAULT_GOAL	:= build
 
 build: concrete
 
@@ -18,8 +18,14 @@ example/server: concrete
 
 include build/project.mk
 
-SRCDIRS		:= $(LIBRARIES) $(TESTS)
-SOURCES		:= $(shell find $(SRCDIRS) -name '*.[cht]pp')
+HEADERS		:= $(shell find $(LIBRARIES) -name "*.hpp")
+
+TAGS: $(HEADERS)
+	$(call echo,Generate,$@)
+	$(QUIET) etags $(HEADERS)
+
+SOURCEDIRS	:= $(LIBRARIES) $(TESTS)
+SOURCES		:= $(shell find $(SOURCEDIRS) -name "*.[ch]pp")
 
 todo::
 	$(QUIET) grep -niE "(todo|xxx)" $(SOURCES) | sed -r \
