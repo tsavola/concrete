@@ -18,13 +18,13 @@
 
 namespace concrete {
 
-SocketResource::SocketResource(int domain, int type, int protocol):
-	FileResource(socket(domain, type, protocol)),
+Socket::Socket(int domain, int type, int protocol):
+	File(socket(domain, type, protocol)),
 	m_connected(false)
 {
 }
 
-void SocketResource::wait_connection(const struct sockaddr *addr, socklen_t addrlen)
+void Socket::wait_connection(const struct sockaddr *addr, socklen_t addrlen)
 {
 	assert(!m_connected);
 
@@ -38,12 +38,12 @@ void SocketResource::wait_connection(const struct sockaddr *addr, socklen_t addr
 	}
 }
 
-void SocketResource::wait_connection()
+void Socket::wait_connection()
 {
 	Context::Active().wait_event(fd(), EV_WRITE);
 }
 
-bool SocketResource::connected()
+bool Socket::connected()
 {
 	if (m_connected)
 		return true;

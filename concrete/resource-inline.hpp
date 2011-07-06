@@ -10,29 +10,16 @@
 #include <cstddef>
 #include <memory>
 
+#include <concrete/arena-access.hpp>
+
 namespace concrete {
-
-template <typename T>
-ResourceManager::Wrap<T>::Wrap(T *resource) throw ():
-	resource(resource)
-{
-}
-
-template <typename T>
-ResourceManager::Wrap<T>::~Wrap() throw ()
-{
-	delete resource;
-}
 
 template <typename T, typename... Args>
 ResourceSlot ResourceManager::new_resource(Args... args)
 {
 	std::unique_ptr<T> resource(new T(args...));
-	std::unique_ptr<VirtualWrap> wrap(new Wrap<T>(resource.get()));
+	auto slot = add_resource(resource.get());
 	resource.release();
-
-	auto slot = add_resource(wrap.get());
-	wrap.release();
 
 	return slot;
 }
@@ -42,13 +29,13 @@ T *ResourceManager::resource_cast(ResourceSlot slot) const
 {
 	auto base = find_resource(slot);
 	if (base == NULL)
-		throw ResourceError();
+		throw IntegrityError(slot.address());
 
-	auto wrap = dynamic_cast<Wrap<T> *> (base);
-	if (wrap == NULL)
-		throw ResourceError();
+	auto derived = dynamic_cast<T *> (base);
+	if (derived == NULL)
+		throw IntegrityError(slot.address());
 
-	return wrap->resource;
+	return derived;
 }
 
 template <typename T>

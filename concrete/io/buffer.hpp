@@ -13,16 +13,16 @@
 #include <cstddef>
 
 #include <concrete/io/file.hpp>
-#include <concrete/util/noncopyable.hpp>
+#include <concrete/resource.hpp>
 
 namespace concrete {
 
-class BufferResource: Noncopyable {
+class Buffer: public Resource {
 public:
-	BufferResource();
-	explicit BufferResource(size_t size);
-	BufferResource(void *data, size_t size);
-	~BufferResource() throw ();
+	Buffer();
+	explicit Buffer(size_t size);
+	Buffer(void *data, size_t size);
+	~Buffer() throw ();
 
 	void reset();
 	void reset(size_t size);
@@ -33,13 +33,13 @@ public:
 	size_t size() const throw ();
 	size_t remaining() const throw ();
 
-	bool read(FileResource &source);
-	bool write(FileResource &target);
+	bool read(File &source);
+	bool write(File &target);
 
 private:
-	char *m_data;
-	size_t m_size;
-	size_t m_transferred;
+	char   *m_data;
+	size_t  m_size;
+	size_t  m_transferred;
 };
 
 } // namespace

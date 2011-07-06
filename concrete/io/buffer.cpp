@@ -13,21 +13,21 @@
 
 namespace concrete {
 
-BufferResource::BufferResource():
+Buffer::Buffer():
 	m_data(NULL),
 	m_size(0),
 	m_transferred(0)
 {
 }
 
-BufferResource::BufferResource(size_t size):
+Buffer::Buffer(size_t size):
 	m_data(new char[size]),
 	m_size(size),
 	m_transferred(0)
 {
 }
 
-BufferResource::BufferResource(void *data, size_t size):
+Buffer::Buffer(void *data, size_t size):
 	m_data(new char[size]),
 	m_size(size),
 	m_transferred(0)
@@ -35,12 +35,12 @@ BufferResource::BufferResource(void *data, size_t size):
 	std::memcpy(m_data, data, size);
 }
 
-BufferResource::~BufferResource() throw ()
+Buffer::~Buffer() throw ()
 {
 	delete[] m_data;
 }
 
-void BufferResource::reset()
+void Buffer::reset()
 {
 	if (m_data)
 		delete[] m_data;
@@ -50,7 +50,7 @@ void BufferResource::reset()
 	m_transferred = 0;
 }
 
-void BufferResource::reset(size_t size)
+void Buffer::reset(size_t size)
 {
 	reset();
 
@@ -58,34 +58,34 @@ void BufferResource::reset(size_t size)
 	m_size = size;
 }
 
-void BufferResource::reset(void *data, size_t size)
+void Buffer::reset(void *data, size_t size)
 {
 	reset(size);
 
 	std::memcpy(m_data, data, size);
 }
 
-char *BufferResource::data() throw ()
+char *Buffer::data() throw ()
 {
 	return m_data;
 }
 
-const char *BufferResource::data() const throw ()
+const char *Buffer::data() const throw ()
 {
 	return m_data;
 }
 
-size_t BufferResource::size() const throw ()
+size_t Buffer::size() const throw ()
 {
 	return m_size;
 }
 
-size_t BufferResource::remaining() const throw ()
+size_t Buffer::remaining() const throw ()
 {
 	return m_size - m_transferred;
 }
 
-bool BufferResource::read(FileResource &file)
+bool Buffer::read(File &file)
 {
 	auto len = file.read(m_data + m_transferred, m_size - m_transferred);
 
@@ -95,7 +95,7 @@ bool BufferResource::read(FileResource &file)
 	return len != 0;
 }
 
-bool BufferResource::write(FileResource &file)
+bool Buffer::write(File &file)
 {
 	auto len = file.write(m_data + m_transferred, m_size - m_transferred);
 

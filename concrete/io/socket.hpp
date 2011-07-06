@@ -16,9 +16,9 @@
 
 namespace concrete {
 
-class SocketResource: public FileResource {
+class Socket: public File {
 public:
-	SocketResource(int domain, int type, int protocol = 0);
+	Socket(int domain, int type, int protocol = 0);
 
 	void wait_connection(const struct sockaddr *addr, socklen_t addrlen);
 	void wait_connection();

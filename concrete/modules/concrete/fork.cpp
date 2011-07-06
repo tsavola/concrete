@@ -58,13 +58,13 @@ protected:
 			return resolve.is_lost() || socket.is_lost() || buffer.is_lost();
 		}
 
-		Portable<Object>                  host;
-		Portable<Object>                  port;
-		PortableResource<ResolveResource> resolve;
-		PortableResource<SocketResource>  socket;
-		PortableResource<BufferResource>  buffer;
-		Portable<uint8_t>                 mode;
-		Portable<bool>                    forked;
+		Portable<Object>          host;
+		Portable<Object>          port;
+		PortableResource<Resolve> resolve;
+		PortableResource<Socket>  socket;
+		PortableResource<Buffer>  buffer;
+		Portable<uint8_t>         mode;
+		Portable<bool>            forked;
 	} CONCRETE_PACKED;
 
 	explicit Fork(unsigned int address) throw ():

@@ -17,11 +17,10 @@
 #include <event.h>
 
 #include <concrete/context.hpp>
-#include <concrete/resource.hpp>
 
 namespace concrete {
 
-FileResource::FileResource(int fd):
+File::File(int fd):
 	m_fd(fd)
 {
 	if (m_fd < 0)
@@ -38,22 +37,22 @@ FileResource::FileResource(int fd):
 	}
 }
 
-FileResource::~FileResource() throw ()
+File::~File() throw ()
 {
 	close(m_fd);
 }
 
-int FileResource::fd() const throw ()
+int File::fd() const throw ()
 {
 	return m_fd;
 }
 
-void FileResource::wait_readability()
+void File::wait_readability()
 {
 	Context::Active().wait_event(fd(), EV_READ);
 }
 
-ssize_t FileResource::read(void *buf, size_t bufsize)
+ssize_t File::read(void *buf, size_t bufsize)
 {
 	auto len = ::read(fd(), buf, bufsize);
 
@@ -63,12 +62,12 @@ ssize_t FileResource::read(void *buf, size_t bufsize)
 	return len;
 }
 
-void FileResource::wait_writability()
+void File::wait_writability()
 {
 	Context::Active().wait_event(fd(), EV_WRITE);
 }
 
-ssize_t FileResource::write(const void *buf, size_t bufsize)
+ssize_t File::write(const void *buf, size_t bufsize)
 {
 	auto len = ::write(fd(), buf, bufsize);
 

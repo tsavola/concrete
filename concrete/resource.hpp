@@ -23,12 +23,9 @@ struct event_base;
 
 namespace concrete {
 
-class ResourceError: public std::exception {
+class Resource: Noncopyable {
 public:
-	ResourceError() throw ();
-	virtual ~ResourceError() throw () {}
-
-	virtual const char *what() const throw ();
+	virtual ~Resource() throw () {}
 };
 
 class ResourceSlot: public Pointer {
@@ -62,41 +59,27 @@ public:
 	ResourceManager();
 	~ResourceManager() throw ();
 
-	template <typename T, typename... Args> ResourceSlot new_resource(Args... args);
+	template <typename ResourceType, typename... Args> ResourceSlot new_resource(Args... args);
 	void destroy_resource(ResourceSlot slot) throw ();
 	bool is_resource_lost(ResourceSlot slot) const throw ();
-	template <typename T> T *resource_cast(ResourceSlot slot) const;
+	template <typename ResourceType> ResourceType *resource_cast(ResourceSlot slot) const;
 
 	void wait_event(int fd, short events, EventCallback *callback);
 	void poll_events();
 
 private:
-	class VirtualWrap: Noncopyable {
-	public:
-		virtual ~VirtualWrap() throw () {}
-	};
-
-	template <typename T>
-	class Wrap: public VirtualWrap {
-	public:
-		explicit Wrap(T *resource) throw ();
-		virtual ~Wrap() throw ();
-
-		T *const resource;
-	};
-
-	typedef std::map<unsigned int, VirtualWrap *> WrapMap;
+	typedef std::map<unsigned int, Resource *> Map;
 
 	static void event_callback(int fd, short events, void *arg);
 
-	ResourceSlot add_resource(VirtualWrap *wrap);
-	VirtualWrap *find_resource(ResourceSlot slot) const throw ();
+	ResourceSlot add_resource(Resource *resource);
+	Resource *find_resource(ResourceSlot slot) const throw ();
 
-	WrapMap                  m_wrap_map;
+	Map                      m_map;
 	struct event_base *const m_event_base;
 };
 
-template <typename T>
+template <typename ResourceType>
 class PortableResource {
 public:
 	~PortableResource() throw ();
@@ -107,12 +90,20 @@ public:
 
 	operator bool() const throw ();
 	bool operator!() const throw ();
-	T *operator*() const throw ();
-	T *operator->() const throw ();
+	ResourceType *operator*() const throw ();
+	ResourceType *operator->() const throw ();
 
 private:
 	Portable<ResourceSlot> m_slot;
 } CONCRETE_PACKED;
+
+class ResourceError: public std::exception {
+public:
+	ResourceError() throw ();
+	virtual ~ResourceError() throw () {}
+
+	virtual const char *what() const throw ();
+};
 
 } // namespace
 

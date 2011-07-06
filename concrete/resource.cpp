@@ -21,16 +21,6 @@
 
 namespace concrete {
 
-ResourceError::ResourceError() throw ()
-{
-	Backtrace();
-}
-
-const char *ResourceError::what() const throw ()
-{
-	return "Resource access error";
-}
-
 ResourceSlot ResourceSlot::New()
 {
 	return NewPointer<ResourceSlot>();
@@ -65,30 +55,30 @@ ResourceManager::ResourceManager():
 
 ResourceManager::~ResourceManager() throw ()
 {
-	for (auto i = m_wrap_map.begin(); i != m_wrap_map.end(); ++i)
+	for (auto i = m_map.begin(); i != m_map.end(); ++i)
 		delete i->second;
 
 	event_base_free(m_event_base);
 }
 
-ResourceSlot ResourceManager::add_resource(VirtualWrap *wrap)
+ResourceSlot ResourceManager::add_resource(Resource *resource)
 {
 	ResourceSlot slot = ResourceSlot::New();
 
 	std::unique_ptr<ResourceSlot, void (*)(ResourceSlot *)> slot_deleter(
 		&slot, ResourceSlot::Destroy);
 
-	m_wrap_map[slot.key()] = wrap;
+	m_map[slot.key()] = resource;
 
 	slot_deleter.release();
 
 	return slot;
 }
 
-ResourceManager::VirtualWrap *ResourceManager::find_resource(ResourceSlot slot) const throw ()
+Resource *ResourceManager::find_resource(ResourceSlot slot) const throw ()
 {
-	auto i = m_wrap_map.find(slot.key());
-	if (i != m_wrap_map.end())
+	auto i = m_map.find(slot.key());
+	if (i != m_map.end())
 		return i->second;
 
 	return NULL;
@@ -97,10 +87,10 @@ ResourceManager::VirtualWrap *ResourceManager::find_resource(ResourceSlot slot) 
 void ResourceManager::destroy_resource(ResourceSlot slot) throw ()
 {
 	if (slot) {
-		auto i = m_wrap_map.find(slot.key());
-		if (i != m_wrap_map.end()) {
+		auto i = m_map.find(slot.key());
+		if (i != m_map.end()) {
 			delete i->second;
-			m_wrap_map.erase(i);
+			m_map.erase(i);
 		}
 
 		slot.destroy();
@@ -109,7 +99,7 @@ void ResourceManager::destroy_resource(ResourceSlot slot) throw ()
 
 bool ResourceManager::is_resource_lost(ResourceSlot slot) const throw ()
 {
-	return m_wrap_map.find(slot.key()) == m_wrap_map.end();
+	return m_map.find(slot.key()) == m_map.end();
 }
 
 void ResourceManager::wait_event(int fd, short events, EventCallback *callback)
@@ -131,6 +121,16 @@ void ResourceManager::event_callback(int fd, short events, void *arg)
 	Trace("resumed");
 
 	reinterpret_cast<EventCallback *> (arg)->resume();
+}
+
+ResourceError::ResourceError() throw ()
+{
+	Backtrace();
+}
+
+const char *ResourceError::what() const throw ()
+{
+	return "Resource access error";
 }
 
 } // namespace

@@ -18,14 +18,14 @@
 #include <netdb.h>
 
 #include <concrete/io/file.hpp>
-#include <concrete/util/noncopyable.hpp>
+#include <concrete/resource.hpp>
 
 namespace concrete {
 
-class ResolveResource: Noncopyable {
+class Resolve: public Resource {
 	struct Pipe {
-		FileResource read;
-		FileResource write;
+		File read;
+		File write;
 
 		Pipe(int ret, int fd[2]);
 	};
@@ -44,7 +44,7 @@ class ResolveResource: Noncopyable {
 	};
 
 public:
-	ResolveResource(const std::string &node, const std::string &service);
+	Resolve(const std::string &node, const std::string &service);
 
 	void wait_addrinfo();
 	struct addrinfo *addrinfo();

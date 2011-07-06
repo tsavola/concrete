@@ -17,17 +17,16 @@
 #include <event.h>
 
 #include <concrete/context.hpp>
-#include <concrete/resource.hpp>
 
 namespace concrete {
 
-ResolveResource::Pipe::Pipe(int ret, int fd[2]):
+Resolve::Pipe::Pipe(int ret, int fd[2]):
 	read(ret >= 0 ? fd[0] : -1),
 	write(ret >= 0 ? fd[1] : -1)
 {
 }
 
-ResolveResource::AddrInfo::AddrInfo(const std::string &node_, const std::string &service_):
+Resolve::AddrInfo::AddrInfo(const std::string &node_, const std::string &service_):
 	node(node_),
 	service(service_),
 	pipe(::pipe(pipe_buf), pipe_buf)
@@ -48,7 +47,7 @@ ResolveResource::AddrInfo::AddrInfo(const std::string &node_, const std::string 
 		throw ResourceError();
 }
 
-ResolveResource::AddrInfo::~AddrInfo() throw ()
+Resolve::AddrInfo::~AddrInfo() throw ()
 {
 	gai_cancel(&cb);
 
@@ -56,7 +55,7 @@ ResolveResource::AddrInfo::~AddrInfo() throw ()
 		freeaddrinfo(cb.ar_result);
 }
 
-void ResolveResource::AddrInfo::callback(sigval_t sigval) throw ()
+void Resolve::AddrInfo::callback(sigval_t sigval) throw ()
 {
 	int fd = sigval.sival_int;
 	char buf = 0;
@@ -65,17 +64,17 @@ void ResolveResource::AddrInfo::callback(sigval_t sigval) throw ()
 		;
 }
 
-ResolveResource::ResolveResource(const std::string &node, const std::string &service):
+Resolve::Resolve(const std::string &node, const std::string &service):
 	m_addrinfo(node, service)
 {
 }
 
-void ResolveResource::wait_addrinfo()
+void Resolve::wait_addrinfo()
 {
 	m_addrinfo.pipe.read.wait_readability();
 }
 
-struct addrinfo *ResolveResource::addrinfo()
+struct addrinfo *Resolve::addrinfo()
 {
 	char buf;
 
