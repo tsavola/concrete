@@ -12,9 +12,9 @@
 
 #define CONCRETE_API __attribute__ ((visibility ("default")))
 
-#include <memory>
-
 #include "concrete.h"
+
+#include <memory>
 
 #include <concrete/context.hpp>
 #include <lib/libevent.hpp>
