@@ -1,16 +1,13 @@
-PYTHON		:= python3.1
-
-PY_SOURCE	:= example/example.py
+PY_SOURCE	:= example/test.py
 O_PY_SOURCE	:= $(O)/obj/$(PY_SOURCE)
 O_PY_BYTECODE	:= $(O_PY_SOURCE)c
 
 NAME		:= example
-SOURCES		:= $(wildcard example/example.cpp example/modules/*.cpp)
-CPPFLAGS	+= -DEXAMPLE_BYTECODE="\""$(O_PY_BYTECODE)"\""
+SOURCES		:= $(wildcard example/*.c)
+CPPFLAGS	+= -Ilib -DEXAMPLE_BYTECODE="\""$(O_PY_BYTECODE)"\""
 
-CONCRETE	:= $(O)/lib/libconcrete.a
-DEPENDS		+= $(CONCRETE)
-LIBS		+= $(CONCRETE) -levent -lanl
+DEPENDS		+= $(O)/lib/libconcrete.so
+LIBS		+= -L$(O)/lib -lconcrete
 
 include build/test.mk
 

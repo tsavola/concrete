@@ -1,3 +1,5 @@
+PYTHON		?= python3.1
+
 -include config.mk
 
 CPPFLAGS	+= -I.
@@ -13,6 +15,8 @@ build: lib-shared
 
 lib-shared: concrete-reloc
 example: lib-shared
+
+export PYTHON
 
 include build/project.mk
 
