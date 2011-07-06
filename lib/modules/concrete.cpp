@@ -18,7 +18,7 @@
 
 using namespace concrete;
 
-namespace example {
+namespace {
 
 static Object Test(const TupleObject &args, const DictObject &kwargs)
 {
@@ -30,4 +30,4 @@ static Object Test(const TupleObject &args, const DictObject &kwargs)
 
 } // namespace
 
-CONCRETE_INTERNAL_FUNCTION(ConcreteModule_Test, example::Test)
+CONCRETE_INTERNAL_FUNCTION(ConcreteModule_Test, Test)
