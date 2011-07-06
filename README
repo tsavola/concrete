@@ -8,7 +8,7 @@ Dependencies:
 
 Build instructions:
 
-  git submodule update --init
+  ./bootstrap.sh
   make
 
 Mac OS X prerequisites:
