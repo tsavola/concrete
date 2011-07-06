@@ -7,59 +7,43 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#include "module-content.hpp"
+#include "module-data.hpp"
 
-#include <concrete/context.hpp>
+#include <concrete/context-data.hpp>
 #include <concrete/objects/string.hpp>
 #include <concrete/objects/type.hpp>
 
 namespace concrete {
 
-void ModuleObjectTypeInit(const TypeObject &type)
-{
-	type.init_builtin(StringObject::New("module"));
-}
-
-ModuleObject::Content::Content(const TypeObject &type, const DictObject &dict):
-	Object::Content(type),
+ModuleObject::Data::Data(const TypeObject &type, const DictObject &dict):
+	Object::Data(type),
 	dict(dict)
 {
 }
 
 TypeObject ModuleObject::Type()
 {
-	return Context::SystemObjects()->module_type;
+	return Context::Active().data()->module_type;
 }
 
 ModuleObject ModuleObject::New(const DictObject &dict)
 {
-	return Context::NewBlock<Content>(Type(), dict);
-}
-
-ModuleObject::ModuleObject(BlockId id) throw ():
-	Object(id)
-{
-}
-
-ModuleObject::ModuleObject(const ModuleObject &other) throw ():
-	Object(other)
-{
-}
-
-ModuleObject &ModuleObject::operator=(const ModuleObject &other) throw ()
-{
-	Object::operator=(other);
-	return *this;
+	return NewObject<ModuleObject>(dict);
 }
 
 DictObject ModuleObject::dict() const
 {
-	return content()->dict;
+	return data()->dict;
 }
 
-ModuleObject::Content *ModuleObject::content() const
+ModuleObject::Data *ModuleObject::data() const
 {
-	return content_pointer<Content>();
+	return data_cast<Data>();
+}
+
+void ModuleObjectTypeInit(const TypeObject &type)
+{
+	type.init_builtin(StringObject::New("module"));
 }
 
 } // namespace

@@ -40,7 +40,7 @@ void SocketResource::wait_connection(const struct sockaddr *addr, socklen_t addr
 
 void SocketResource::wait_connection()
 {
-	Context::WaitEvent(fd(), EV_WRITE);
+	Context::Active().wait_event(fd(), EV_WRITE);
 }
 
 bool SocketResource::connected()

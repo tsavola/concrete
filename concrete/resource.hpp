@@ -12,70 +12,107 @@
 
 #include <cstdint>
 #include <exception>
+#include <map>
 
+#include <concrete/pointer.hpp>
+#include <concrete/portable.hpp>
 #include <concrete/util/noncopyable.hpp>
-#include <concrete/util/portable.hpp>
+#include <concrete/util/packed.hpp>
+
+struct event_base;
 
 namespace concrete {
-
-typedef uint32_t ResourceId;
-
-class Resource: Noncopyable {
-public:
-	virtual ~Resource() throw ();
-};
 
 class ResourceError: public std::exception {
 public:
 	ResourceError() throw ();
-	virtual ~ResourceError() throw ();
+	virtual ~ResourceError() throw () {}
 
 	virtual const char *what() const throw ();
 };
 
-class ResourceManager: Noncopyable {
-	class Impl;
+class ResourceSlot: public Pointer {
+	friend class Pointer;
 
 public:
-	struct Snapshot {
-		Portable<ResourceId> begin;
-		Portable<ResourceId> end;
+	static ResourceSlot New();
+	static void Destroy(ResourceSlot *ptr) throw ();
 
-		Snapshot() throw ();
-		Snapshot(ResourceId begin, ResourceId end) throw ();
+	ResourceSlot() throw () {}
+	ResourceSlot(const ResourceSlot &other) throw (): Pointer(other) {}
 
-	} CONCRETE_PACKED;
+	void destroy() throw ();
+	unsigned int key() const throw ();
 
-	template <typename ResourceType>
-	struct Allocation {
-		ResourceId id;
-		ResourceType &resource;
+protected:
+	struct Data {} CONCRETE_PACKED;
+
+	explicit ResourceSlot(unsigned int address) throw (): Pointer(address) {}
+};
+
+class ResourceManager {
+public:
+	class EventCallback: Noncopyable {
+	public:
+		virtual void resume() throw () = 0;
 	};
 
+	static ResourceManager &Active() throw ();
+
 	ResourceManager();
-	explicit ResourceManager(const Snapshot &snapshot);
 	~ResourceManager() throw ();
 
-	Snapshot snapshot() const throw ();
+	template <typename T, typename... Args> ResourceSlot new_resource(Args... args);
+	void destroy_resource(ResourceSlot slot) throw ();
+	bool is_resource_lost(ResourceSlot slot) const throw ();
+	template <typename T> T *resource_cast(ResourceSlot slot) const;
 
-	template <typename ResourceType, typename... Args>
-	Allocation<ResourceType> new_resource(Args... args);
-
-	template <typename ResourceType>
-	ResourceType &resource(ResourceId id) const;
-
-	void delete_resource(ResourceId id) throw ();
-	bool resource_lost(ResourceId id) const throw ();
-
-	void wait_event(int fd, short events);
+	void wait_event(int fd, short events, EventCallback *callback);
 	void poll_events();
 
 private:
-	ResourceId append_resource(Resource *resource);
-	Resource *find_resource(ResourceId id) const throw ();
+	class VirtualWrap: Noncopyable {
+	public:
+		virtual ~VirtualWrap() throw () {}
+	};
 
-	Impl *const m_impl;
+	template <typename T>
+	class Wrap: public VirtualWrap {
+	public:
+		explicit Wrap(T *resource) throw ();
+		virtual ~Wrap() throw ();
+
+		T *const resource;
+	};
+
+	typedef std::map<unsigned int, VirtualWrap *> WrapMap;
+
+	static void event_callback(int fd, short events, void *arg);
+
+	ResourceSlot add_resource(VirtualWrap *wrap);
+	VirtualWrap *find_resource(ResourceSlot slot) const throw ();
+
+	WrapMap                  m_wrap_map;
+	struct event_base *const m_event_base;
 };
+
+template <typename T>
+class PortableResource {
+public:
+	~PortableResource() throw ();
+
+	template <typename... Args> void create(Args... args);
+	void destroy() throw ();
+	bool is_lost() const throw ();
+
+	operator bool() const throw ();
+	bool operator!() const throw ();
+	T *operator*() const throw ();
+	T *operator->() const throw ();
+
+private:
+	Portable<ResourceSlot> m_slot;
+} CONCRETE_PACKED;
 
 } // namespace
 

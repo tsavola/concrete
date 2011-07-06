@@ -20,34 +20,25 @@
 namespace concrete {
 
 class CallableObject: public Object {
-	friend class Object;
+	friend class Pointer;
 
 public:
-	CallableObject(const CallableObject &other) throw ();
-	CallableObject &operator=(const CallableObject &other) throw ();
+	CallableObject(const CallableObject &other) throw (): Object(other) {}
 
-	Object init_call(BlockId &continuation,
-	                 const TupleObject &args,
-	                 const DictObject &kwargs) const;
-	Object resume_call(BlockId &continuation) const;
-	void cleanup_call(BlockId continuation) const throw ();
+	Object initiate(Continuation &cont, const TupleObject &args, const DictObject &kwargs) const;
+	Object resume(Continuation &cont) const;
+	void release(Continuation cont) const throw ();
+
+	Object continuable_call(Continuation &cont,
+	                        Continuation::Stage stage,
+	                        const TupleObject *args = NULL,
+	                        const DictObject *kwargs = NULL) const;
 
 protected:
-	struct Content;
-
-	CallableObject(BlockId id) throw ();
-
-private:
-	Object call(ContinuationOp op,
-	            BlockId &continuation,
-	            const TupleObject *args = NULL,
-	            const DictObject *kwargs = NULL) const;
-
-	Content *content() const;
+	explicit CallableObject(unsigned int address) throw (): Object(address) {}
 };
 
-template <>
-struct TypeCheck<CallableObject> {
+template <> struct TypeCheck<CallableObject> {
 	bool operator()(const TypeObject &type);
 };
 

@@ -7,64 +7,49 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#include "none-content.hpp"
+#include "none-data.hpp"
 
-#include <concrete/context.hpp>
+#include <concrete/arena.hpp>
+#include <concrete/context-data.hpp>
 #include <concrete/objects/internal.hpp>
 #include <concrete/objects/string.hpp>
 #include <concrete/objects/type.hpp>
 
 namespace concrete {
 
-void NoneObjectTypeInit(const TypeObject &type)
-{
-	type.init_builtin(StringObject::New("none"));
-
-	type.protocol().repr  = InternalObject::New(internal::ObjectType_Repr);
-	type.protocol().str   = InternalObject::New(internal::ObjectType_Str);
-}
-
-NoneObject::Content::Content(BlockId none_id):
-	Object::Content(none_id, NoRefcountInit())
+NoneObject::Data::Data(const Pointer &type_placeholder) throw ():
+	Object::Data(type_placeholder)
 {
 }
 
 TypeObject NoneObject::Type()
 {
-	return Context::SystemObjects()->none_type;
+	return Context::Active().data()->none_type;
 }
 
 NoneObject NoneObject::NewBuiltin()
 {
-	auto allocated = Context::AllocBlock(sizeof (Content));
-	new (allocated.ptr) Content(allocated.id);
-	return allocated.id;
-}
-
-NoneObject::NoneObject(BlockId id) throw ():
-	Object(id)
-{
-}
-
-NoneObject::NoneObject(const NoneObject &other) throw ():
-	Object(other)
-{
-}
-
-NoneObject &NoneObject::operator=(const NoneObject &other) throw ()
-{
-	Object::operator=(other);
-	return *this;
+	auto allocated = Arena::Active().allocate(sizeof (Data));
+	new (allocated.data) Data(Pointer(allocated.address));
+	return NoneObject(allocated.address);
 }
 
 void NoneObject::init_builtin(const Portable<TypeObject> &type)
 {
-	content()->type = type;
+	data()->init_none_type(type);
 }
 
-NoneObject::Content *NoneObject::content() const
+NoneObject::Data *NoneObject::data() const
 {
-	return content_pointer<Content>();
+	return data_cast<Data>();
+}
+
+void NoneObjectTypeInit(const TypeObject &type)
+{
+	type.init_builtin(StringObject::New("none"));
+
+	type.protocol()->repr  = InternalObject::New(internal::ObjectType_Repr);
+	type.protocol()->str   = InternalObject::New(internal::ObjectType_Str);
 }
 
 } // namespace

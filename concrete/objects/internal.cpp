@@ -7,90 +7,76 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#include "internal-content.hpp"
+#include "internal-data.hpp"
 
 #include <cassert>
 
+#include <concrete/context-data.hpp>
 #include <concrete/context.hpp>
 #include <concrete/objects/string.hpp>
 #include <concrete/objects/type.hpp>
 
 namespace concrete {
 
-void InternalObjectTypeInit(const TypeObject &type)
-{
-	type.init_builtin(StringObject::New("internal"));
-}
-
-static InternalFunction *functions[] = {
+static InternalObject::Function *internal_functions[] = {
 #	define CONCRETE_INTERNAL_SYMBOL(Symbol) internal_symbol::Symbol,
 #	include <concrete/internals.hpp>
 #	undef CONCRETE_INTERNAL_SYMBOL
 };
 
-InternalObject::Content::Content(const TypeObject &type, internal::SymbolId symbol_id):
-	CallableObject::Content(type),
+InternalObject::Data::Data(const TypeObject &type, internal::SymbolId symbol_id):
+	CallableObject::Data(type),
 	symbol_id(symbol_id)
 {
 }
 
-Object InternalObject::Content::call(ContinuationOp op,
-                                     BlockId &continuation,
-                                     const TupleObject *args,
-                                     const DictObject *kwargs) const
+Object InternalObject::continuable_call(Continuation &cont,
+                                        Continuation::Stage stage,
+                                        const TupleObject *args,
+                                        const DictObject *kwargs) const
 {
-	unsigned int index = symbol_id;
+	unsigned int index = data()->symbol_id;
 
-	if (index >= sizeof (functions) / sizeof (functions[0]))
+	if (index >= sizeof (internal_functions) / sizeof (internal_functions[0]))
 		throw RuntimeError("internal call undefined");
 
-	assert(functions[index]);
-	return functions[index](op, continuation, args, kwargs);
+	assert(internal_functions[index]);
+	return internal_functions[index](cont, stage, args, kwargs);
 }
 
 TypeObject InternalObject::Type()
 {
-	return Context::SystemObjects()->internal_type;
+	return Context::Active().data()->internal_type;
 }
 
 InternalObject InternalObject::New(internal::SymbolId symbol_id)
 {
-	return Context::NewBlock<Content>(Type(), symbol_id);
+	return NewObject<InternalObject>(symbol_id);
 }
 
-InternalObject::InternalObject(BlockId id) throw ():
-	CallableObject(id)
+Object InternalObject::immediate_call_args(const TupleObject &args) const
 {
-}
+	Continuation dummy;
 
-InternalObject::InternalObject(const InternalObject &other) throw ():
-	CallableObject(other)
-{
-}
+	auto kwargs = DictObject::NewEmpty();
+	auto result = continuable_call(dummy, Continuation::Initiate, &args, &kwargs);
 
-InternalObject &InternalObject::operator=(const InternalObject &other) throw ()
-{
-	CallableObject::operator=(other);
-	return *this;
-}
-
-Object InternalObject::call_args(const TupleObject &args) const
-{
-	BlockId continuation = 0;
-	auto kwargs = DictObject::EmptySingleton();
-	auto value = content()->call(InitContinuation, continuation, &args, &kwargs);
-
-	if (continuation) {
-		content()->call(CleanupContinuation, continuation, NULL, NULL);
-		throw RuntimeError("non-trivial protocol method called from native code");
+	if (dummy) {
+		continuable_call(dummy, Continuation::Release, NULL, NULL);
+		throw RuntimeError("non-immediate internal function called from native context");
 	}
 
-	return value;
+	return result;
 }
 
-InternalObject::Content *InternalObject::content() const
+InternalObject::Data *InternalObject::data() const
 {
-	return content_pointer<Content>();
+	return data_cast<Data>();
+}
+
+void InternalObjectTypeInit(const TypeObject &type)
+{
+	type.init_builtin(StringObject::New("internal"));
 }
 
 } // namespace

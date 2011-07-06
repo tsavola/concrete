@@ -7,23 +7,21 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#ifndef CONCRETE_OBJECTS_TUPLE_CONTENT_HPP
-#define CONCRETE_OBJECTS_TUPLE_CONTENT_HPP
+#ifndef CONCRETE_OBJECTS_BYTES_DATA_HPP
+#define CONCRETE_OBJECTS_BYTES_DATA_HPP
 
-#include "tuple.hpp"
+#include "bytes.hpp"
 
-#include <concrete/objects/object-content.hpp>
-#include <concrete/util/portable.hpp>
+#include <concrete/objects/object-data.hpp>
 
 namespace concrete {
 
-struct TupleObject::Content: Object::Content {
-	Portable<Object> items[0];
+struct BytesObject::Data: Object::Data {
+	uint8_t data[0];
 
-	explicit Content(const TypeObject &type);
-	~Content() throw ();
+	Data(const TypeObject &type, const uint8_t *data);
 
-	unsigned int size() const throw ();
+	size_t size() const throw ();
 
 } CONCRETE_PACKED;
 

@@ -7,125 +7,55 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-// TODO: proper memory allocator
-
 #include "arena.hpp"
 
-#include <cassert>
-#include <cstddef>
 #include <cstdlib>
 #include <cstring>
 
+#include <concrete/context.hpp>
 #include <concrete/util/backtrace.hpp>
-#include <concrete/util/byteorder.hpp>
+#include <concrete/util/trace.hpp>
 
 namespace concrete {
 
-AllocError::AllocError(size_t size) throw ():
-	m_size(size)
+Arena &Arena::Active() throw ()
 {
-	Backtrace();
+	return Context::Active().arena();
 }
 
-AllocError::~AllocError() throw ()
+const Arena::Header *Arena::AllocationHeader(const void *data) throw ()
 {
+	return reinterpret_cast<const Header *> (data) - 1;
 }
 
-const char *AllocError::what() const throw ()
+Arena::Header *Arena::AllocationHeader(void *data) throw ()
 {
-	return "Block allocation failed";
+	return reinterpret_cast<Header *> (data) - 1;
 }
 
-size_t AllocError::size() const throw ()
+size_t Arena::AllocationSize(const void *data) throw ()
 {
-	return m_size;
+	return AllocationHeader(data)->size;
 }
 
-AccessError::AccessError(BlockId block_id, bool deferred) throw ():
-	IntegrityError(block_id),
-	m_deferred(deferred)
+size_t Arena::AlignedSize(size_t size) throw ()
 {
-}
-
-const char *AccessError::what() const throw ()
-{
-	if (m_deferred)
-		return "Bad block access (deferred)";
-	else
-		return "Bad block access";
-}
-
-Arena::Snapshot::Snapshot() throw ()
-{
-}
-
-Arena::Snapshot::Snapshot(void *base, size_t size, BlockId access_error_block) throw ():
-	base(base),
-	size(size),
-	access_error_block(access_error_block)
-{
-}
-
-size_t Arena::Snapshot::head_size() const throw ()
-{
-	return sizeof (*this) - sizeof (base);
-}
-
-const void *Arena::Snapshot::head_ptr() const throw ()
-{
-	return reinterpret_cast<const char *> (this) + sizeof (base);
-}
-
-void *Arena::Snapshot::head_ptr() throw ()
-{
-	return reinterpret_cast<char *> (this) + sizeof (base);
-}
-
-size_t Arena::Snapshot::data_size() const throw ()
-{
-	return size;
-}
-
-const void *Arena::Snapshot::data_ptr() const throw ()
-{
-	return base;
-}
-
-void Arena::Snapshot::init_data(void *data) throw ()
-{
-	base = data;
-}
-
-BlockId Arena::OffsetId(size_t block_offset) throw ()
-{
-	assert ((block_offset & 1) == 0);
-
-	return block_offset | 1;
-}
-
-size_t Arena::IdOffset(BlockId block_id) throw ()
-{
-	assert ((block_id & 1) == 1);
-
-	return block_id & ~1;
-}
-
-size_t Arena::AlignedSize(BlockSize block_size) throw ()
-{
-	return (block_size + sizeof (uint32_t) - 1) & ~size_t(sizeof (uint32_t) - 1);
+	return (size + sizeof (uint32_t) - 1) & ~size_t(sizeof (uint32_t) - 1);
 }
 
 Arena::Arena() throw ():
 	m_base(NULL),
 	m_size(0),
-	m_access_error_block(0)
+	m_version(1),
+	m_access_error_address(0)
 {
 }
 
-Arena::Arena(const Snapshot &snapshot) throw ():
-	m_base(snapshot.base),
-	m_size(snapshot.size),
-	m_access_error_block(snapshot.access_error_block)
+Arena::Arena(void *base, size_t size):
+	m_base(base),
+	m_size(size),
+	m_version(1),
+	m_access_error_address(0)
 {
 }
 
@@ -136,124 +66,206 @@ Arena::~Arena() throw ()
 
 Arena::Snapshot Arena::snapshot() const throw ()
 {
-	return Snapshot(m_base, m_size, m_access_error_block);
-}
-
-Arena::Allocation Arena::alloc_block(size_t block_size)
-{
-	assert(block_size >= sizeof (Block));
-
-	check_error();
-
-	size_t aligned_size = AlignedSize(block_size);
-	if (aligned_size < block_size)
-		throw AllocError(block_size);
-
-	size_t offset = m_size;
-
-	m_base = std::realloc(m_base, m_size + aligned_size);
-	if (m_base == NULL)
-		throw AllocError(block_size);
-
-	m_size += aligned_size;
-
-	char *ptr = reinterpret_cast<char *> (m_base) + offset;
-	std::memset(ptr, 0, aligned_size);
-
-	Block *block = reinterpret_cast<Block *> (ptr);
-	block->m_portable_size = PortByteorder(block_size);
-
-	return Allocation {
-		block,
-		OffsetId(offset),
+	return Snapshot {
+		m_base,
+		m_size,
 	};
 }
 
-void Arena::free_block(BlockId block_id) throw ()
+Arena::Allocation Arena::allocate(size_t data_size)
 {
-	auto block = nonthrowing_block_pointer(block_id, sizeof (Block));
+	check_access_error();
 
-	if (block == NULL)
-		return;
+	size_t full_size = sizeof (Header) + AlignedSize(data_size);
+	if (full_size < data_size)
+		throw AllocationError(data_size);
 
-	size_t offset = IdOffset(block_id);
-	size_t aligned_size = AlignedSize(block->block_size());
+	size_t old_size = m_size;
+	unsigned int header_address = old_size;
+	size_t new_size = old_size + full_size;
 
-	if (offset + aligned_size == m_size) {
-		m_size -= aligned_size;
-		m_base = std::realloc(m_base, m_size);
+	void *new_base = std::realloc(m_base, new_size);
+	if (new_base == NULL)
+		throw AllocationError(data_size);
+
+	if (new_base != m_base)
+		update_version();
+
+	m_base = new_base;
+	m_size = new_size;
+
+	char *ptr = reinterpret_cast<char *> (m_base) + header_address;
+	std::memset(ptr, 0, full_size);
+	new (ptr) Header(data_size);
+
+	unsigned int data_address = header_address + sizeof (Header);
+	void *data_ptr = ptr + sizeof (Header);
+
+	return Allocation {
+		data_address,
+		data_ptr,
+	};
+}
+
+void Arena::free(unsigned int data_address, void *data) throw ()
+{
+	unsigned int header_address = data_address - sizeof (Header);
+	void *ptr = reinterpret_cast<void *> (reinterpret_cast<char *> (data) - sizeof (Header));
+
+	size_t full_size = sizeof (Header) + AlignedSize(AllocationSize(data));
+
+	if (header_address + full_size == m_size) {
+		m_base = std::realloc(m_base, header_address);
+		m_size = header_address;
+
+		update_version();
 	} else {
-		std::memset(block, 0xff, aligned_size);
+		std::memset(ptr, 0x55, full_size);
 	}
 }
 
-Block *Arena::block_pointer(BlockId block_id, size_t minimum_size)
+void Arena::update_version() throw ()
 {
-	check_error();
+	unsigned int version = m_version + 1;
 
-	auto block = nonthrowing_block_pointer(block_id, minimum_size);
+	if (version == 0)
+		version = 1;
 
-	check_error();
-
-	return block;
+	m_version = version;
 }
 
-Block *Arena::nonthrowing_block_pointer(BlockId block_id, size_t minimum_size) throw ()
+Arena::Accession Arena::access(unsigned int address, size_t minimum_size)
 {
-	assert(minimum_size >= sizeof (Block));
+	check_access_error();
+	auto accession = nonthrowing_access(address, minimum_size);
+	check_access_error();
 
-	if (block_id == 0)
-		return set_access_error(block_id);
+	return accession;
+}
 
-	size_t offset = IdOffset(block_id);
+Arena::Accession Arena::nonthrowing_access(unsigned int address, size_t minimum_size) throw ()
+{
+	if (address < sizeof (Header)) {
+		Trace("address %1% access (minimum size %2%)", address, minimum_size);
+		return defer_access_error(address);
+	}
 
 #ifndef NDEBUG
-	if (offset & (sizeof (uint32_t) - 1))
-		return set_access_error(block_id);
+	if (address & (sizeof (uint32_t) - 1)) {
+		Trace("address %1% alignment error", address);
+		return defer_access_error(address);
+	}
 #endif
 
-	if (m_size < minimum_size || offset > m_size - minimum_size)
-		return set_access_error(block_id);
+	if (m_size < minimum_size || address > m_size - minimum_size) {
+		Trace("address %1% minimum size %2% out of range", address, minimum_size);
+		return defer_access_error(address);
+	}
 
-	auto block = reinterpret_cast<Block *> (reinterpret_cast<char *> (m_base) + offset);
-	size_t block_size = block->block_size();
-	size_t aligned_size = AlignedSize(block_size);
+	void *data = reinterpret_cast<char *> (m_base) + address;
 
-	if (aligned_size < block_size)
-		return set_access_error(block_id);
+	size_t data_size = AllocationSize(data);
+	size_t aligned_size = AlignedSize(data_size);
 
-	if (m_size < aligned_size || offset > m_size - aligned_size)
-		return set_access_error(block_id);
+	if (aligned_size < data_size)
+		return defer_access_error(address);
 
-	return block;
+	if (m_size < aligned_size || address > m_size - aligned_size) {
+		Trace("address %1% actual size %2% out of range", address, minimum_size);
+		return defer_access_error(address);
+	}
+
+	return Accession {
+		m_version,
+		data,
+	};
 }
 
-BlockId Arena::block_id(const Block *block) const throw ()
+Arena::Accession Arena::defer_access_error(unsigned int address) throw ()
 {
-	const char *block_ptr = reinterpret_cast<const char *> (block);
-	const char *base_ptr = reinterpret_cast<const char *> (m_base);
-
-	return OffsetId(block_ptr - base_ptr);
-}
-
-Block *Arena::set_access_error(BlockId block_id) throw ()
-{
-	if (m_access_error_block == 0) {
+	if (m_access_error_address == 0) {
 		Backtrace();
-		m_access_error_block = block_id;
+		m_access_error_address = address;
 	}
 
-	return NULL;
+	return Accession {
+		0,
+		NULL,
+	};
 }
 
-void Arena::check_error()
+void Arena::check_access_error()
 {
-	if (m_access_error_block) {
-		auto block_id = m_access_error_block;
-		m_access_error_block = 0;
+	if (m_access_error_address) {
+		auto address = m_access_error_address;
+		m_access_error_address = 0;
 
-		throw AccessError(block_id, true);
+		throw IntegrityError(address);
 	}
+}
+
+ArenaAccess::ArenaAccess(const ArenaAccess &other) throw ():
+	m_version(other.m_version),
+	m_data(other.m_data)
+{
+}
+
+void ArenaAccess::operator=(const ArenaAccess &other) throw ()
+{
+	m_version = other.m_version;
+	m_data = other.m_data;
+}
+
+void *ArenaAccess::arena_access(unsigned int address, size_t minimum_size) const
+{
+	Arena &arena = Arena::Active();
+
+	if (m_version != arena.version()) {
+		auto accession = arena.access(address, minimum_size);
+
+		m_version = accession.version;
+		m_data = accession.data;
+	}
+
+	return m_data;
+}
+
+void *ArenaAccess::nonthrowing_arena_access(unsigned int address, size_t minimum_size) const throw ()
+{
+	Arena &arena = Arena::Active();
+
+	if (m_version != arena.version()) {
+		auto accession = arena.nonthrowing_access(address, minimum_size);
+		if (accession.data == NULL)
+			return NULL;
+
+		m_version = accession.version;
+		m_data = accession.data;
+	}
+
+	return m_data;
+}
+
+IntegrityError::IntegrityError(unsigned int address) throw ():
+	m_address(address)
+{
+	Backtrace();
+}
+
+const char *IntegrityError::what() const throw ()
+{
+	return "Arena integrity violation";
+}
+
+AllocationError::AllocationError(size_t size) throw ():
+	m_size(size)
+{
+	Backtrace();
+}
+
+const char *AllocationError::what() const throw ()
+{
+	return "Out of memory";
 }
 
 } // namespace

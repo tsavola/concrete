@@ -7,115 +7,85 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#include "function-content.hpp"
+#include "function-data.hpp"
 
-#include <concrete/execute.hpp>
+#include <concrete/context-data.hpp>
+#include <concrete/execution.hpp>
 #include <concrete/objects/string.hpp>
 #include <concrete/objects/type.hpp>
 #include <concrete/util/packed.hpp>
+#include <concrete/util/trace.hpp>
 
 namespace concrete {
 
-void FunctionObjectTypeInit(const TypeObject &type)
+FunctionContinuation::Data::~Data() throw ()
 {
-	type.init_builtin(StringObject::New("function"));
+	frame->destroy();
 }
 
-class CallState: public Block {
-public:
-	~CallState() throw ()
-	{
-		if (frame_id)
-			Executor::Active().destroy_frame(frame_id);
-	}
+bool FunctionContinuation::initiate(Object &result,
+                                    const TupleObject &args,
+                                    const DictObject &kwargs,
+                                    const CodeObject &code) const
+{
+	auto dict = DictObject::NewWithCapacity(args.size() + kwargs.size());
 
-	Portable<BlockId> frame_id;
+	for (unsigned int i = 0; i < args.size(); i++)
+		dict.set_item(code.varnames().get_item(i), args.get_item(i));
 
-} CONCRETE_PACKED;
+	kwargs.copy_to(dict);
 
-class Call: public Continuable {
-public:
-	explicit Call(const CodeObject &code) throw ():
-		m_code(code)
-	{
-	}
+	auto frame = Context::Active().execution()->new_frame(code, dict);
+	data()->frame = frame;
 
-	bool call(Object &result, const TupleObject &args, const DictObject &kwargs) const
-	{
-		auto dict = DictObject::NewWithCapacity(args.size() + kwargs.size());
+	return false;
+}
 
-		for (unsigned int i = 0; i < args.size(); i++)
-			dict.set_item(m_code.varnames().get_item(i), args.get_item(i));
+bool FunctionContinuation::resume(Object &result, const CodeObject &code) const
+{
+	result = data()->frame->result();
 
-		kwargs.copy_to(dict);
+	return true;
+}
 
-		BlockId frame_id = Executor::Active().new_frame(m_code, dict);
-		state()->frame_id = frame_id;
+FunctionContinuation::Data *FunctionContinuation::data() const
+{
+	return data_cast<Data>();
+}
 
-		return false;
-	}
-
-	bool resume(Object &result) const
-	{
-		BlockId frame_id = state()->frame_id;
-		result = Executor::Active().frame_result(frame_id);
-
-		return true;
-	}
-
-private:
-	CallState *state() const
-	{
-		return state_pointer<CallState>();
-	}
-
-	const CodeObject m_code;
-};
-
-FunctionObject::Content::Content(const TypeObject &type, const CodeObject &code):
-	CallableObject::Content(type),
+FunctionObject::Data::Data(const TypeObject &type, const CodeObject &code) throw ():
+	CallableObject::Data(type),
 	code(code)
 {
 }
 
-Object FunctionObject::Content::call(ContinuationOp op,
-                                     BlockId &state_id,
-                                     const TupleObject *args,
-                                     const DictObject *kwargs) const
+Object FunctionObject::continuable_call(Continuation &cont,
+                                        Continuation::Stage stage,
+                                        const TupleObject *args,
+                                        const DictObject *kwargs) const
 {
-	Call call(code);
-	return ContinuableCall<CallState>(op, state_id, call, args, kwargs);
+	CodeObject code = data()->code;
+	return Continuation::Call<FunctionContinuation>(cont, stage, args, kwargs, code);
 }
 
 TypeObject FunctionObject::Type()
 {
-	return Context::SystemObjects()->function_type;
+	return Context::Active().data()->function_type;
 }
 
 FunctionObject FunctionObject::New(const CodeObject &code)
 {
-	return Context::NewBlock<Content>(Type(), code);
+	return NewObject<FunctionObject>(code);
 }
 
-FunctionObject::FunctionObject(BlockId id) throw ():
-	CallableObject(id)
+FunctionObject::Data *FunctionObject::data() const
 {
+	return data_cast<Data>();
 }
 
-FunctionObject::FunctionObject(const FunctionObject &other) throw ():
-	CallableObject(other)
+void FunctionObjectTypeInit(const TypeObject &type)
 {
-}
-
-FunctionObject &FunctionObject::operator=(const FunctionObject &other) throw ()
-{
-	CallableObject::operator=(other);
-	return *this;
-}
-
-FunctionObject::Content *FunctionObject::content() const
-{
-	return content_pointer<Content>();
+	type.init_builtin(StringObject::New("function"));
 }
 
 } // namespace

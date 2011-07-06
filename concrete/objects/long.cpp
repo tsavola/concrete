@@ -7,66 +7,50 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#include "long-content.hpp"
+#include "long-data.hpp"
 
 #include <boost/format.hpp>
 
-#include <concrete/context.hpp>
+#include <concrete/context-data.hpp>
 #include <concrete/objects/internal.hpp>
 #include <concrete/objects/string.hpp>
 #include <concrete/objects/type.hpp>
 
 namespace concrete {
 
-void LongObjectTypeInit(const TypeObject &type)
-{
-	type.init_builtin(StringObject::New("long"));
-
-	type.protocol().add   = InternalObject::New(internal::LongType_Add);
-	type.protocol().repr  = InternalObject::New(internal::LongType_Repr);
-	type.protocol().str   = InternalObject::New(internal::LongType_Str);
-}
-
-LongObject::Content::Content(const TypeObject &type, int64_t value):
-	Object::Content(type),
+LongObject::Data::Data(const TypeObject &type, int64_t value):
+	Object::Data(type),
 	value(value)
 {
 }
 
 TypeObject LongObject::Type()
 {
-	return Context::SystemObjects()->long_type;
+	return Context::Active().data()->long_type;
 }
 
 LongObject LongObject::New(int64_t value)
 {
-	return Context::NewBlock<Content>(Type(), value);
-}
-
-LongObject::LongObject(BlockId id) throw ():
-	Object(id)
-{
-}
-
-LongObject::LongObject(const LongObject &other) throw ():
-	Object(other)
-{
-}
-
-LongObject &LongObject::operator=(const LongObject &other) throw ()
-{
-	Object::operator=(other);
-	return *this;
+	return NewObject<LongObject>(value);
 }
 
 int64_t LongObject::value() const
 {
-	return content()->value;
+	return data()->value;
 }
 
-LongObject::Content *LongObject::content() const
+LongObject::Data *LongObject::data() const
 {
-	return content_pointer<Content>();
+	return data_cast<Data>();
+}
+
+void LongObjectTypeInit(const TypeObject &type)
+{
+	type.init_builtin(StringObject::New("long"));
+
+	type.protocol()->add   = InternalObject::New(internal::LongType_Add);
+	type.protocol()->repr  = InternalObject::New(internal::LongType_Repr);
+	type.protocol()->str   = InternalObject::New(internal::LongType_Str);
 }
 
 static Object LongAdd(const TupleObject &args, const DictObject &kwargs)

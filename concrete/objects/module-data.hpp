@@ -7,20 +7,23 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#include "continuation.hpp"
+#ifndef CONCRETE_OBJECTS_MODULE_DATA_HPP
+#define CONCRETE_OBJECTS_MODULE_DATA_HPP
 
-#include <concrete/context.hpp>
+#include "module.hpp"
+
+#include <concrete/objects/object-data.hpp>
+#include <concrete/portable.hpp>
 
 namespace concrete {
 
-Continuable::Continuable():
-	m_state_id(0)
-{
-}
+struct ModuleObject::Data: Object::Data {
+	const Portable<DictObject> dict;
 
-void Continuable::set_state(BlockId state_id) throw ()
-{
-	m_state_id = state_id;
-}
+	Data(const TypeObject &type, const DictObject &dict);
+
+} CONCRETE_PACKED;
 
 } // namespace
+
+#endif

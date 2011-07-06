@@ -18,11 +18,11 @@
 #include <netdb.h>
 
 #include <concrete/io/file.hpp>
-#include <concrete/resource.hpp>
+#include <concrete/util/noncopyable.hpp>
 
 namespace concrete {
 
-class ResolveResource: public Resource {
+class ResolveResource: Noncopyable {
 	struct Pipe {
 		FileResource read;
 		FileResource write;

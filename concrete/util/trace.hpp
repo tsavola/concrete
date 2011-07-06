@@ -17,7 +17,11 @@
 
 namespace concrete {
 
+class Pointer;
+class DataBase;
+
 #ifdef CONCRETE_TRACE
+
 template <typename Format>
 inline Format TraceFormat(Format format)
 {
@@ -35,11 +39,20 @@ void Trace(const char *format, Args... args) throw ()
 {
 	try {
 		std::cerr << "TRACE: " << TraceFormat(boost::format(format), args...) << std::endl;
-	} catch (...) {
-	}
+	} catch (...) {}
 }
+
+void TraceData(const void *data) throw ();
+void TraceData(const void *data, size_t size) throw ();
+void TraceData(const Pointer &pointer) throw ();
+
 #else
+
 template <typename... Args> inline void Trace(const char *, Args...) throw () {}
+inline void TraceData(const void *data) throw () {}
+inline void TraceData(const void *data, size_t size) throw () {}
+inline void TraceData(const Pointer &pointer) throw () {}
+
 #endif
 
 } // namespace

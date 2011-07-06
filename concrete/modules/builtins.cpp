@@ -11,12 +11,12 @@
 
 #include <iostream>
 
+#include <concrete/nested-data.hpp>
 #include <concrete/objects/dict.hpp>
 #include <concrete/objects/internal.hpp>
 #include <concrete/objects/long.hpp>
 #include <concrete/objects/module.hpp>
 #include <concrete/objects/string.hpp>
-#include <concrete/util/nested.hpp>
 
 namespace concrete {
 
@@ -24,7 +24,7 @@ DictObject BuiltinsModuleInit(const DictObject &modules)
 {
 	auto dict = DictObject::New();
 
-	dict.set_item(StringObject::New("None"),  Context::SystemObjects()->none);
+	dict.set_item(StringObject::New("None"),  Object());
 
 	dict.set_item(StringObject::New("id"),    InternalObject::New(internal::BuiltinsModule_Id));
 	dict.set_item(StringObject::New("print"), InternalObject::New(internal::BuiltinsModule_Print));
@@ -38,27 +38,30 @@ DictObject BuiltinsModuleInit(const DictObject &modules)
 
 static Object Id(const TupleObject &args, const DictObject &kwargs)
 {
-	return LongObject::New(args.get_item(0).id());
+	return LongObject::New(args.get_item(0).address());
 }
 
-class PrintState: public NestedContinuation {
+class Print: public NestedContinuation {
+	friend class Pointer;
+	friend class Continuation;
+
+private:
+	struct Data: NestedContinuation::Data {
+		Portable<uint32_t> index;
+		Portable<Object>   args;
+		Portable<Object>   deferred_value;
+	} CONCRETE_PACKED;
+
+	explicit Print(unsigned int address) throw (): NestedContinuation(address) {}
+
 public:
-	Portable<uint32_t> index;
-	Portable<Object> args;
-
-	Portable<Object> deferred_value;
-
-} CONCRETE_PACKED;
-
-class Print: public NestedContinuable {
-public:
-	bool call(Object &result, const TupleObject &args, const DictObject &kwargs) const
+	bool initiate(Object &result, const TupleObject &args, const DictObject &kwargs) const
 	{
 		if (args.size() == 0)
 			return finish();
 
-		state()->index = 0;
-		state()->args = args;
+		data()->index = 0;
+		data()->args = args;
 
 		return evaluate();
 	}
@@ -71,20 +74,20 @@ public:
 			if (!resume_nested(value))
 				return false;
 		} else {
-			value = state()->deferred_value;
+			value = data()->deferred_value;
 		}
 
 		std::cout << value.require<StringObject>().string();
 
-		unsigned int index = state()->index;
-		unsigned int size = state()->args->cast<TupleObject>().size();
+		unsigned int index = data()->index;
+		unsigned int size = data()->args->cast<TupleObject>().size();
 
 		if (index == size - 1)
 			return finish();
 
 		std::cout << " ";
 
-		state()->index = ++index;
+		data()->index = ++index;
 
 		return evaluate();
 	}
@@ -92,16 +95,16 @@ public:
 private:
 	bool evaluate() const
 	{
-		unsigned int index = state()->index;
-		auto self = state()->args->cast<TupleObject>().get_item(index);
-		auto callable = self.protocol().str->require<CallableObject>();
+		unsigned int index = data()->index;
+		auto self = data()->args->cast<TupleObject>().get_item(index);
+		auto callable = self.protocol()->str->require<CallableObject>();
 
 		Object value;
 		auto tuple = TupleObject::New(self);
-		auto dict = DictObject::EmptySingleton();
+		auto dict = DictObject::NewEmpty();
 
 		if (call_nested(callable, value, tuple, dict))
-			state()->deferred_value = value;
+			data()->deferred_value = value;
 
 		return false;
 	}
@@ -113,9 +116,9 @@ private:
 		return true;
 	}
 
-	PrintState *state() const
+	Data *data() const
 	{
-		return static_cast<PrintState *> (nested_state());
+		return data_cast<Data>();
 	}
 };
 
@@ -126,12 +129,12 @@ static Object Repr(const TupleObject &args, const DictObject &kwargs)
 
 static NestedCall Str(const TupleObject &args, const DictObject &kwargs)
 {
-	return NestedCall(args.get_item(0).protocol().repr, args, kwargs);
+	return NestedCall(args.get_item(0).protocol()->repr, args, kwargs);
 }
 
 } // namespace
 
-CONCRETE_INTERNAL_FUNCTION   (BuiltinsModule_Id,    Id)
-CONCRETE_INTERNAL_CONTINUABLE(BuiltinsModule_Print, Print, PrintState)
-CONCRETE_INTERNAL_FUNCTION   (BuiltinsModule_Repr,  Repr)
-CONCRETE_INTERNAL_NESTED_CALL(BuiltinsModule_Str,   Str)
+CONCRETE_INTERNAL_FUNCTION    (BuiltinsModule_Id,    Id)
+CONCRETE_INTERNAL_CONTINUATION(BuiltinsModule_Print, Print)
+CONCRETE_INTERNAL_FUNCTION    (BuiltinsModule_Repr,  Repr)
+CONCRETE_INTERNAL_NESTED_CALL (BuiltinsModule_Str,   Str)

@@ -7,35 +7,33 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#ifndef CONCRETE_OBJECTS_DICT_CONTENT_HPP
-#define CONCRETE_OBJECTS_DICT_CONTENT_HPP
+#ifndef CONCRETE_OBJECTS_DICT_DATA_HPP
+#define CONCRETE_OBJECTS_DICT_DATA_HPP
 
 #include "dict.hpp"
 
-#include <concrete/objects/object-content.hpp>
+#include <concrete/objects/object-data.hpp>
 #include <concrete/util/noncopyable.hpp>
+#include <concrete/util/packed.hpp>
 
 namespace concrete {
 
-struct DictObject::Content: Object::Content {
+struct DictObject::Data: Object::Data {
 	struct Item: Noncopyable {
-		Portable<Object> key;
-		Portable<Object> value;
-
 		Item(const Object &key, const Object &value);
 
+		Portable<Object> key;
+		Portable<Object> value;
 	} CONCRETE_PACKED;
 
-	Portable<uint32_t> size;
-	Item items[0];
+	explicit Data(const TypeObject &type);
+	~Data() throw ();
 
-	explicit Content(const TypeObject &type);
-	~Content() throw ();
-
-	void verify_integrity() const;
 	unsigned int capacity() const throw ();
 	unsigned int find_item(const Object &key) const;
 
+	Portable<uint32_t> size;
+	Item               items[0];
 } CONCRETE_PACKED;
 
 } // namespace

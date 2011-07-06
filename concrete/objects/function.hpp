@@ -12,27 +12,54 @@
 
 #include <concrete/objects/callable.hpp>
 #include <concrete/objects/code.hpp>
+#include <concrete/objects/dict.hpp>
+#include <concrete/objects/tuple.hpp>
 
 namespace concrete {
 
 class FunctionObject: public CallableObject {
+	friend class Pointer;
 	friend class Object;
-	friend class CallableObject;
 
 public:
 	static TypeObject Type();
 	static FunctionObject New(const CodeObject &code);
 
-	FunctionObject(const FunctionObject &other) throw ();
-	FunctionObject &operator=(const FunctionObject &other) throw ();
+	FunctionObject(const FunctionObject &other) throw (): CallableObject(other) {}
+
+	Object continuable_call(Continuation &cont,
+	                        Continuation::Stage stage,
+	                        const TupleObject *args = NULL,
+	                        const DictObject *kwargs = NULL) const;
 
 protected:
-	struct Content;
+	struct Data;
 
-	FunctionObject(BlockId id) throw ();
+	explicit FunctionObject(unsigned int address) throw (): CallableObject(address) {}
 
 private:
-	Content *content() const;
+	Data *data() const;
+};
+
+class FunctionContinuation: public Continuation {
+	friend class Pointer;
+
+public:
+	FunctionContinuation(const FunctionContinuation &other) throw (): Continuation(other) {}
+
+	bool initiate(Object &result,
+	              const TupleObject &args,
+	              const DictObject &kwargs,
+	              const CodeObject &code) const;
+
+	bool resume(Object &result, const CodeObject &code) const;
+
+private:
+	struct Data;
+
+	explicit FunctionContinuation(unsigned int address) throw (): Continuation(address) {}
+
+	Data *data() const;
 };
 
 void FunctionObjectTypeInit(const TypeObject &type);

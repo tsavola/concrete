@@ -11,124 +11,72 @@
 #define CONCRETE_CONTEXT_HPP
 
 #include <cassert>
+#include <cstddef>
 
 #include <concrete/arena.hpp>
-#include <concrete/block.hpp>
+#include <concrete/arena-access.hpp>
 #include <concrete/objects/none.hpp>
 #include <concrete/objects/object-partial.hpp>
 #include <concrete/objects/type.hpp>
+#include <concrete/portable.hpp>
 #include <concrete/resource.hpp>
-#include <concrete/util/activatable.hpp>
 #include <concrete/util/noncopyable.hpp>
-#include <concrete/util/packed.hpp>
 
 namespace concrete {
 
-class Context: public Activatable<Context>, Noncopyable {
-	friend class IntegrityError;
+class Execution;
+class ScopedContext;
+
+class Context: ArenaAccess {
+	friend class ScopedContext;
 
 public:
-	struct Snapshot: Arena::Snapshot {
-		ResourceManager::Snapshot resources;
-		Portable<BlockId> system_objects;
+	struct Data;
 
-		Snapshot() throw ();
-
-		Snapshot(const Arena::Snapshot &arena,
-		         const ResourceManager::Snapshot &resources,
-		         BlockId system_objects) throw ();
-
-		size_t head_size() const throw ();
-
-	} CONCRETE_PACKED;
-
-	struct SystemObjectsBlock: Block {
-		const Portable<NoneObject> none;
-		const Portable<TypeObject> type_type;
-		const Portable<TypeObject> object_type;
-		const Portable<TypeObject> none_type;
-		const Portable<TypeObject> string_type;
-		const Portable<TypeObject> long_type;
-		const Portable<TypeObject> bytes_type;
-		const Portable<TypeObject> tuple_type;
-		Portable<Object>           tuple_empty;
-		const Portable<TypeObject> dict_type;
-		Portable<Object>           dict_empty;
-		const Portable<TypeObject> code_type;
-		const Portable<TypeObject> function_type;
-		const Portable<TypeObject> internal_type;
-		const Portable<TypeObject> module_type;
-		Portable<Object>           builtins;
-		Portable<Object>           modules;
-
-		SystemObjectsBlock(const NoneObject &none) throw ();
-
-	private:
-		SystemObjectsBlock(const SystemObjectsBlock &);
-
-		const SystemObjectsBlock &operator=(const SystemObjectsBlock &);
-
-	} CONCRETE_PACKED;
-
-	static Arena::Allocation AllocBlock(size_t size);
-
-	static void FreeBlock(BlockId id) throw ();
-
-	template <typename BlockType, typename... Args>
-	static BlockId NewBlock(Args... args);
-
-	template <typename BlockType, typename... Args>
-	static BlockId NewCustomSizeBlock(size_t size, Args... args);
-
-	template <typename BlockType>
-	static void DeleteBlock(BlockId id); // doesn't throw unless ~T() does
-
-	template <typename BlockType>
-	static BlockType *BlockPointer(BlockId id);
-
-	template <typename BlockType>
-	static BlockType *NonthrowingBlockPointer(BlockId id) throw ();
-
-	template <typename ResourceType, typename... Args>
-	static ResourceManager::Allocation<ResourceType> NewResource(Args... args);
-
-	template <typename ResourceType, typename... Args>
-	static ResourceType &Resource(ResourceId id);
-
-	static void DeleteResource(ResourceId id) throw ();
-
-	static bool ResourceLost(ResourceId id) throw ();
-
-	static void WaitEvent(int fd, short events);
-
-	static SystemObjectsBlock *SystemObjects();
-
-	static const SystemObjectsBlock *NonthrowingSystemObjects() throw ();
-
-	static Object LoadBuiltinName(const Object &name);
-
-	static Object ImportBuiltinModule(const Object &name);
+	static Context &Active() throw ();
 
 	Context();
+	Context(void *base, size_t size);
 
-	explicit Context(const Snapshot &snapshot);
+	bool is_active() const throw () { return m_active; }
 
-	Snapshot snapshot() const throw ();
+	Arena &arena() throw () { return m_arena; }
+	ResourceManager &resource_manager() throw () { return m_resource_manager; }
 
-	void poll_events();
+	Data *data();
+	const Data *nonthrowing_data() throw ();
+
+	const Pointer &none_pointer() const throw () { return m_none_pointer; }
+
+	Object load_builtin_name(const Object &name);
+	Object import_builtin_module(const Object &name);
+
+	void add_execution(const Execution &execution);
+	Portable<Execution> &execution() throw ();
+
+	void wait_event(int fd, short events);
+
+	bool executable() throw ();
+	void execute();
 
 private:
-	SystemObjectsBlock *system_objects();
+	class EventCallback;
 
-	Arena m_arena;
+	Arena           m_arena;
 	ResourceManager m_resource_manager;
-	BlockId m_system_objects;
+	Pointer           m_none_pointer;
+	bool            m_active;
 };
 
-typedef ActiveScope<Context> ContextScope;
+class ScopedContext: Noncopyable {
+public:
+	explicit ScopedContext(Context &context) throw ();
+	~ScopedContext() throw ();
+
+private:
+	Context &m_context;
+};
 
 } // namespace
-
-#include "context-inline.hpp"
 
 #endif

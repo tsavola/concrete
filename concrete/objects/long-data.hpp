@@ -7,17 +7,20 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#ifndef CONCRETE_OBJECTS_CALLABLE_CONTENT_HPP
-#define CONCRETE_OBJECTS_CALLABLE_CONTENT_HPP
+#ifndef CONCRETE_OBJECTS_LONG_DATA_HPP
+#define CONCRETE_OBJECTS_LONG_DATA_HPP
 
-#include "callable.hpp"
+#include "long.hpp"
 
-#include <concrete/objects/object-content.hpp>
+#include <concrete/objects/object-data.hpp>
+#include <concrete/portable.hpp>
 
 namespace concrete {
 
-struct CallableObject::Content: Object::Content {
-	explicit Content(const TypeObject &type);
+struct LongObject::Data: Object::Data {
+	Portable<int64_t> value;
+
+	Data(const TypeObject &type, int64_t value);
 
 } CONCRETE_PACKED;
 

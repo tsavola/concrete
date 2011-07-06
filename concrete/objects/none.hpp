@@ -11,28 +11,28 @@
 #define CONCRETE_OBJECTS_NONE_HPP
 
 #include <concrete/objects/object-partial.hpp>
+#include <concrete/portable.hpp>
 
 namespace concrete {
 
 class NoneObject: public Object {
-	friend class Object;
+	friend class Pointer;
 
 public:
 	static TypeObject Type();
 	static NoneObject NewBuiltin();
 
-	NoneObject(const NoneObject &other) throw ();
-	NoneObject &operator=(const NoneObject &other) throw ();
+	NoneObject(const NoneObject &other) throw (): Object(other) {}
 
 	void init_builtin(const Portable<TypeObject> &type);
 
 protected:
-	struct Content;
+	struct Data;
+
+	explicit NoneObject(unsigned int address) throw (): Object(address) {}
 
 private:
-	NoneObject(BlockId id) throw ();
-
-	Content *content() const;
+	Data *data() const;
 };
 
 void NoneObjectTypeInit(const TypeObject &type);

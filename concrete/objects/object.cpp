@@ -7,143 +7,161 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#include "object-content.hpp"
+#include "object-data.hpp"
 
 #include <boost/format.hpp>
 
-#include <concrete/context.hpp>
-#include <concrete/objects/bytes-content.hpp>
-#include <concrete/objects/callable-content.hpp>
-#include <concrete/objects/code-content.hpp>
-#include <concrete/objects/dict-content.hpp>
-#include <concrete/objects/function-content.hpp>
-#include <concrete/objects/internal-content.hpp>
-#include <concrete/objects/long-content.hpp>
-#include <concrete/objects/module-content.hpp>
-#include <concrete/objects/none-content.hpp>
-#include <concrete/objects/string-content.hpp>
-#include <concrete/objects/tuple-content.hpp>
-#include <concrete/objects/type-content.hpp>
-#include <concrete/util/nested.hpp>
+#include <concrete/context-data.hpp>
+#include <concrete/nested-data.hpp>
+#include <concrete/objects/bytes-data.hpp>
+#include <concrete/objects/code-data.hpp>
+#include <concrete/objects/dict-data.hpp>
+#include <concrete/objects/function-data.hpp>
+#include <concrete/objects/internal-data.hpp>
+#include <concrete/objects/long-data.hpp>
+#include <concrete/objects/module-data.hpp>
+#include <concrete/objects/none-data.hpp>
+#include <concrete/objects/string-data.hpp>
+#include <concrete/objects/tuple-data.hpp>
+#include <concrete/objects/type-data.hpp>
 
 namespace concrete {
 
-void ObjectTypeInit(const TypeObject &type)
-{
-	type.init_builtin(StringObject::New("object"));
-
-	type.protocol().repr  = InternalObject::New(internal::ObjectType_Repr);
-	type.protocol().str   = InternalObject::New(internal::ObjectType_Str);
-}
-
-Object::Content::Content(BlockId type_id, NoRefcountInit no_refcount_init):
-	type(type_id, PortableRawInit())
+Object::Data::Data(const Pointer &type_pointer) throw ():
+	m_type_pointer(Referenced(type_pointer))
 {
 }
 
-Object::Content::Content(const TypeObject &type):
-	refcount(0),
-	type(type)
+Object::Data::Data(const TypeObject &type) throw ():
+	m_type_pointer(Referenced(type))
 {
 }
 
-Object::Protocol::Protocol()
+Object::Data::~Data() throw ()
 {
+	RawAccess::Unref(m_type_pointer->address());
 }
 
-Object::Protocol::Protocol(const NoneObject &none) throw ():
-	add(none),
-	repr(none),
-	str(none)
+void Object::Data::init_none_type(const Portable<TypeObject> &none_type) throw ()
 {
+	m_type_pointer = *none_type;
+	RawAccess::Ref(m_type_pointer->address());
 }
 
-BlockId Object::RawAccess::Default() throw ()
+void Object::Data::ref() throw ()
 {
-	return Context::SystemObjects()->none.id();
+	m_refcount = int(m_refcount) + 1;
 }
 
-void Object::RawAccess::Ref(BlockId id) throw ()
+void Object::Data::unref(unsigned int address) throw ()
 {
-	auto content = Context::NonthrowingBlockPointer<Object::Content>(id);
-	if (content)
-		content->refcount = int(content->refcount) + 1;
+	int refcount = int(m_refcount) - 1;
+	m_refcount = refcount;
+	assert(refcount >= 0);
+	if (refcount == 0)
+		Destroy(address, this);
 }
 
-void Object::RawAccess::Unref(BlockId id) throw ()
+TypeObject Object::Data::type() const throw ()
 {
-	auto content = Context::NonthrowingBlockPointer<Object::Content>(id);
-	if (content) {
-		int refcount = int(content->refcount) - 1;
-		content->refcount = refcount;
-		assert(refcount >= 0);
-		if (refcount == 0)
-			Destroy(content, id);
-	}
+	return m_type_pointer->cast<TypeObject>();
+}
+
+Object::RawAccess::RawType Object::RawAccess::InitRef() throw ()
+{
+	return Referenced(Context::Active().none_pointer()).address();
+}
+
+void Object::RawAccess::Ref(RawType address) throw ()
+{
+	auto data = NonthrowingDataCast<Data>(address);
+	if (data)
+		data->ref();
+}
+
+void Object::RawAccess::Unref(RawType address) throw ()
+{
+	auto data = NonthrowingDataCast<Data>(address);
+	if (data)
+		data->unref(address);
+}
+
+Object::RawAccess::RawType Object::RawAccess::ExtractRef(const Pointer &object) throw ()
+{
+	return Referenced(object).address();
 }
 
 TypeObject Object::Type()
 {
-	return Context::SystemObjects()->object_type;
+	return Context::Active().data()->object_type;
 }
 
 Object Object::New()
 {
-	return Object(Context::NewBlock<Content>(Type()));
+	return NewObject<Object>();
 }
 
-void Object::Destroy(Content *content, BlockId id) throw ()
+const Pointer &Object::Referenced(const Pointer &object) throw ()
 {
-	auto builtin = Context::NonthrowingSystemObjects();
-	if (builtin == NULL)
+	auto data = object.nonthrowing_data_cast<Data>();
+	if (data)
+		data->ref();
+
+	return object;
+}
+
+void Object::Destroy(unsigned int address, Data *data) throw ()
+{
+	auto context = Context::Active().nonthrowing_data();
+	if (context == NULL)
 		return;
 
-	auto type = content->type->cast<TypeObject>();
+	auto type = data->type();
 
-	if (type == builtin->object_type)
-		static_cast<Object::Content *> (content)->~Content();
-	else if (type == builtin->type_type)
-		static_cast<TypeObject::Content *> (content)->~Content();
-	else if (type == builtin->long_type)
-		static_cast<LongObject::Content *> (content)->~Content();
-	else if (type == builtin->bytes_type)
-		static_cast<BytesObject::Content *> (content)->~Content();
-	else if (type == builtin->string_type)
-		static_cast<StringObject::Content *> (content)->~Content();
-	else if (type == builtin->tuple_type)
-		static_cast<TupleObject::Content *> (content)->~Content();
-	else if (type == builtin->dict_type)
-		static_cast<DictObject::Content *> (content)->~Content();
-	else if (type == builtin->code_type)
-		static_cast<CodeObject::Content *> (content)->~Content();
-	else if (type == builtin->function_type)
-		static_cast<FunctionObject::Content *> (content)->~Content();
-	else if (type == builtin->internal_type)
-		static_cast<InternalObject::Content *> (content)->~Content();
-	else if (type == builtin->module_type)
-		static_cast<ModuleObject::Content *> (content)->~Content();
-	else {
+	if (type == context->object_type)
+		TypedDestroy<Object>(address, data);
+	else if (type == context->type_type)
+		TypedDestroy<TypeObject>(address, data);
+	else if (type == context->long_type)
+		TypedDestroy<LongObject>(address, data);
+	else if (type == context->bytes_type)
+		TypedDestroy<BytesObject>(address, data);
+	else if (type == context->string_type)
+		TypedDestroy<StringObject>(address, data);
+	else if (type == context->tuple_type)
+		TypedDestroy<TupleObject>(address, data);
+	else if (type == context->dict_type)
+		TypedDestroy<DictObject>(address, data);
+	else if (type == context->code_type)
+		TypedDestroy<CodeObject>(address, data);
+	else if (type == context->function_type)
+		TypedDestroy<FunctionObject>(address, data);
+	else if (type == context->internal_type)
+		TypedDestroy<InternalObject>(address, data);
+	else if (type == context->module_type)
+		TypedDestroy<ModuleObject>(address, data);
+	else
 		assert(false);
-		return;
-	}
-
-	Context::FreeBlock(id);
 }
 
-Object::Object():
-	m_id(RawAccess::Default())
+template <typename ObjectType>
+void Object::TypedDestroy(unsigned int address, Data *data) throw ()
 {
-	ref();
+	DestroyData(address, static_cast<typename ObjectType::Data *> (data));
 }
 
-Object::Object(BlockId id) throw ():
-	m_id(id)
+Object::Object() throw ():
+	Pointer(Referenced(Context::Active().none_pointer()))
 {
-	ref();
 }
 
 Object::Object(const Object &other) throw ():
-	m_id(other.m_id)
+	Pointer(Referenced(other))
+{
+}
+
+Object::Object(unsigned int address) throw ():
+	Pointer(address)
 {
 	ref();
 }
@@ -153,68 +171,72 @@ Object::~Object() throw ()
 	unref();
 }
 
-Object &Object::operator=(const Object &other) throw ()
+void Object::operator=(const Object &other) throw ()
 {
 	unref();
-	m_id = other.m_id;
-	ref();
-	return *this;
+	Pointer::operator=(Referenced(other));
 }
 
-bool Object::operator==(const Object &other) const throw ()
+Object::operator bool() const throw ()
 {
-	return m_id == other.m_id;
-}
-
-bool Object::operator!=(const Object &other) const throw ()
-{
-	return m_id != other.m_id;
-}
-
-BlockId Object::id() const throw ()
-{
-	return m_id;
+	return operator!=(Context::Active().none_pointer());
 }
 
 TypeObject Object::type() const
 {
-	// don't use cast<TypeObject>() because it causes an infinite recursion
-	return TypeObject(content()->type.id());
+	return data()->type();
 }
 
-const Object::Protocol &Object::protocol() const
+const PortableObjectProtocol *Object::protocol() const
 {
 	return type().protocol();
 }
 
 void Object::ref() const throw ()
 {
-	RawAccess::Ref(id());
+	auto data = nonthrowing_data();
+	if (data)
+		data->ref();
 }
 
 void Object::unref() const throw ()
 {
-	RawAccess::Unref(id());
+	auto data = nonthrowing_data();
+	if (data)
+		data->unref(m_address);
 }
 
-Object::Content *Object::content() const
+Object::Data *Object::data() const
 {
-	return content_pointer<Content>();
+	return data_cast<Data>();
+}
+
+Object::Data *Object::nonthrowing_data() const throw ()
+{
+	return nonthrowing_data_cast<Data>();
 }
 
 Object Object::add(const Object &other) const
 {
-	return protocol().add->require<InternalObject>().call(*this, other);
+	return protocol()->add->require<InternalObject>().immediate_call(*this, other);
 }
 
 StringObject Object::repr() const
 {
-	return protocol().repr->require<InternalObject>().call(*this).require<StringObject>();
+	return protocol()->repr->require<InternalObject>().immediate_call(*this).require<StringObject>();
 }
 
 StringObject Object::str() const
 {
-	return protocol().str->require<InternalObject>().call(*this).require<StringObject>();
+	return protocol()->str->require<InternalObject>().immediate_call(*this).require<StringObject>();
+}
+ 
+void ObjectTypeInit(const TypeObject &type)
+{
+	type.init_builtin(StringObject::New("object"));
+
+	type.protocol()->repr  = InternalObject::New(internal::ObjectType_Repr);
+	type.protocol()->str   = InternalObject::New(internal::ObjectType_Str);
 }
 
 static Object ObjectRepr(const TupleObject &args, const DictObject &kwargs)
@@ -223,13 +245,13 @@ static Object ObjectRepr(const TupleObject &args, const DictObject &kwargs)
 
 	return StringObject::New(
 		(boost::format("<%s object at 0x%lx>")
-		 % self.type().name().data()
-		 % self.id()).str());
+		 % self.type().name().c_str()
+		 % self.address()).str());
 }
 
-struct NestedCall ObjectStr(const TupleObject &args, const DictObject &kwargs)
+static struct NestedCall ObjectStr(const TupleObject &args, const DictObject &kwargs)
 {
-	return NestedCall(args.get_item(0).protocol().repr, args, kwargs);
+	return NestedCall(args.get_item(0).protocol()->repr, args, kwargs);
 }
 
 } // namespace

@@ -10,39 +10,36 @@
 #ifndef CONCRETE_CONTINUATION_HPP
 #define CONCRETE_CONTINUATION_HPP
 
-#include <concrete/block.hpp>
+#include <concrete/pointer.hpp>
 #include <concrete/objects/dict.hpp>
 #include <concrete/objects/object.hpp>
 #include <concrete/objects/tuple.hpp>
-#include <concrete/util/noncopyable.hpp>
 
 namespace concrete {
 
-enum ContinuationOp {
-	InitContinuation,
-	ResumeContinuation,
-	CleanupContinuation,
-};
+class Continuation: public Pointer {
+	friend class Pointer;
 
-class Continuable: Noncopyable {
 public:
-	Continuable();
+	enum Stage {
+		Initiate,
+		Resume,
+		Release,
+	};
 
-	void set_state(BlockId state_id) throw ();
+	template <typename ImplType, typename... ImplParams>
+	static Object Call(Continuation &cont,
+	                   Stage stage,
+	                   const TupleObject *args,
+	                   const DictObject *kwargs,
+	                   ImplParams... impl_params);
+
+	Continuation() throw () {}
+	Continuation(const Continuation &other) throw (): Pointer(other) {}
 
 protected:
-	template <typename StateType> StateType *state_pointer() const;
-
-private:
-	BlockId m_state_id;
+	explicit Continuation(unsigned int address) throw (): Pointer(address) {}
 };
-
-template <typename ContinuationType, typename ContinuableType>
-Object ContinuableCall(ContinuationOp op,
-                       BlockId &state_id,
-                       ContinuableType &continuable,
-                       const TupleObject *args,
-                       const DictObject *kwargs);
 
 } // namespace
 

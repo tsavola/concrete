@@ -12,9 +12,9 @@
 #include <sys/socket.h>
 #include <netdb.h>
 
-#include <concrete/block.hpp>
 #include <concrete/context.hpp>
-#include <concrete/execute.hpp>
+#include <concrete/continuation.hpp>
+#include <concrete/execution.hpp>
 #include <concrete/io/buffer.hpp>
 #include <concrete/io/resolve.hpp>
 #include <concrete/io/socket.hpp>
@@ -23,87 +23,81 @@
 #include <concrete/objects/long.hpp>
 #include <concrete/objects/module.hpp>
 #include <concrete/objects/tuple.hpp>
-#include <concrete/util/portable.hpp>
+#include <concrete/portable.hpp>
 #include <concrete/resource.hpp>
+#include <concrete/util/noncopyable.hpp>
 #include <concrete/util/trace.hpp>
 
 namespace concrete {
 
-class ForkState: public Block {
-public:
-	~ForkState() throw ()
-	{
-		reset();
-	}
+class Fork: public Continuation {
+	friend class Pointer;
 
-	void reset() throw ()
-	{
-		if (resolve_id) {
-			Context::DeleteResource(resolve_id);
-			resolve_id = 0;
-		}
-
-		if (socket_id) {
-			Context::DeleteResource(socket_id);
-			socket_id = 0;
-		}
-
-		if (buffer_id) {
-			Context::DeleteResource(buffer_id);
-			buffer_id = 0;
-		}
-	}
-
-	bool lost() const throw ()
-	{
-		return Context::ResourceLost(resolve_id) ||
-		       Context::ResourceLost(socket_id) ||
-		       Context::ResourceLost(buffer_id);
-	}
-
-	Portable<Object> host;
-	Portable<Object> port;
-	Portable<ResourceId> resolve_id;
-	Portable<ResourceId> socket_id;
-	Portable<ResourceId> buffer_id;
-	Portable<uint8_t> mode;
-	Portable<bool> forked;
-
-} CONCRETE_PACKED;
-
-class Fork: public Continuable {
-	enum Mode {
+protected:
+	enum {
 		ResolveMode,
 		ConnectMode,
 		WriteMode,
 	};
 
+	struct Data: Noncopyable {
+		~Data() throw ()
+		{
+			reset();
+		}
+
+		void reset() throw ()
+		{
+			resolve.destroy();
+			socket.destroy();
+			buffer.destroy();
+		}
+
+		bool is_lost() const throw ()
+		{
+			return resolve.is_lost() || socket.is_lost() || buffer.is_lost();
+		}
+
+		Portable<Object>                  host;
+		Portable<Object>                  port;
+		PortableResource<ResolveResource> resolve;
+		PortableResource<SocketResource>  socket;
+		PortableResource<BufferResource>  buffer;
+		Portable<uint8_t>                 mode;
+		Portable<bool>                    forked;
+	} CONCRETE_PACKED;
+
+	explicit Fork(unsigned int address) throw ():
+		Continuation(address)
+	{
+	}
+
 public:
-	bool call(Object &result, const TupleObject &args, const DictObject &kwargs) const
+	bool initiate(Object &result, const TupleObject &args, const DictObject &kwargs) const
 	{
 		auto address = args.get_item(0).require<TupleObject>();
 		auto host = address.get_item(0).require<StringObject>();
 		auto port = address.get_item(1).require<LongObject>().str();
 
-		state()->host = host;
-		state()->port = port;
+		data()->host = host;
+		data()->port = port;
 
-		init_resolve();
+		initiate_resolve();
 		return false;
 	}
 
 	bool resume(Object &result) const
 	{
-		if (state()->forked)
+		if (data()->forked)
 			return true;
 
-		if (state()->lost()) {
-			state()->reset();
-			init_resolve();
+		if (data()->is_lost()) {
+			data()->reset();
+			initiate_resolve();
 			return false;
 		}
 
-		switch (state()->mode) {
+		switch (data()->mode) {
 		case ResolveMode:
 			resume_resolve();
 			return false;
@@ -116,47 +110,44 @@ public:
 			return resume_write(result);
 
 		default:
-			throw IntegrityError(state());
+			throw IntegrityError(address());
 		}
 	}
 
 private:
-	void init_resolve() const
+	void initiate_resolve() const
 	{
-		Trace("fork: init resolve");
+		Trace("fork: initiate resolve");
 
-		auto resolve = Context::NewResource<ResolveResource>(
-			state()->host->cast<StringObject>().string(),
-			state()->port->cast<StringObject>().string());
+		auto host = data()->host->cast<StringObject>().string();
+		auto port = data()->port->cast<StringObject>().string();
 
-		state()->resolve_id = resolve.id;
-		state()->mode = ResolveMode;
+		data()->resolve.create(host, port);
+		data()->mode = ResolveMode;
 
-		resolve.resource.wait_addrinfo();
+		data()->resolve->wait_addrinfo();
 	}
 
 	void resume_resolve() const
 	{
 		Trace("fork: resume resolve");
 
-		auto &resolve = Context::Resource<ResolveResource>(state()->resolve_id);
-
-		auto addrinfo = resolve.addrinfo();
+		auto addrinfo = data()->resolve->addrinfo();
 		if (addrinfo)
-			init_connect(addrinfo);
+			initiate_connect(addrinfo);
 		else
-			resolve.wait_addrinfo();
+			data()->resolve->wait_addrinfo();
 	}
 
-	void init_connect(const struct addrinfo *addrinfo) const
+	void initiate_connect(const struct addrinfo *addrinfo) const
 	{
-		Trace("fork: init connect");
+		Trace("fork: initiate connect");
 
 		int family;
 		socklen_t addrlen = 0;
 		struct sockaddr_storage addr;
 
-		for (auto i = addrinfo; i; i = i->ai_next) {
+		for (auto i = addrinfo; i; i = i->ai_next)
 			if (i->ai_socktype == SOCK_STREAM) {
 				family = i->ai_family;
 				addrlen = i->ai_addrlen;
@@ -164,76 +155,57 @@ private:
 
 				break;
 			}
-		}
 
 		if (addrlen == 0)
 			throw ResourceError();
 
-		auto socket = Context::NewResource<SocketResource>(family, SOCK_STREAM);
+		data()->socket.create(family, SOCK_STREAM);
+		data()->mode = ConnectMode;
 
-		state()->socket_id = socket.id;
-		state()->mode = ConnectMode;
-
-		socket.resource.wait_connection(
-			reinterpret_cast<struct sockaddr *> (&addr),
-			addrlen);
+		data()->socket->wait_connection(reinterpret_cast<struct sockaddr *> (&addr), addrlen);
 	}
 
 	void resume_connect() const
 	{
 		Trace("fork: resume connect");
 
-		auto &socket = Context::Resource<SocketResource>(state()->socket_id);
-
-		if (socket.connected())
-			init_write();
+		if (data()->socket->connected())
+			initiate_write();
 		else
-			socket.wait_connection();
+			data()->socket->wait_connection();
 	}
 
-	void init_write() const
+	void initiate_write() const
 	{
-		Trace("fork: init write");
+		Trace("fork: initiate write");
 
-		auto context = Context::Active().snapshot();
-		auto executor = Executor::Active().snapshot();
+		data()->buffer.create();
+		data()->mode = WriteMode;
 
-		auto buffer = Context::NewResource<BufferResource>(
-			context.head_size() + context.data_size() + executor.size());
+		auto snapshot = Arena::Active().snapshot();
 
-		char *data = buffer.resource.data();
-		size_t offset = 0;
+		auto buffer = *data()->buffer;
+		buffer->reset(snapshot.size);
 
-		state()->forked = true;
+		data()->forked = true;
+		std::memcpy(buffer->data(), snapshot.base, snapshot.size);
+		data()->forked = false;
 
-		std::memcpy(data + offset, context.head_ptr(), context.head_size());
-		offset += context.head_size();
-		std::memcpy(data + offset, context.data_ptr(), context.data_size());
-		offset += context.data_size();
-		std::memcpy(data + offset, executor.ptr(), executor.size());
-
-		state()->forked = false;
-
-		state()->buffer_id = buffer.id;
-		state()->mode = WriteMode;
-
-		auto &socket = Context::Resource<SocketResource>(state()->socket_id);
-
-		socket.wait_writability();
+		data()->socket->wait_writability();
 	}
 
 	bool resume_write(Object &result) const
 	{
 		Trace("fork: resume write");
 
-		auto &socket = Context::Resource<SocketResource>(state()->socket_id);
-		auto &buffer = Context::Resource<BufferResource>(state()->buffer_id);
+		auto socket = *data()->socket;
+		auto buffer = *data()->buffer;
 
-		if (!buffer.write(socket))
+		if (!buffer->write(*socket))
 			throw ResourceError();
 
-		if (buffer.remaining()) {
-			socket.wait_writability();
+		if (buffer->remaining()) {
+			socket->wait_writability();
 			return false;
 		} else {
 			result = LongObject::New(1);
@@ -241,12 +213,12 @@ private:
 		}
 	}
 
-	ForkState *state() const
+	Data *data() const
 	{
-		return state_pointer<ForkState>();
+		return data_cast<Data>();
 	}
 };
 
 } // namespace
 
-CONCRETE_INTERNAL_CONTINUABLE(ConcreteModule_Fork, Fork, ForkState)
+CONCRETE_INTERNAL_CONTINUATION(ConcreteModule_Fork, Fork)

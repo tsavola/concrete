@@ -7,71 +7,56 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#include "bytes-content.hpp"
+#include "bytes-data.hpp"
 
 #include <cstring>
 
-#include <concrete/context.hpp>
+#include <concrete/arena.hpp>
+#include <concrete/context-data.hpp>
 #include <concrete/objects/string.hpp>
 #include <concrete/objects/type.hpp>
 
 namespace concrete {
 
-void BytesObjectTypeInit(const TypeObject &type)
-{
-	type.init_builtin(StringObject::New("bytes"));
-}
-
-BytesObject::Content::Content(const TypeObject &type, const uint8_t *data_):
-	Object::Content(type)
+BytesObject::Data::Data(const TypeObject &type, const uint8_t *data_):
+	Object::Data(type)
 {
 	std::memcpy(data, data_, size());
 }
 
-size_t BytesObject::Content::size() const throw ()
+size_t BytesObject::Data::size() const throw ()
 {
-	return block_size() - sizeof (Object::Content);
+	return Arena::AllocationSize(this) - sizeof (Data);
 }
 
 TypeObject BytesObject::Type()
 {
-	return Context::SystemObjects()->bytes_type;
+	return Context::Active().data()->bytes_type;
 }
 
 BytesObject BytesObject::New(const uint8_t *data, size_t size)
 {
-	return Context::NewCustomSizeBlock<Content>(sizeof (Object::Content) + size, Type(), data);
-}
-
-BytesObject::BytesObject(BlockId id) throw ():
-	Object(id)
-{
-}
-
-BytesObject::BytesObject(const BytesObject &other) throw ():
-	Object(other)
-{
-}
-
-BytesObject &BytesObject::operator=(const BytesObject &other) throw ()
-{
-	Object::operator=(other);
-	return *this;
+	return NewCustomSizeObject<BytesObject>(sizeof (Data) + size, data);
 }
 
 size_t BytesObject::size() const
 {
-	return content()->size();
+	return data()->size();
 }
 
-const uint8_t *BytesObject::data() const
+const uint8_t *BytesObject::c_data() const
 {
-	return content()->data;
+	return data()->data;
 }
 
-BytesObject::Content *BytesObject::content() const
+BytesObject::Data *BytesObject::data() const
 {
-	return content_pointer<Content>();
+	return data_cast<Data>();
+}
+
+void BytesObjectTypeInit(const TypeObject &type)
+{
+	type.init_builtin(StringObject::New("bytes"));
 }
 
 } // namespace

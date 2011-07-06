@@ -15,22 +15,16 @@
 
 namespace concrete {
 
-template <typename ObjectType>
-BlockId Object::RawAccess::Extract(const ObjectType &object) throw ()
+template <typename ObjectType, typename... Args>
+ObjectType Object::NewObject(Args... args)
 {
-	return object.id();
+	return NewPointer<ObjectType>(ObjectType::Type(), args...);
 }
 
-template <typename ObjectType>
-ObjectType Object::RawAccess::Materialize(BlockId id) throw ()
+template <typename ObjectType, typename... Args>
+ObjectType Object::NewCustomSizeObject(size_t size, Args... args)
 {
-	return ObjectType(id);
-}
-
-template <typename ObjectType>
-ObjectType Object::RawAccess::Materialize(BlockId id, ObjectType *) throw ()
-{
-	return Materialize<ObjectType>(id);
+	return NewCustomSizePointer<ObjectType>(size, ObjectType::Type(), args...);
 }
 
 template <typename ObjectType>
@@ -41,25 +35,12 @@ bool Object::check() const
 }
 
 template <typename ObjectType>
-ObjectType Object::cast() const
-{
-	assert(check<ObjectType>());
-	return RawAccess::Materialize<ObjectType>(id());
-}
-
-template <typename ObjectType>
 ObjectType Object::require() const
 {
 	if (!check<ObjectType>())
 		throw TypeError(type());
 
-	return RawAccess::Materialize<ObjectType>(id());
-}
-
-template <typename ContentType>
-ContentType *Object::content_pointer() const
-{
-	return Context::BlockPointer<ContentType>(id());
+	return RawAccess::Materialize<ObjectType>(address());
 }
 
 } // namespace

@@ -12,16 +12,16 @@
 
 #include <sys/types.h>
 
-#include <concrete/resource.hpp>
+#include <concrete/util/noncopyable.hpp>
 
 namespace concrete {
 
-class FileResource: public Resource {
+class FileResource: Noncopyable {
 public:
-	static int NonthrowingNonblock(int fd) throw ();
+	static int NonthrowingNonpointer(int fd) throw ();
 
 	explicit FileResource(int fd);
-	virtual ~FileResource() throw ();
+	~FileResource() throw ();
 
 	int fd() const throw ();
 

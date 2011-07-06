@@ -17,11 +17,6 @@
 
 namespace concrete {
 
-typedef Object InternalFunction(ContinuationOp op,
-                                BlockId &continuation,
-                                const TupleObject *args,
-                                const DictObject *kwargs);
-
 namespace internal {
 	enum SymbolId {
 #		define CONCRETE_INTERNAL_SYMBOL(Symbol)  Symbol,
@@ -30,76 +25,79 @@ namespace internal {
 	};
 }
 
-namespace internal_symbol {
-#	define CONCRETE_INTERNAL_SYMBOL(Symbol)  InternalFunction Symbol;
-#	include <concrete/internals.hpp>
-#	undef CONCRETE_INTERNAL_SYMBOL
-}
-
 class InternalObject: public CallableObject {
+	friend class Pointer;
 	friend class Object;
-	friend class CallableObject;
 
 public:
+	typedef Object Function(Continuation &cont,
+                                Continuation::Stage stage,
+                                const TupleObject *args,
+                                const DictObject *kwargs);
+
 	static TypeObject Type();
 	static InternalObject New(internal::SymbolId symbol_id);
 
-	InternalObject(const InternalObject &other) throw ();
-	InternalObject &operator=(const InternalObject &other) throw ();
+	InternalObject(const InternalObject &other) throw (): CallableObject(other) {}
 
-	template <typename... Args> Object call(Args... args) const;
+	template <typename... Args> Object immediate_call(Args... args) const;
+
+	Object continuable_call(Continuation &cont,
+	                        Continuation::Stage stage,
+	                        const TupleObject *args = NULL,
+	                        const DictObject *kwargs = NULL) const;
 
 protected:
-	struct Content;
+	struct Data;
 
-	InternalObject(BlockId id) throw ();
+	explicit InternalObject(unsigned int address) throw (): CallableObject(address) {}
 
 private:
-	Object call_args(const TupleObject &args) const;
-	Content *content() const;
+	Object immediate_call_args(const TupleObject &args) const;
+
+	Data *data() const;
 };
 
 void InternalObjectTypeInit(const TypeObject &type);
+
+namespace internal_symbol {
+#	define CONCRETE_INTERNAL_SYMBOL(Symbol)  InternalObject::Function Symbol;
+#	include <concrete/internals.hpp>
+#	undef CONCRETE_INTERNAL_SYMBOL
+}
 
 } // namespace
 
 #define CONCRETE_INTERNAL_FUNCTION(Symbol, Function)                          \
 	concrete::Object concrete::internal_symbol::Symbol(                   \
-		ContinuationOp op,                                            \
-		BlockId &,                                                    \
+		Continuation &,                                               \
+		Continuation::Stage stage,                                    \
 		const TupleObject *args,                                      \
 		const DictObject *kwargs)                                     \
 	{                                                                     \
 		return Function(*args, *kwargs);                              \
 	}
 
-#define CONCRETE_INTERNAL_CONTINUABLE(Symbol,                                 \
-                                      ContinuableType,                        \
-                                      ContinuationType)                       \
+#define CONCRETE_INTERNAL_CONTINUATION(Symbol, ImplType)                      \
 	concrete::Object concrete::internal_symbol::Symbol(                   \
-		ContinuationOp op,                                            \
-		BlockId &continuation_id,                                     \
+		Continuation &cont,                                           \
+		Continuation::Stage stage,                                    \
 		const TupleObject *args,                                      \
 		const DictObject *kwargs)                                     \
 	{                                                                     \
-		ContinuableType continuable;                                  \
-		return ContinuableCall<ContinuationType>(                     \
-			op, continuation_id, continuable, args, kwargs);      \
+		return Continuation::Call<ImplType>(                          \
+			cont, stage, args, kwargs);                           \
 	}
 
-#define CONCRETE_INTERNAL_CONTINUABLE_ARGS(Symbol,                            \
-                                           ContinuableType,                   \
-                                           ContinuationType,                  \
-                                           ContinuableArgs...)                \
+#define CONCRETE_INTERNAL_CONTINUATION_PARAMS(Symbol, ImplType, ImplParams...)\
 	concrete::Object concrete::internal_symbol::Symbol(                   \
-		ContinuationOp op,                                            \
-		BlockId &continuation_id,                                     \
+		Continuation &cont,                                           \
+		Continuation::Stage stage,                                    \
 		const TupleObject *args,                                      \
 		const DictObject *kwargs)                                     \
 	{                                                                     \
-		ContinuableType continuable(ContinuableArgs);                 \
-		return ContinuableCall<ContinuationType>(                     \
-			op, continuation_id, continuable, args, kwargs);      \
+		return Continuation::Call<ImplType>(                          \
+			cont, stage, args, kwargs, ImplParams);               \
 	}
 
 #include "internal-inline.hpp"

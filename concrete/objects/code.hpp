@@ -20,33 +20,35 @@
 namespace concrete {
 
 class CodeObject: public Object {
+	friend class Pointer;
 	friend class Object;
 
 public:
 	static TypeObject Type();
+
 	static CodeObject New(unsigned int stacksize,
-	                      const BytesObject &code,
+	                      const BytesObject &bytecode,
 	                      const TupleObject &consts,
 	                      const TupleObject &names,
 	                      const TupleObject &varnames);
+
 	static CodeObject Load(const void *data, size_t size);
 
-	CodeObject(const CodeObject &other) throw ();
-	CodeObject &operator=(const CodeObject &other) throw ();
+	CodeObject(const CodeObject &other) throw (): Object(other) {}
 
 	unsigned int stacksize() const;
-	BytesObject code() const;
+	BytesObject bytecode() const;
 	TupleObject consts() const;
 	TupleObject names() const;
 	TupleObject varnames() const;
 
 protected:
-	struct Content;
+	struct Data;
+
+	explicit CodeObject(unsigned int address) throw (): Object(address) {}
 
 private:
-	CodeObject(BlockId id) throw ();
-
-	Content *content() const;
+	Data *data() const;
 };
 
 void CodeObjectTypeInit(const TypeObject &type);

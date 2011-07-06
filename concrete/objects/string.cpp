@@ -7,41 +7,33 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#include "string-content.hpp"
+#include "string-data.hpp"
 
 #include <cstdint>
 #include <cstdint>
 #include <cstring>
 
-#include <concrete/context.hpp>
+#include <concrete/arena.hpp>
+#include <concrete/context-data.hpp>
 #include <concrete/exception.hpp>
 #include <concrete/objects/internal.hpp>
 #include <concrete/objects/type.hpp>
 
 namespace concrete {
 
-void StringObjectTypeInit(const TypeObject &type)
-{
-	type.init_builtin(StringObject::New("string"));
-
-	type.protocol().add   = InternalObject::New(internal::StringType_Add);
-	type.protocol().repr  = InternalObject::New(internal::StringType_Repr);
-	type.protocol().str   = InternalObject::New(internal::StringType_Str);
-}
-
-StringObject::Content::Content(const TypeObject &type, const char *data_):
-	Object::Content(type)
+StringObject::Data::Data(const TypeObject &type, const char *data_):
+	Object::Data(type)
 {
 	std::memcpy(data, data_, size());
 	init();
 }
 
-StringObject::Content::Content(const TypeObject &type):
-	Object::Content(type)
+StringObject::Data::Data(const TypeObject &type):
+	Object::Data(type)
 {
 }
 
-void StringObject::Content::init()
+void StringObject::Data::init()
 {
 	auto data_size = size();
 	size_t string_length = 0;
@@ -80,19 +72,19 @@ void StringObject::Content::init()
 	length = string_length;
 }
 
-size_t StringObject::Content::size() const throw ()
+size_t StringObject::Data::size() const throw ()
 {
-	return block_size() - sizeof (Content) - 1;
+	return Arena::AllocationSize(this) - sizeof (Data) - 1;
 }
 
 TypeObject StringObject::Type()
 {
-	return Context::SystemObjects()->string_type;
+	return Context::Active().data()->string_type;
 }
 
 StringObject StringObject::New(const char *data, size_t size)
 {
-	return Context::NewCustomSizeBlock<Content>(sizeof (Content) + size + 1, Type(), data);
+	return NewCustomSizeObject<StringObject>(sizeof (Data) + size + 1, data);
 }
 
 StringObject StringObject::New(const char *string)
@@ -107,28 +99,12 @@ StringObject StringObject::New(const std::string &string)
 
 StringObject StringObject::NewUninitialized(size_t size)
 {
-	return Context::NewCustomSizeBlock<Content>(sizeof (Content) + size + 1, Type());
-}
-
-StringObject::StringObject(BlockId id) throw ():
-	Object(id)
-{
-}
-
-StringObject::StringObject(const StringObject &other) throw ():
-	Object(other)
-{
-}
-
-StringObject &StringObject::operator=(const StringObject &other) throw ()
-{
-	Object::operator=(other);
-	return *this;
+	return NewCustomSizeObject<StringObject>(sizeof (Data) + size + 1);
 }
 
 void StringObject::init_uninitialized()
 {
-	content()->init();
+	data()->init();
 }
 
 bool StringObject::equals(const StringObject &other) const
@@ -136,38 +112,45 @@ bool StringObject::equals(const StringObject &other) const
 	if (operator==(other))
 		return true;
 
-	auto b1 = content();
-	auto b2 = other.content();
+	auto a = data();
+	auto b = other.data();
 
-	return b1->size() == b1->size() && std::memcmp(b1->data, b2->data, b1->size()) == 0;
+	return a->size() == b->size() && std::memcmp(a->data, b->data, a->size()) == 0;
 }
 
 size_t StringObject::size() const
 {
-	return content()->size();
+	return data()->size();
 }
 
 size_t StringObject::length() const
 {
-	return content()->length;
+	return data()->length;
 }
 
-char *StringObject::data() const
+char *StringObject::c_str() const
 {
-	auto c = content();
-	c->data[c->size()] = '\0';
-	return c->data;
+	data()->data[data()->size()] = '\0';
+	return data()->data;
 }
 
 std::string StringObject::string() const
 {
-	auto c = content();
-	return std::string(c->data, c->size());
+	return std::string(data()->data, data()->size());
 }
 
-StringObject::Content *StringObject::content() const
+StringObject::Data *StringObject::data() const
 {
-	return content_pointer<Content>();
+	return data_cast<Data>();
+}
+
+void StringObjectTypeInit(const TypeObject &type)
+{
+	type.init_builtin(StringObject::New("string"));
+
+	type.protocol()->add   = InternalObject::New(internal::StringType_Add);
+	type.protocol()->repr  = InternalObject::New(internal::StringType_Repr);
+	type.protocol()->str   = InternalObject::New(internal::StringType_Str);
 }
 
 static Object StringAdd(const TupleObject &args, const DictObject &kwargs)
@@ -185,10 +168,10 @@ static Object StringAdd(const TupleObject &args, const DictObject &kwargs)
 		return s1;
 
 	auto r = StringObject::NewUninitialized(s1size + s2size);
-	auto rdata = r.data();
+	auto r_mem = r.c_str();
 
-	std::memcpy(rdata, s1.data(), s1size);
-	std::memcpy(rdata + s1size, s2.data(), s2size);
+	std::memcpy(r_mem, s1.c_str(), s1size);
+	std::memcpy(r_mem + s1size, s2.c_str(), s2size);
 
 	r.init_uninitialized();
 
@@ -203,11 +186,11 @@ static Object StringRepr(const TupleObject &args, const DictObject &kwargs)
 
 	value += "'";
 
-	const char *data = self.data();
+	const char *str = self.c_str();
 	unsigned int size = self.size();
 
 	for (unsigned int i = 0; i < size; i++) {
-		switch (data[i]) {
+		switch (str[i]) {
 		case '\0':
 			value += "\\0";
 			break;
@@ -221,7 +204,7 @@ static Object StringRepr(const TupleObject &args, const DictObject &kwargs)
 			break;
 
 		default:
-			value += data[i];
+			value += str[i];
 			break;
 		}
 	}

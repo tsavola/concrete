@@ -10,75 +10,73 @@
 #ifndef CONCRETE_OBJECTS_OBJECT_PARTIAL_HPP
 #define CONCRETE_OBJECTS_OBJECT_PARTIAL_HPP
 
-#include <concrete/block.hpp>
+#include <concrete/pointer.hpp>
 
 namespace concrete {
 
+class NoneObject;
 class StringObject;
 class TypeObject;
+struct PortableObjectProtocol;
 
-class Object {
+class Object: public Pointer {
+	friend class Pointer;
+	friend class NoneObject;
+	friend class TypeObject;
+
 public:
-	struct RawAccess {
-		typedef BlockId RawType;
-
-		static BlockId Default() throw ();
-
-		template <typename ObjectType>
-		static BlockId Extract(const ObjectType &object) throw ();
-
-		template <typename ObjectType>
-		static ObjectType Materialize(BlockId id) throw ();
-
-		template <typename ObjectType>
-		static ObjectType Materialize(BlockId id, ObjectType *) throw ();
-
-		static void Ref(BlockId id) throw ();
-		static void Unref(BlockId id) throw ();
-	};
-
-	struct Protocol;
+	struct RawAccess;
 
 	static TypeObject Type();
 	static Object New();
 
-	Object();
+	Object() throw ();
 	Object(const Object &other) throw ();
 	~Object() throw ();
 
-	Object &operator=(const Object &other) throw ();
+	void operator=(const Object &other) throw ();
 
-	bool operator==(const Object &other) const throw ();
-	bool operator!=(const Object &other) const throw ();
-
-	BlockId id() const throw ();
+	operator bool() const throw ();
 
 	template <typename ObjectType> bool check() const;
-	template <typename ObjectType> ObjectType cast() const;
 	template <typename ObjectType> ObjectType require() const;
 
 	TypeObject type() const;
-	const Protocol &protocol() const;
+	const PortableObjectProtocol *protocol() const;
 
 	Object add(const Object &) const;
 	StringObject repr() const;
 	StringObject str() const;
 
 protected:
-	struct Content;
+	struct Data;
 
-	explicit Object(BlockId id) throw ();
+	template <typename ObjectType, typename... Args>
+	static ObjectType NewObject(Args... args);
 
-	template <typename ContentType> ContentType *content_pointer() const;
+	template <typename ObjectType, typename... Args>
+	static ObjectType NewCustomSizeObject(size_t size, Args... args);
+
+	explicit Object(unsigned int address) throw ();
 
 private:
-	static void Destroy(Content *content, BlockId id) throw ();
+	static Data *NonthrowingData(const Pointer &object) throw ();
+
+	static const Pointer &Referenced(const Pointer &object) throw ();
+
+	static void Destroy(unsigned int address, Data *data) throw ();
+
+	template <typename ObjectType>
+	static void TypedDestroy(unsigned int address, Data *data) throw ();
+
+	struct NoRefInit {};
+	Object(const Pointer &pointer, NoRefInit) throw (): Pointer(pointer) {}
 
 	void ref() const throw ();
 	void unref() const throw ();
-	Content *content() const;
 
-	BlockId m_id;
+	Data *data() const;
+	Data *nonthrowing_data() const throw ();
 };
 
 } // namespace

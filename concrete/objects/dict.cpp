@@ -7,57 +7,45 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#include "dict-content.hpp"
+#include "dict-data.hpp"
 
 #include <algorithm>
 #include <cassert>
 
-#include <concrete/context.hpp>
+#include <concrete/arena.hpp>
+#include <concrete/context-data.hpp>
 #include <concrete/exception.hpp>
-#include <concrete/objects/object-content.hpp>
+#include <concrete/objects/object.hpp>
 #include <concrete/objects/string.hpp>
 #include <concrete/objects/type.hpp>
+#include <concrete/portable.hpp>
 #include <concrete/util/packed.hpp>
-#include <concrete/util/portable.hpp>
 
 namespace concrete {
 
-void DictObjectTypeInit(const TypeObject &type)
-{
-	type.init_builtin(StringObject::New("dict"));
-
-	Context::SystemObjects()->dict_empty = DictObject::NewWithCapacity(0);
-}
-
-DictObject::Content::Item::Item(const Object &key, const Object &value):
+DictObject::Data::Item::Item(const Object &key, const Object &value):
 	key(key),
 	value(value)
 {
 }
 
-DictObject::Content::Content(const TypeObject &type):
-	Object::Content(type)
+DictObject::Data::Data(const TypeObject &type):
+	Object::Data(type)
 {
 }
 
-DictObject::Content::~Content() throw ()
+DictObject::Data::~Data() throw ()
 {
 	for (unsigned int i = std::min(uint32_t(size), capacity()); i-- > 0; )
 		items[i].~Item();
 }
 
-void DictObject::Content::verify_integrity() const
+unsigned int DictObject::Data::capacity() const throw ()
 {
-	if (uint32_t(size) > capacity())
-		throw IntegrityError(this);
+	return (Arena::AllocationSize(this) - sizeof (Data)) / sizeof (Item);
 }
 
-unsigned int DictObject::Content::capacity() const throw ()
-{
-	return (block_size() - sizeof (Content)) / sizeof (Item);
-}
-
-unsigned int DictObject::Content::find_item(const Object &key) const
+unsigned int DictObject::Data::find_item(const Object &key) const
 {
 	unsigned int i;
 
@@ -70,14 +58,12 @@ unsigned int DictObject::Content::find_item(const Object &key) const
 
 TypeObject DictObject::Type()
 {
-	return Context::SystemObjects()->dict_type;
+	return Context::Active().data()->dict_type;
 }
 
-DictObject DictObject::EmptySingleton()
+DictObject DictObject::NewEmpty()
 {
-	auto empty = Context::SystemObjects()->dict_empty->cast<DictObject>();
-	assert(empty.capacity() == 0);
-	return empty;
+	return NewWithCapacity(0);
 }
 
 DictObject DictObject::New()
@@ -87,49 +73,30 @@ DictObject DictObject::New()
 
 DictObject DictObject::NewWithCapacity(unsigned int capacity)
 {
-	return Context::NewCustomSizeBlock<Content>(
-		sizeof (Content) + sizeof (Content::Item) * capacity,
-		Type());
-}
-
-DictObject::DictObject(BlockId id) throw ():
-	Object(id)
-{
-}
-
-DictObject::DictObject(const DictObject &other) throw ():
-	Object(other)
-{
-}
-
-DictObject &DictObject::operator=(const DictObject &other) throw ()
-{
-	Object::operator=(other);
-	return *this;
+	return NewCustomSizeObject<DictObject>(sizeof (Data) + sizeof (Data::Item) * capacity);
 }
 
 unsigned int DictObject::size() const
 {
-	return content()->size;
+	return data()->size;
 }
 
 void DictObject::set_item(const Object &key, const Object &value) const
 {
 	key.require<StringObject>();
 
-	auto b = content();
-	auto i = b->find_item(key);
+	auto i = data()->find_item(key);
 
-	if (i < b->size) {
-		b->items[i].value = value;
+	if (i < data()->size) {
+		data()->items[i].value = value;
 		return;
 	}
 
-	if (i == b->capacity())
+	if (i == data()->capacity())
 		throw RuntimeError("dict capacity exceeded");
 
-	new (&b->items[i]) Content::Item(key, value);
-	b->size = i + 1;
+	new (&data()->items[i]) Data::Item(key, value);
+	data()->size = i + 1;
 }
 
 Object DictObject::get_item(const Object &key) const
@@ -147,34 +114,39 @@ bool DictObject::get_item(const Object &key, Object &value) const
 	if (!key.check<StringObject>())
 		return false;
 
-	auto b = content();
-	auto i = b->find_item(key);
+	auto i = data()->find_item(key);
 
-	if (i == b->size)
+	if (i == data()->size)
 		return false;
 
-	value = b->items[i].value;
+	value = data()->items[i].value;
 	return true;
 }
 
 void DictObject::copy_to(const DictObject &target) const
 {
-	for (unsigned int i = 0; i < size(); i++) {
-		auto b = content();
-		target.set_item(b->items[i].key, b->items[i].value);
-	}
+	for (unsigned int i = 0; i < size(); i++)
+		target.set_item(data()->items[i].key, data()->items[i].value);
 }
 
 unsigned int DictObject::capacity() const
 {
-	return content()->capacity();
+	return data()->capacity();
 }
 
-DictObject::Content *DictObject::content() const
+DictObject::Data *DictObject::data() const
 {
-	auto block = content_pointer<Content>();
-	block->verify_integrity();
-	return block;
+	auto c = data_cast<Data>();
+
+	if (*c->size > c->capacity())
+		throw IntegrityError(address());
+
+	return c;
+}
+
+void DictObjectTypeInit(const TypeObject &type)
+{
+	type.init_builtin(StringObject::New("dict"));
 }
 
 } // namespace

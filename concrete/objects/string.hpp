@@ -18,6 +18,7 @@
 namespace concrete {
 
 class StringObject: public Object {
+	friend class Pointer;
 	friend class Object;
 
 public:
@@ -28,24 +29,23 @@ public:
 	static StringObject New(const std::string &string);
 	static StringObject NewUninitialized(size_t size);
 
-	StringObject(const StringObject &other) throw ();
-	StringObject &operator=(const StringObject &other) throw ();
+	StringObject(const StringObject &other) throw (): Object(other) {}
 
 	void init_uninitialized();
 
 	bool equals(const StringObject &other) const;
 	size_t size() const;
 	size_t length() const;
-	char *data() const;
+	char *c_str() const;
 	std::string string() const;
 
 protected:
-	struct Content;
+	struct Data;
+
+	explicit StringObject(unsigned int address) throw (): Object(address) {}
 
 private:
-	StringObject(BlockId id) throw ();
-
-	Content *content() const;
+	Data *data() const;
 };
 
 void StringObjectTypeInit(const TypeObject &type);

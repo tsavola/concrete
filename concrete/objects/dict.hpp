@@ -15,17 +15,17 @@
 namespace concrete {
 
 class DictObject: public Object {
+	friend class Pointer;
 	friend class Object;
 
 public:
 	static TypeObject Type();
 
-	static DictObject EmptySingleton();
+	static DictObject NewEmpty();
 	static DictObject New();
 	static DictObject NewWithCapacity(unsigned int capacity);
 
-	DictObject(const DictObject &other) throw ();
-	DictObject &operator=(const DictObject &other) throw ();
+	DictObject(const DictObject &other) throw (): Object(other) {}
 
 	unsigned int size() const;
 	void set_item(const Object &key, const Object &value) const;
@@ -34,13 +34,13 @@ public:
 	void copy_to(const DictObject &target) const;
 
 protected:
-	struct Content;
+	struct Data;
+
+	explicit DictObject(unsigned int address) throw (): Object(address) {}
 
 private:
-	DictObject(BlockId id) throw ();
-
 	unsigned int capacity() const;
-	Content *content() const;
+	Data *data() const;
 };
 
 void DictObjectTypeInit(const TypeObject &type);

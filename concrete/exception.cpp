@@ -15,50 +15,25 @@
 namespace concrete {
 
 // TODO
-Exception::Exception(const Object &args) throw ():
+CodeException::CodeException(const Object &args) throw ():
 	m_repr(args.repr())
 {
 	Backtrace();
 }
 
-Exception::Exception(const StringObject &repr, int) throw ():
+CodeException::CodeException(const StringObject &repr, int) throw ():
 	m_repr(repr)
 {
 	Backtrace();
 }
 
-Exception::Exception(const Exception &other) throw ():
-	m_repr(other.m_repr)
-{
-}
-
-Exception::~Exception() throw ()
-{
-}
-
-Exception &Exception::operator=(const Exception &other) throw ()
-{
-	m_repr = other.m_repr;
-	return *this;
-}
-
-const char *Exception::what() const throw ()
-{
-	return m_repr.data();
-}
-
 TypeError::TypeError(const TypeObject &type) throw ():
-	Exception(type.name(), 0)
-{
-}
-
-KeyError::KeyError(const Object &key) throw ():
-	Exception(key)
+	CodeException(type.name(), int())
 {
 }
 
 RuntimeError::RuntimeError(const char *message) throw ():
-	Exception(StringObject::New(message), 0)
+	CodeException(StringObject::New(message), 0)
 {
 }
 

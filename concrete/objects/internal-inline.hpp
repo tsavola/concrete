@@ -10,9 +10,9 @@
 namespace concrete {
 
 template <typename... Args>
-Object InternalObject::call(Args... args) const
+Object InternalObject::immediate_call(Args... args) const
 {
-	return call_args(TupleObject::New(args...));
+	return immediate_call_args(TupleObject::New(args...));
 }
 
 } // namespace

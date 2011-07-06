@@ -17,24 +17,24 @@
 namespace concrete {
 
 class LongObject: public Object {
+	friend class Pointer;
 	friend class Object;
 
 public:
 	static TypeObject Type();
 	static LongObject New(int64_t value);
 
-	LongObject(const LongObject &other) throw ();
-	LongObject &operator=(const LongObject &other) throw ();
+	LongObject(const LongObject &other) throw (): Object(other) {}
 
 	int64_t value() const;
 
 protected:
-	struct Content;
+	struct Data;
+
+	explicit LongObject(unsigned int address) throw (): Object(address) {}
 
 private:
-	LongObject(BlockId id) throw ();
-
-	Content *content() const;
+	Data *data() const;
 };
 
 void LongObjectTypeInit(const TypeObject &type);

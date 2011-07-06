@@ -10,27 +10,20 @@
 #include "resource.hpp"
 
 #include <cassert>
-#include <map>
+#include <memory>
 #include <utility>
 
 #include <event.h>
 
+#include <concrete/context.hpp>
 #include <concrete/util/backtrace.hpp>
 #include <concrete/util/trace.hpp>
 
 namespace concrete {
 
-Resource::~Resource() throw ()
-{
-}
-
 ResourceError::ResourceError() throw ()
 {
 	Backtrace();
-}
-
-ResourceError::~ResourceError() throw ()
-{
 }
 
 const char *ResourceError::what() const throw ()
@@ -38,204 +31,106 @@ const char *ResourceError::what() const throw ()
 	return "Resource access error";
 }
 
-class ResourceManager::Impl {
-	typedef std::map<ResourceId, Resource *> ResourceMap;
-
-public:
-	Impl():
-		m_lost_begin(0),
-		m_lost_end(0),
-		m_event_base(event_base_new()),
-		m_suspended(false)
-	{
-		if (m_event_base == NULL)
-			throw ResourceError();
-	}
-
-	Impl(const Snapshot &snapshot):
-		m_lost_begin(snapshot.begin),
-		m_lost_end(snapshot.end),
-		m_event_base(event_base_new()),
-		m_suspended(false)
-	{
-		if (m_event_base == NULL)
-			throw ResourceError();
-	}
-
-	~Impl() throw ()
-	{
-		for (auto i = m_resources.begin(); i != m_resources.end(); ++i)
-			delete i->second;
-
-		event_base_free(m_event_base);
-	}
-
-	Snapshot snapshot() const throw ()
-	{
-		ResourceId begin = m_lost_begin;
-		ResourceId end = m_lost_end;
-
-		if (begin == end) {
-			if (m_resources.empty()) {
-				begin = 0;
-				end = 0;
-			} else {
-				begin = m_resources.begin()->first;
-				end = m_resources.rbegin()->first + 1;
-			}
-		} else {
-			if (!m_resources.empty())
-				end = m_resources.rbegin()->first + 1;
-		}
-
-		return Snapshot(begin, end);
-	}
-
-	ResourceId append_resource(Resource *resource)
-	{
-		typedef std::pair<ResourceId, Resource *> Pair;
-
-		ResourceId id = 1;
-		auto i = m_resources.end();
-
-		if (!m_resources.empty()) {
-			--i;
-			id = i->first + 1;
-		}
-
-		m_resources.insert(i, Pair(id, resource));
-
-		assert(id);
-
-		return id;
-	}
-
-	Resource *find_resource(ResourceId id) const throw ()
-	{
-		auto i = m_resources.find(id);
-		if (i == m_resources.end())
-			return NULL;
-
-		return i->second;
-	}
-
-	void delete_resource(ResourceId id) throw ()
-	{
-		if (id == 0)
-			return;
-
-		auto i = m_resources.find(id);
-		if (i == m_resources.end())
-			return;
-
-		delete i->second;
-		m_resources.erase(i);
-	}
-
-	bool resource_lost(ResourceId id) const throw ()
-	{
-		if (id == 0)
-			return false;
-
-		return id >= m_lost_begin && id < m_lost_end;
-	}
-
-	void wait_event(int fd, short events)
-	{
-		assert(!m_suspended);
-
-		if (event_base_once(m_event_base, fd, events, event_callback, this, NULL) < 0)
-			throw ResourceError();
-
-		m_suspended = true;
-
-		Trace("suspended");
-	}
-
-	void poll_events()
-	{
-		if (m_suspended && event_base_loop(m_event_base, EVLOOP_ONCE) < 0)
-			throw ResourceError();
-	}
-
-private:
-	static void event_callback(int fd, short events, void *arg)
-	{
-		auto impl = reinterpret_cast<Impl *> (arg);
-
-		assert(impl->m_suspended);
-		impl->m_suspended = false;
-
-		Trace("resumed");
-	}
-
-	const ResourceId m_lost_begin;
-	const ResourceId m_lost_end;
-	ResourceMap m_resources;
-	struct event_base *const m_event_base;
-	bool m_suspended;
-};
-
-ResourceManager::Snapshot::Snapshot() throw ():
-	begin(0),
-	end(0)
+ResourceSlot ResourceSlot::New()
 {
+	return NewPointer<ResourceSlot>();
 }
 
-ResourceManager::Snapshot::Snapshot(ResourceId begin, ResourceId end) throw ():
-	begin(begin),
-	end(end)
+void ResourceSlot::Destroy(ResourceSlot *ptr) throw ()
 {
+	ptr->destroy();
+}
+
+void ResourceSlot::destroy() throw ()
+{
+	DestroyPointer(*this);
+}
+
+unsigned int ResourceSlot::key() const throw ()
+{
+	return address();
+}
+
+ResourceManager &ResourceManager::Active() throw ()
+{
+	return Context::Active().resource_manager();
 }
 
 ResourceManager::ResourceManager():
-	m_impl(new Impl)
+	m_event_base(event_base_new())
 {
-}
-
-ResourceManager::ResourceManager(const Snapshot &snapshot):
-	m_impl(new Impl(snapshot))
-{
+	if (m_event_base == NULL)
+		throw ResourceError();
 }
 
 ResourceManager::~ResourceManager() throw ()
 {
-	delete m_impl;
+	for (auto i = m_wrap_map.begin(); i != m_wrap_map.end(); ++i)
+		delete i->second;
+
+	event_base_free(m_event_base);
 }
 
-ResourceManager::Snapshot ResourceManager::snapshot() const throw ()
+ResourceSlot ResourceManager::add_resource(VirtualWrap *wrap)
 {
-	return m_impl->snapshot();
+	ResourceSlot slot = ResourceSlot::New();
+
+	std::unique_ptr<ResourceSlot, void (*)(ResourceSlot *)> slot_deleter(
+		&slot, ResourceSlot::Destroy);
+
+	m_wrap_map[slot.key()] = wrap;
+
+	slot_deleter.release();
+
+	return slot;
 }
 
-ResourceId ResourceManager::append_resource(Resource *resource)
+ResourceManager::VirtualWrap *ResourceManager::find_resource(ResourceSlot slot) const throw ()
 {
-	return m_impl->append_resource(resource);
+	auto i = m_wrap_map.find(slot.key());
+	if (i != m_wrap_map.end())
+		return i->second;
+
+	return NULL;
 }
 
-Resource *ResourceManager::find_resource(ResourceId id) const throw ()
+void ResourceManager::destroy_resource(ResourceSlot slot) throw ()
 {
-	return m_impl->find_resource(id);
+	if (slot) {
+		auto i = m_wrap_map.find(slot.key());
+		if (i != m_wrap_map.end()) {
+			delete i->second;
+			m_wrap_map.erase(i);
+		}
+
+		slot.destroy();
+	}
 }
 
-void ResourceManager::delete_resource(ResourceId id) throw ()
+bool ResourceManager::is_resource_lost(ResourceSlot slot) const throw ()
 {
-	m_impl->delete_resource(id);
+	return m_wrap_map.find(slot.key()) == m_wrap_map.end();
 }
 
-bool ResourceManager::resource_lost(ResourceId id) const throw ()
+void ResourceManager::wait_event(int fd, short events, EventCallback *callback)
 {
-	return m_impl->resource_lost(id);
-}
+	if (event_base_once(m_event_base, fd, events, event_callback, callback, NULL) < 0)
+		throw ResourceError();
 
-void ResourceManager::wait_event(int fd, short events)
-{
-	m_impl->wait_event(fd, events);
+	Trace("suspended");
 }
 
 void ResourceManager::poll_events()
 {
-	m_impl->poll_events();
+	if (event_base_loop(m_event_base, EVLOOP_ONCE) < 0)
+		throw ResourceError();
+}
+
+void ResourceManager::event_callback(int fd, short events, void *arg)
+{
+	Trace("resumed");
+
+	reinterpret_cast<EventCallback *> (arg)->resume();
 }
 
 } // namespace

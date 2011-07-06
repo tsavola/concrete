@@ -7,30 +7,29 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#ifndef CONCRETE_OBJECTS_CODE_CONTENT_HPP
-#define CONCRETE_OBJECTS_CODE_CONTENT_HPP
+#ifndef CONCRETE_OBJECTS_CODE_DATA_HPP
+#define CONCRETE_OBJECTS_CODE_DATA_HPP
 
 #include "code.hpp"
 
-#include <concrete/objects/object-content.hpp>
-#include <concrete/util/portable.hpp>
+#include <concrete/objects/object-data.hpp>
+#include <concrete/portable.hpp>
 
 namespace concrete {
 
-struct CodeObject::Content: Object::Content {
-	Portable<uint32_t> stacksize;
-	Portable<BytesObject> code;
-	Portable<TupleObject> consts;
-	Portable<TupleObject> names;
-	Portable<TupleObject> varnames;
-
-	Content(const TypeObject &type,
+struct CodeObject::Data: Object::Data {
+	Data(const TypeObject &type,
 	        unsigned int stacksize,
 	        const BytesObject &code,
 	        const TupleObject &consts,
 	        const TupleObject &names,
 	        const TupleObject &varnames);
 
+	Portable<uint32_t>    stacksize;
+	Portable<BytesObject> bytecode;
+	Portable<TupleObject> consts;
+	Portable<TupleObject> names;
+	Portable<TupleObject> varnames;
 } CONCRETE_PACKED;
 
 } // namespace

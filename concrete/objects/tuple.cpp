@@ -7,96 +7,76 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#include "tuple-content.hpp"
+#include "tuple-data.hpp"
 
-#include <concrete/context.hpp>
+#include <concrete/context-data.hpp>
 #include <concrete/exception.hpp>
 #include <concrete/objects/string.hpp>
 #include <concrete/objects/type.hpp>
 
 namespace concrete {
 
-void TupleObjectTypeInit(const TypeObject &type)
-{
-	type.init_builtin(StringObject::New("tuple"));
-
-	Context::SystemObjects()->tuple_empty = TupleObject::NewWithSize(0);
-}
-
-TupleObject::Content::Content(const TypeObject &type):
-	Object::Content(type)
+TupleObject::Data::Data(const TypeObject &type):
+	Object::Data(type)
 {
 	for (unsigned int i = 0; i < size(); i++)
 		new (&items[i]) Portable<Object>();
 }
 
-TupleObject::Content::~Content() throw ()
+TupleObject::Data::~Data() throw ()
 {
 	for (unsigned int i = size(); i-- > 0; )
 		items[i].~Portable<Object>();
 }
 
-unsigned int TupleObject::Content::size() const throw ()
+unsigned int TupleObject::Data::size() const throw ()
 {
-	return (block_size() - sizeof (Content)) / sizeof (Portable<Object>);
+	return (Arena::AllocationSize(this) - sizeof (Data)) / sizeof (Portable<Object>);
 }
 
 TypeObject TupleObject::Type()
 {
-	return Context::SystemObjects()->tuple_type;
+	return Context::Active().data()->tuple_type;
 }
 
 TupleObject TupleObject::New()
 {
-	return Context::SystemObjects()->tuple_empty->cast<TupleObject>();
+	return Context::Active().data()->tuple_empty->cast<TupleObject>();
 }
 
 TupleObject TupleObject::NewWithSize(unsigned int size)
 {
-	return Context::NewCustomSizeBlock<Content>(
-		sizeof (Content) + sizeof (Portable<Object>) * size,
-		Type());
-}
-
-TupleObject::TupleObject(BlockId id) throw ():
-	Object(id)
-{
-}
-
-TupleObject::TupleObject(const TupleObject &other) throw ():
-	Object(other)
-{
-}
-
-TupleObject &TupleObject::operator=(const TupleObject &other) throw ()
-{
-	Object::operator=(other);
-	return *this;
+	return NewCustomSizeObject<TupleObject>(sizeof (Data) + sizeof (Portable<Object>) * size);
 }
 
 void TupleObject::init_item(unsigned int index, const Object &item)
 {
-	auto c = content();
-	assert(index < c->size());
-	c->items[index] = item;
+	assert(index < data()->size());
+	data()->items[index] = item;
 }
 
 unsigned int TupleObject::size() const
 {
-	return content()->size();
+	return data()->size();
 }
 
 Object TupleObject::get_item(unsigned int index) const
 {
-	auto c = content();
-	if (index >= c->size())
+	if (index >= data()->size())
 		throw RuntimeError("tuple index out of bounds");
-	return c->items[index];
+	return data()->items[index];
 }
 
-TupleObject::Content *TupleObject::content() const
+TupleObject::Data *TupleObject::data() const
 {
-	return content_pointer<Content>();
+	return data_cast<Data>();
+}
+
+void TupleObjectTypeInit(const TypeObject &type)
+{
+	type.init_builtin(StringObject::New("tuple"));
+
+	Context::Active().data()->tuple_empty = TupleObject::NewWithSize(0);
 }
 
 } // namespace

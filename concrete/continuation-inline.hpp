@@ -9,57 +9,47 @@
 
 #include <cassert>
 
-#include <concrete/context.hpp>
+#include <concrete/util/trace.hpp>
 
 namespace concrete {
 
-template <typename StateType>
-StateType *Continuable::state_pointer() const
+template <typename ImplType, typename... ImplParams>
+Object Continuation::Call(Continuation &cont,
+                          Stage stage,
+                          const TupleObject *args,
+                          const DictObject *kwargs,
+                          ImplParams... impl_params)
 {
-	return Context::BlockPointer<StateType>(m_state_id);
-}
-
-template <typename ContinuationType, typename ContinuableType>
-Object ContinuableCall(ContinuationOp op,
-                       BlockId &state_id,
-                       ContinuableType &continuable,
-                       const TupleObject *args,
-                       const DictObject *kwargs)
-{
+	ImplType impl = cont.cast<ImplType>();
 	bool done = false;
 	Object result;
 
-	switch (op) {
-	case InitContinuation:
-		assert(state_id == 0);
+	switch (stage) {
+	case Initiate:
+		assert(!impl);
 		assert(args && kwargs);
 
-		state_id = Context::NewBlock<ContinuationType>();
-		continuable.set_state(state_id);
-		done = continuable.call(result, *args, *kwargs);
+		impl = NewPointer<ImplType>();
+		done = impl.initiate(result, *args, *kwargs, impl_params...);
 		break;
 
-	case ResumeContinuation:
-		assert(state_id);
+	case Resume:
+		assert(impl);
 
-		continuable.set_state(state_id);
-		done = continuable.resume(result);
+		done = impl.resume(result, impl_params...);
 		break;
 
-	case CleanupContinuation:
-		assert(state_id);
+	case Release:
+		assert(impl);
 
-		continuable.set_state(state_id);
 		done = true;
 		break;
 	}
 
-	if (done) {
-		BlockId id = state_id;
-		state_id = 0;
+	if (done)
+		DestroyPointer(impl);
 
-		Context::DeleteBlock<ContinuationType>(id);
-	}
+	cont = impl;
 
 	return result;
 }

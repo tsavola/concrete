@@ -7,10 +7,11 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#include "code-content.hpp"
+#include "code-data.hpp"
 
 #include <cstdint>
 
+#include <concrete/context-data.hpp>
 #include <concrete/exception.hpp>
 #include <concrete/objects/bytes.hpp>
 #include <concrete/objects/code.hpp>
@@ -18,16 +19,54 @@
 #include <concrete/objects/string.hpp>
 #include <concrete/objects/tuple.hpp>
 #include <concrete/objects/type.hpp>
-#include <concrete/util/loader.hpp>
 #include <concrete/util/noncopyable.hpp>
 #include <concrete/util/packed.hpp>
 
 namespace concrete {
 
-void CodeObjectTypeInit(const TypeObject &type)
-{
-	type.init_builtin(StringObject::New("code"));
-}
+// TODO: merge Loader, CodeLoader and CodeLoaderState
+
+template <typename State>
+class Loader: Noncopyable {
+public:
+	Loader(State &state) throw ():
+		m_state(state)
+	{
+	}
+
+	bool empty() const
+	{
+		return m_state.position() >= m_state.size();
+	}
+
+	template <typename T>
+	T load()
+	{
+		return PortByteorder(*load_raw<T>(1));
+	}
+
+	const char *load_chars(size_t count)
+	{
+		return load_raw<char>(count);
+	}
+
+	template <typename T>
+	const T *load_raw(size_t count)
+	{
+		auto pos = m_state.position();
+
+		if (pos + sizeof (T) * count > m_state.size())
+			throw RuntimeError("Loader ran out of data");
+
+		auto data = m_state.data() + pos;
+		m_state.advance(sizeof (T) * count);
+
+		return reinterpret_cast<const T *> (data);
+	}
+
+private:
+	State &m_state;
+};
 
 class CodeLoaderState: Noncopyable {
 public:
@@ -88,7 +127,7 @@ public:
 		case '(': object = load_tuple(); break;
 		case 'c': object = load_code(); break;
 		case 'u': object = load_unicode(); break;
-		default: throw Exception(StringObject::New(&type, 1));
+		default: throw CodeException(StringObject::New(&type, 1));
 		}
 
 		return object;
@@ -145,15 +184,15 @@ private:
 	}
 };
 
-CodeObject::Content::Content(const TypeObject &type,
+CodeObject::Data::Data(const TypeObject &type,
                              unsigned int stacksize,
-                             const BytesObject &code,
+                             const BytesObject &bytecode,
                              const TupleObject &consts,
                              const TupleObject &names,
                              const TupleObject &varnames):
-	Object::Content(type),
+	Object::Data(type),
 	stacksize(stacksize),
-	code(code),
+	bytecode(bytecode),
 	consts(consts),
 	names(names),
 	varnames(varnames)
@@ -162,16 +201,16 @@ CodeObject::Content::Content(const TypeObject &type,
 
 TypeObject CodeObject::Type()
 {
-	return Context::SystemObjects()->code_type;
+	return Context::Active().data()->code_type;
 }
 
 CodeObject CodeObject::New(unsigned int stacksize,
-                           const BytesObject &code,
+                           const BytesObject &bytecode,
                            const TupleObject &consts,
                            const TupleObject &names,
                            const TupleObject &varnames)
 {
-	return Context::NewBlock<Content>(Type(), stacksize, code, consts, names, varnames);
+	return NewObject<CodeObject>(stacksize, bytecode, consts, names, varnames);
 }
 
 CodeObject CodeObject::Load(const void *data, size_t size)
@@ -185,50 +224,39 @@ CodeObject CodeObject::Load(const void *data, size_t size)
 	return Loader.load_next<CodeObject>();
 }
 
-CodeObject::CodeObject(BlockId id) throw ():
-	Object(id)
-{
-}
-
-CodeObject::CodeObject(const CodeObject &other) throw ():
-	Object(other)
-{
-}
-
-CodeObject &CodeObject::operator=(const CodeObject &other) throw ()
-{
-	Object::operator=(other);
-	return *this;
-}
-
 unsigned int CodeObject::stacksize() const
 {
-	return content()->stacksize;
+	return data()->stacksize;
 }
 
-BytesObject CodeObject::code() const
+BytesObject CodeObject::bytecode() const
 {
-	return content()->code;
+	return data()->bytecode;
 }
 
 TupleObject CodeObject::consts() const
 {
-	return content()->consts;
+	return data()->consts;
 }
 
 TupleObject CodeObject::names() const
 {
-	return content()->names;
+	return data()->names;
 }
 
 TupleObject CodeObject::varnames() const
 {
-	return content()->varnames;
+	return data()->varnames;
 }
 
-CodeObject::Content *CodeObject::content() const
+CodeObject::Data *CodeObject::data() const
 {
-	return content_pointer<Content>();
+	return data_cast<Data>();
+}
+
+void CodeObjectTypeInit(const TypeObject &type)
+{
+	type.init_builtin(StringObject::New("code"));
 }
 
 } // namespace

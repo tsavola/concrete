@@ -10,22 +10,19 @@
 #ifndef CONCRETE_UTIL_NONCOPYABLE_HPP
 #define CONCRETE_UTIL_NONCOPYABLE_HPP
 
+#include <concrete/util/packed.hpp>
+
 namespace concrete {
 
 class Noncopyable {
 protected:
-	Noncopyable() throw ()
-	{
-	}
-
-	~Noncopyable() throw ()
-	{
-	}
+	Noncopyable() throw () {}
+	~Noncopyable() throw () {}
 
 private:
 	Noncopyable(const Noncopyable &);
-	const Noncopyable &operator=(const Noncopyable &);
-};
+	void operator=(const Noncopyable &);
+} CONCRETE_PACKED;
 
 } // namespace
 

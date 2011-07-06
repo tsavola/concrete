@@ -18,15 +18,15 @@
 
 #if defined(__BYTE_ORDER)
 # if __BYTE_ORDER == __LITTLE_ENDIAN
-#  define CONCRETE_LITTLE_ENDIAN
+#  define CONCRETE_PORTABLE_BYTEORDER true
 # else
-#  define CONCRETE_BIG_ENDIAN
+#  define CONCRETE_PORTABLE_BYTEORDER false
 # endif
 #elif defined(__APPLE__)
 # if defined(__LITTLE_ENDIAN__)
-#  define CONCRETE_LITTLE_ENDIAN
+#  define CONCRETE_PORTABLE_BYTEORDER true
 # else
-#  define CONCRETE_BIG_ENDIAN
+#  define CONCRETE_PORTABLE_BYTEORDER false
 # endif
 #else
 # error cannot figure out byteorder
@@ -34,52 +34,36 @@
 
 namespace concrete {
 
-#ifdef CONCRETE_LITTLE_ENDIAN
-template <typename T, unsigned int N>
-struct PortableByteorder {
-	static T Adapt(const T &x) throw ()
-	{
-		return x;
-	}
+#if CONCRETE_PORTABLE_BYTEORDER
+
+template <typename T, unsigned int N> struct PortableByteorder {
+	static T Adapt(T x) throw () { return x; }
 };
+
 #else
+
 template <typename T, unsigned int N> struct PortableByteorder;
 
-template <typename T>
-struct PortableByteorder<T, 1> {
-	static T Adapt(const T &x) throw ()
-	{
-		return x;
-	}
+template <typename T> struct PortableByteorder<T, 1> {
+	static T Adapt(T x) throw () { return x; }
 };
 
-template <typename T>
-struct PortableByteorder<T, 2> {
-	static T Adapt(const T &x) throw ()
-	{
-		return bswap_16(x);
-	}
+template <typename T> struct PortableByteorder<T, 2> {
+	static T Adapt(T x) throw () { return bswap_16(x); }
 };
 
-template <typename T>
-struct PortableByteorder<T, 4> {
-	static T Adapt(const T &x) throw ()
-	{
-		return bswap_32(x);
-	}
+template <typename T> struct PortableByteorder<T, 4> {
+	static T Adapt(T x) throw () { return bswap_32(x); }
 };
 
-template <typename T>
-struct PortableByteorder<T, 8> {
-	static T Adapt(const T &x) throw ()
-	{
-		return bswap_64(x);
-	}
+template <typename T> struct PortableByteorder<T, 8> {
+	static T Adapt(T x) throw () { return bswap_64(x); }
 };
+
 #endif
 
 template <typename T>
-T PortByteorder(const T &x) throw ()
+T PortByteorder(T x) throw ()
 {
 	return PortableByteorder<T, sizeof (T)>::Adapt(x);
 }

@@ -12,24 +12,27 @@
 
 #include "object-partial.hpp"
 
-#include <concrete/block.hpp>
+#include <concrete/pointer.hpp>
+#include <concrete/portable.hpp>
 #include <concrete/util/noncopyable.hpp>
 #include <concrete/util/packed.hpp>
-#include <concrete/util/portable.hpp>
 
 namespace concrete {
 
 class NoneObject;
 class TypeObject;
 
-struct Object::Protocol: Noncopyable {
+struct Object::RawAccess: Pointer::RawAccess {
+	static RawType InitRef() throw ();
+	static void Ref(RawType address) throw ();
+	static void Unref(RawType address) throw ();
+	static RawType ExtractRef(const Pointer &pointer) throw ();
+};
+
+struct PortableObjectProtocol: Noncopyable {
 	Portable<Object> add;
 	Portable<Object> repr;
 	Portable<Object> str;
-
-	Protocol();
-	Protocol(const NoneObject &none) throw ();
-
 } CONCRETE_PACKED;
 
 void ObjectTypeInit(const TypeObject &type);

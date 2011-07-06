@@ -13,6 +13,13 @@
 
 namespace concrete {
 
+BufferResource::BufferResource():
+	m_data(NULL),
+	m_size(0),
+	m_transferred(0)
+{
+}
+
 BufferResource::BufferResource(size_t size):
 	m_data(new char[size]),
 	m_size(size),
@@ -31,6 +38,31 @@ BufferResource::BufferResource(void *data, size_t size):
 BufferResource::~BufferResource() throw ()
 {
 	delete[] m_data;
+}
+
+void BufferResource::reset()
+{
+	if (m_data)
+		delete[] m_data;
+
+	m_data = NULL;
+	m_size = 0;
+	m_transferred = 0;
+}
+
+void BufferResource::reset(size_t size)
+{
+	reset();
+
+	m_data = new char[size];
+	m_size = size;
+}
+
+void BufferResource::reset(void *data, size_t size)
+{
+	reset(size);
+
+	std::memcpy(m_data, data, size);
 }
 
 char *BufferResource::data() throw ()

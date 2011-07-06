@@ -18,31 +18,30 @@ class NoneObject;
 class StringObject;
 
 class TypeObject: public Object {
+	friend class Pointer;
 	friend class Object;
-	friend struct Object::Content;
 
 public:
 	static TypeObject Type();
 
-	static TypeObject NewBuiltin(const NoneObject &none);
-	static TypeObject NewBuiltin(const NoneObject &none, const TypeObject &type);
+	static TypeObject NewBuiltin();
+	static TypeObject NewBuiltin(const TypeObject &type);
 	static TypeObject New(const StringObject &name);
 
-	TypeObject(const TypeObject &other) throw ();
-	TypeObject &operator=(const TypeObject &other) throw ();
+	TypeObject(const TypeObject &other) throw (): Object(other) {}
 
 	void init_builtin(const StringObject &name) const;
 
 	StringObject name() const;
-	Object::Protocol &protocol() const;
+	PortableObjectProtocol *protocol() const;
 
 protected:
-	struct Content;
+	struct Data;
 
 private:
-	TypeObject(BlockId id) throw ();
+	explicit TypeObject(unsigned int address) throw (): Object(address) {}
 
-	Content *content() const;
+	Data *data() const;
 };
 
 void TypeObjectTypeInit(const TypeObject &type);

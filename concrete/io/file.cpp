@@ -50,7 +50,7 @@ int FileResource::fd() const throw ()
 
 void FileResource::wait_readability()
 {
-	Context::WaitEvent(fd(), EV_READ);
+	Context::Active().wait_event(fd(), EV_READ);
 }
 
 ssize_t FileResource::read(void *buf, size_t bufsize)
@@ -65,7 +65,7 @@ ssize_t FileResource::read(void *buf, size_t bufsize)
 
 void FileResource::wait_writability()
 {
-	Context::WaitEvent(fd(), EV_WRITE);
+	Context::Active().wait_event(fd(), EV_WRITE);
 }
 
 ssize_t FileResource::write(const void *buf, size_t bufsize)

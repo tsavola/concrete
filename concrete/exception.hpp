@@ -17,34 +17,35 @@
 
 namespace concrete {
 
-class Exception: public std::exception {
+class TypeObject;
+
+class CodeException: public std::exception {
 public:
-	explicit Exception(const Object &args) throw ();
-	Exception(const Exception &other) throw ();
-	virtual ~Exception() throw ();
+	explicit CodeException(const Object &args) throw ();
+	CodeException(const CodeException &other) throw (): m_repr(other.m_repr) {}
 
-	Exception &operator=(const Exception &other) throw ();
+	void operator=(const CodeException &other) throw () { m_repr = other.m_repr; }
 
-	virtual const char *what() const throw ();
+	virtual const char *what() const throw () { return m_repr.c_str(); }
 
 protected:
-	Exception(const StringObject &repr, int) throw ();
+	CodeException(const StringObject &repr, int) throw ();
 
 private:
 	StringObject m_repr;
 };
 
-class TypeError: public Exception {
+class TypeError: public CodeException {
 public:
 	explicit TypeError(const TypeObject &type) throw ();
 };
 
-class KeyError: public Exception {
+class KeyError: public CodeException {
 public:
-	explicit KeyError(const Object &key) throw ();
+	explicit KeyError(const Object &key) throw (): CodeException(key) {}
 };
 
-class RuntimeError: public Exception {
+class RuntimeError: public CodeException {
 public:
 	explicit RuntimeError(const char *message) throw ();
 };

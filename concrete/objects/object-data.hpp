@@ -1,0 +1,49 @@
+/*
+ * Copyright (c) 2011  Timo Savola
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ */
+
+#ifndef CONCRETE_OBJECTS_OBJECT_DATA_HPP
+#define CONCRETE_OBJECTS_OBJECT_DATA_HPP
+
+#include "object.hpp"
+
+#include <cstdint>
+
+#include <concrete/pointer.hpp>
+#include <concrete/portable.hpp>
+#include <concrete/util/noncopyable.hpp>
+#include <concrete/util/packed.hpp>
+
+namespace concrete {
+
+struct Object::Data: Noncopyable {
+	friend class NoneObject;
+	friend class Object;
+	friend class TypeObject;
+
+	Data() throw () {}
+	explicit Data(const TypeObject &type) throw ();
+	~Data() throw ();
+
+	TypeObject type() const throw ();
+
+private:
+	explicit Data(const Pointer &type) throw ();
+
+	void init_none_type(const Portable<TypeObject> &none_type) throw ();
+
+	void ref() throw ();
+	void unref(unsigned int address) throw ();
+
+	Portable<int32_t> m_refcount;
+	Portable<Pointer>   m_type_pointer;
+} CONCRETE_PACKED;
+
+} // namespace
+
+#endif
