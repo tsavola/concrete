@@ -66,19 +66,16 @@ static void resume(ConcreteContext **wrap, void *data, size_t size)
 
 static void load(Context *context, void *data, size_t size)
 {
-	ScopedContext activate(*context);
 	context->add_execution(Execution::New(CodeObject::Load(data, size)));
 }
 
 static void execute(Context *context)
 {
-	ScopedContext activate(*context);
 	context->execute();
 }
 
 static void executable(Context *context, bool *result)
 {
-	ScopedContext activate(*context);
 	*result = context->executable();
 }
 
@@ -121,6 +118,7 @@ void concrete_load(ConcreteContext *wrap, void *data, size_t size, ConcreteError
 
 	Trace("concrete_load(wrap=%p, data=%p, size=%lu, error=%p)", wrap, data, size, error);
 
+	ScopedContext activate(wrap->context);
 	nonthrowing_call(error, load, &wrap->context, data, size);
 }
 
@@ -132,6 +130,7 @@ bool concrete_execute(ConcreteContext *wrap, ConcreteError *error)
 
 	Trace("concrete_execute(wrap=%p, error=%p)", wrap, error);
 
+	ScopedContext activate(wrap->context);
 	bool result = false;
 
 	nonthrowing_call(error, execute, &wrap->context);
