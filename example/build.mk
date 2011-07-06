@@ -4,7 +4,7 @@ O_PY_BYTECODE	:= $(O_PY_SOURCE)c
 
 NAME		:= example
 SOURCES		:= $(wildcard example/*.c)
-CPPFLAGS	+= -Ilib -DEXAMPLE_BYTECODE="\""$(O_PY_BYTECODE)"\""
+CPPFLAGS	+= -Ilibrary -DEXAMPLE_BYTECODE="\""$(O_PY_BYTECODE)"\""
 
 DEPENDS		+= $(O)/lib/libconcrete.so
 LIBS		+= -L$(O)/lib -lconcrete

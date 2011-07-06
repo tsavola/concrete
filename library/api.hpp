@@ -17,7 +17,7 @@
 #include <memory>
 
 #include <concrete/context.hpp>
-#include <lib/libevent.hpp>
+#include <library/libevent.hpp>
 
 struct ConcreteContext {
 	std::unique_ptr<concrete::LibeventLoop> event_loop;

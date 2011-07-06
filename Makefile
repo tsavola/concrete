@@ -6,15 +6,15 @@ CPPFLAGS	+= -I.
 CFLAGS		+= -g -Wall
 CXXFLAGS	+= -std=gnu++0x
 
-LIBRARIES	:= concrete lib
+LIBRARIES	:= concrete library
 TESTS		:= example python
 
 .DEFAULT_GOAL	:= build
 
-build: lib-shared
+build: library-shared
 
-lib-shared: concrete-reloc
-example: lib-shared
+library-shared: concrete-reloc
+example: library-shared
 
 export PYTHON
 

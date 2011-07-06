@@ -1,6 +1,6 @@
 NAME		:= concrete
 VERSION		:= 0
-SOURCES		:= $(wildcard lib/*.cpp lib/*/*.cpp)
+SOURCES		:= $(wildcard library/*.cpp library/*/*.cpp)
 CFLAGS		+= -fvisibility=hidden -fvisibility-inlines-hidden
 
 DEPENDS		+= $(O)/lib/libconcrete-core.pic.a
