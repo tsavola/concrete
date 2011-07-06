@@ -1,2 +1,2 @@
 CPPFLAGS	+= -DCONCRETE_TRACE -DCONCRETE_BACKTRACE
-LDFLAGS		+= -rdynamic
+LDFLAGS		+= -Wl,-rpath -Wl,$(O)/lib

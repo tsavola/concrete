@@ -4,17 +4,15 @@ CPPFLAGS	+= -I.
 CFLAGS		+= -g -Wall
 CXXFLAGS	+= -std=gnu++0x
 
-LIBRARIES	:= concrete
-BINARIES	:= example/server
+LIBRARIES	:= concrete lib
 TESTS		:= example
 
 .DEFAULT_GOAL	:= build
 
-build: concrete
+build: lib-shared
 
-concrete: concrete-static
-example: concrete
-example/server: concrete
+lib-shared: concrete-reloc
+example: lib-shared
 
 include build/project.mk
 
@@ -25,7 +23,7 @@ TAGS: $(HEADERS)
 	$(QUIET) etags $(HEADERS)
 
 SOURCEDIRS	:= $(LIBRARIES) $(TESTS)
-SOURCES		:= $(shell find $(SOURCEDIRS) -name "*.[ch]pp")
+SOURCES		:= $(shell find $(SOURCEDIRS) -name "*.[ch]pp" -or -name "*.[ch]")
 
 todo::
 	$(QUIET) grep -niE "(todo|xxx)" $(SOURCES) | sed -r \
