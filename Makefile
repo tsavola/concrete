@@ -7,7 +7,7 @@ CFLAGS		+= -g -Wall
 CXXFLAGS	+= -std=gnu++0x
 
 LIBRARIES	:= concrete lib
-TESTS		:= example
+TESTS		:= example python
 
 .DEFAULT_GOAL	:= build
 
