@@ -11,8 +11,6 @@
 
 #include <cerrno>
 
-#include <event.h>
-
 #include <concrete/context.hpp>
 #include <concrete/resource.hpp>
 

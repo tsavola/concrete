@@ -14,8 +14,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include <event.h>
-
 #include <concrete/context.hpp>
 #include <concrete/event.hpp>
 

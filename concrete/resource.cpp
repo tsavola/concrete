@@ -13,8 +13,6 @@
 #include <memory>
 #include <utility>
 
-#include <event.h>
-
 #include <concrete/context.hpp>
 #include <concrete/util/backtrace.hpp>
 
