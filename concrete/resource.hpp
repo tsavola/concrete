@@ -83,6 +83,11 @@ private:
 	Portable<ResourceSlot> m_slot;
 } CONCRETE_PACKED;
 
+template <typename ResourceType>
+struct ResourceCreate {
+	template <typename... Args> static ResourceType *New(Args... args);
+};
+
 class ResourceError: public std::exception {
 public:
 	ResourceError() throw ();

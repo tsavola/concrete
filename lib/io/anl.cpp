@@ -7,7 +7,7 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#include "resolve.hpp"
+#include "anl.hpp"
 
 #include <cerrno>
 #include <cstring>
@@ -18,13 +18,13 @@
 
 namespace concrete {
 
-Resolve::Pipe::Pipe(int ret, int fd[2]):
+ANL::Pipe::Pipe(int ret, int fd[2]):
 	read(ret >= 0 ? fd[0] : -1),
 	write(ret >= 0 ? fd[1] : -1)
 {
 }
 
-Resolve::AddrInfo::AddrInfo(const std::string &node_, const std::string &service_):
+ANL::AddrInfo::AddrInfo(const std::string &node_, const std::string &service_):
 	node(node_),
 	service(service_),
 	pipe(::pipe(pipe_buf), pipe_buf)
@@ -45,7 +45,7 @@ Resolve::AddrInfo::AddrInfo(const std::string &node_, const std::string &service
 		throw ResourceError();
 }
 
-Resolve::AddrInfo::~AddrInfo() throw ()
+ANL::AddrInfo::~AddrInfo() throw ()
 {
 	gai_cancel(&cb);
 
@@ -53,7 +53,7 @@ Resolve::AddrInfo::~AddrInfo() throw ()
 		freeaddrinfo(cb.ar_result);
 }
 
-void Resolve::AddrInfo::callback(sigval_t sigval) throw ()
+void ANL::AddrInfo::callback(sigval_t sigval) throw ()
 {
 	int fd = sigval.sival_int;
 	char buf = 0;
@@ -62,27 +62,35 @@ void Resolve::AddrInfo::callback(sigval_t sigval) throw ()
 		;
 }
 
-Resolve::Resolve(const std::string &node, const std::string &service):
+ANL::ANL(const std::string &node, const std::string &service):
 	m_addrinfo(node, service)
 {
 }
 
 void Resolve::suspend_until_resolved()
 {
-	m_addrinfo.pipe.read.suspend_until_readable();
+	auto &addrinfo = static_cast<ANL *> (this)->m_addrinfo;
+
+	addrinfo.pipe.read.suspend_until_readable();
 }
 
 struct addrinfo *Resolve::addrinfo()
 {
+	auto &addrinfo = static_cast<ANL *> (this)->m_addrinfo;
 	char buf;
 
-	if (m_addrinfo.pipe.read.read(&buf, 1) < 0)
+	if (addrinfo.pipe.read.read(&buf, 1) < 0)
 		return NULL;
 
-	if (gai_error(&m_addrinfo.cb) != 0)
+	if (gai_error(&addrinfo.cb) != 0)
 		throw ResourceError();
 
-	return m_addrinfo.cb.ar_result;
+	return addrinfo.cb.ar_result;
+}
+
+Resolve *ResourceCreate<Resolve>::New(const std::string &node, const std::string &service)
+{
+	return new ANL(node, service);
 }
 
 } // namespace

@@ -10,47 +10,22 @@
 #ifndef CONCRETE_IO_RESOLVE_HPP
 #define CONCRETE_IO_RESOLVE_HPP
 
-#include <cassert>
-#include <csignal>
-#include <cstdint>
 #include <string>
 
-#include <netdb.h>
-
-#include <concrete/io/file.hpp>
 #include <concrete/resource.hpp>
+
+struct addrinfo;
 
 namespace concrete {
 
 class Resolve: public Resource {
-	struct Pipe {
-		File read;
-		File write;
-
-		Pipe(int ret, int fd[2]);
-	};
-
-	struct AddrInfo {
-		const std::string node;
-		const std::string service;
-		int pipe_buf[2];
-		Pipe pipe;
-		struct gaicb cb;
-
-		AddrInfo(const std::string &node, const std::string &service);
-		~AddrInfo() throw ();
-
-		static void callback(sigval_t sigval) throw ();
-	};
-
 public:
-	Resolve(const std::string &node, const std::string &service);
-
 	void suspend_until_resolved();
 	struct addrinfo *addrinfo();
+};
 
-private:
-	AddrInfo m_addrinfo;
+template <> struct ResourceCreate<Resolve> {
+	static Resolve *New(const std::string &node, const std::string &service);
 };
 
 } // namespace

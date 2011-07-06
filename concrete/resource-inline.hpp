@@ -17,7 +17,7 @@ namespace concrete {
 template <typename T, typename... Args>
 ResourceSlot ResourceManager::new_resource(Args... args)
 {
-	std::unique_ptr<T> resource(new T(args...));
+	std::unique_ptr<T> resource(ResourceCreate<T>::New(args...));
 	auto slot = add_resource(resource.get());
 	resource.release();
 
@@ -89,6 +89,13 @@ template <typename T>
 T *PortableResource<T>::operator->() const throw ()
 {
 	return operator*();
+}
+
+template <typename T>
+template <typename... Args>
+T *ResourceCreate<T>::New(Args... args)
+{
+	return new T(args...);
 }
 
 } // namespace
