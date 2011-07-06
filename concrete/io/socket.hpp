@@ -20,8 +20,8 @@ class Socket: public File {
 public:
 	Socket(int domain, int type, int protocol = 0);
 
-	void wait_connection(const struct sockaddr *addr, socklen_t addrlen);
-	void wait_connection();
+	void suspend_until_connected(const struct sockaddr *addr, socklen_t addrlen);
+	void suspend_until_connected();
 	bool connected();
 
 private:

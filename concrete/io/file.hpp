@@ -10,7 +10,7 @@
 #ifndef CONCRETE_IO_FILE_HPP
 #define CONCRETE_IO_FILE_HPP
 
-#include <sys/types.h>
+#include <cstddef>
 
 #include <concrete/resource.hpp>
 
@@ -23,10 +23,11 @@ public:
 
 	int fd() const throw ();
 
-	void wait_readability();
-	ssize_t read(void *buf, size_t bufsize);
+	void suspend_until(unsigned int conditions);
+	void suspend_until_readable();
+	void suspend_until_writable();
 
-	void wait_writability();
+	ssize_t read(void *buf, size_t bufsize);
 	ssize_t write(const void *buf, size_t bufsize);
 
 private:

@@ -13,6 +13,7 @@
 #include <cstdlib>
 #include <memory>
 
+#include <concrete/event.hpp>
 #include <concrete/execution.hpp>
 #include <concrete/modules/builtins.hpp>
 #include <concrete/modules/concrete.hpp>
@@ -31,15 +32,15 @@
 
 namespace concrete {
 
-class Context::EventCallback: public ResourceManager::EventCallback {
-public:
-	EventCallback(Context &context, const Execution &execution) throw ();
+class ContextCallback: public EventCallback {
+	friend class EventCallback;
 
-	virtual void resume() throw ();
+public:
+	ContextCallback(Context &context, const Execution &execution) throw ();
 
 private:
-	Context &m_context;
-	const Execution m_execution;
+	Context         &m_context;
+	const Execution  m_execution;
 };
 
 static CONCRETE_THREAD_LOCAL Context *active_context;
@@ -74,27 +75,14 @@ Context::Data::Data(const NoneObject &none,
 {
 }
 
-Context::EventCallback::EventCallback(Context &context, const Execution &execution) throw ():
-	m_context(context),
-	m_execution(execution)
-{
-}
-
-void Context::EventCallback::resume() throw ()
-{
-	m_context.data()->waiting.remove(m_execution);
-	m_context.data()->runnable.append(m_execution);
-
-	delete this;
-}
-
 Context &Context::Active() throw ()
 {
 	assert(active_context);
 	return *active_context;
 }
 
-Context::Context()
+Context::Context(EventLoop &loop):
+	m_event_loop(loop)
 {
 	ScopedContext activate(*this);
 
@@ -155,7 +143,8 @@ Context::Context()
 	data()->modules = modules;
 }
 
-Context::Context(void *base, size_t size):
+Context::Context(EventLoop &loop, void *base, size_t size):
+	m_event_loop(loop),
 	m_arena(base, size)
 {
 	ScopedContext activate(*this);
@@ -183,10 +172,10 @@ Portable<Execution> &Context::execution() throw ()
 	return data()->current;
 }
 
-void Context::wait_event(int fd, short events)
+void Context::suspend_until(const EventSource &source, unsigned int conditions)
 {
-	std::unique_ptr<EventCallback> callback(new EventCallback(*this, data()->current));
-	Active().resource_manager().wait_event(fd, events, callback.get());
+	std::unique_ptr<ContextCallback> callback(new ContextCallback(*this, data()->current));
+	m_event_loop.wait(source, conditions, callback.get());
 	callback.release();
 
 	data()->waiting.append(data()->current);
@@ -219,7 +208,7 @@ void Context::execute()
 			data()->current = Execution();
 		} else {
 			assert(data()->waiting);
-			m_resource_manager.poll_events();
+			m_event_loop.poll();
 		}
 	}
 }
@@ -250,6 +239,22 @@ ScopedContext::~ScopedContext() throw ()
 
 	active_context = NULL;
 	m_context.m_active = false;
+}
+
+ContextCallback::ContextCallback(Context &context, const Execution &execution) throw ():
+	m_context(context),
+	m_execution(execution)
+{
+}
+
+void EventCallback::resume() throw ()
+{
+	auto callback = static_cast<ContextCallback *> (this);
+
+	callback->m_context.data()->waiting.remove(callback->m_execution);
+	callback->m_context.data()->runnable.append(callback->m_execution);
+
+	delete callback;
 }
 
 } // namespace

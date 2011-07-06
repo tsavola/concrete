@@ -24,13 +24,13 @@ Socket::Socket(int domain, int type, int protocol):
 {
 }
 
-void Socket::wait_connection(const struct sockaddr *addr, socklen_t addrlen)
+void Socket::suspend_until_connected(const struct sockaddr *addr, socklen_t addrlen)
 {
 	assert(!m_connected);
 
 	if (connect(fd(), addr, addrlen) < 0) {
 		if (errno == EINPROGRESS)
-			wait_connection();
+			suspend_until_connected();
 		else
 			throw ResourceError();
 	} else {
@@ -38,9 +38,9 @@ void Socket::wait_connection(const struct sockaddr *addr, socklen_t addrlen)
 	}
 }
 
-void Socket::wait_connection()
+void Socket::suspend_until_connected()
 {
-	Context::Active().wait_event(fd(), EV_WRITE);
+	suspend_until_writable();
 }
 
 bool Socket::connected()

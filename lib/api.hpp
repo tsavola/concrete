@@ -7,20 +7,21 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#ifndef CONCRETELIB_API_HPP
-#define CONCRETELIB_API_HPP
+#ifndef LIB_API_HPP
+#define LIB_API_HPP
 
 #define CONCRETE_API __attribute__ ((visibility ("default")))
+
+#include <memory>
 
 #include "concrete.h"
 
 #include <concrete/context.hpp>
+#include <lib/libevent.hpp>
 
 struct ConcreteContext {
-	template <typename... Args>
-	explicit ConcreteContext(Args... args): context(args...) {}
-
-	concrete::Context context;
+	std::unique_ptr<concrete::LibeventLoop> event_loop;
+	std::unique_ptr<concrete::Context>      context;
 };
 
 #endif

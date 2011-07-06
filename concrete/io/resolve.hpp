@@ -46,7 +46,7 @@ class Resolve: public Resource {
 public:
 	Resolve(const std::string &node, const std::string &service);
 
-	void wait_addrinfo();
+	void suspend_until_resolved();
 	struct addrinfo *addrinfo();
 
 private:

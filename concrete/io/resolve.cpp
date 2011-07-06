@@ -14,8 +14,6 @@
 
 #include <unistd.h>
 
-#include <event.h>
-
 #include <concrete/context.hpp>
 
 namespace concrete {
@@ -69,9 +67,9 @@ Resolve::Resolve(const std::string &node, const std::string &service):
 {
 }
 
-void Resolve::wait_addrinfo()
+void Resolve::suspend_until_resolved()
 {
-	m_addrinfo.pipe.read.wait_readability();
+	m_addrinfo.pipe.read.suspend_until_readable();
 }
 
 struct addrinfo *Resolve::addrinfo()

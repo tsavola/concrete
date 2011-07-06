@@ -54,14 +54,28 @@ static void nonthrowing_call(ConcreteError *error, Function function, Args... ar
 		Trace("error type=%u message=\"%s\"", error->type, error->message);
 }
 
-static void create(ConcreteContext **wrap)
+static void create(ConcreteContext **wrap_ptr)
 {
-	*wrap = new ConcreteContext;
+	std::unique_ptr<ConcreteContext> wrap(new ConcreteContext);
+
+	wrap->event_loop.reset(new LibeventLoop);
+	wrap->context.reset(new Context(*wrap->event_loop.get()));
+
+	*wrap_ptr = wrap.get();
+
+	wrap.release();
 }
 
-static void resume(ConcreteContext **wrap, void *data, size_t size)
+static void resume(ConcreteContext **wrap_ptr, void *data, size_t size)
 {
-	*wrap = new ConcreteContext(data, size);
+	std::unique_ptr<ConcreteContext> wrap(new ConcreteContext);
+
+	wrap->event_loop.reset(new LibeventLoop);
+	wrap->context.reset(new Context(*wrap->event_loop.get(), data, size));
+
+	*wrap_ptr = wrap.get();
+
+	wrap.release();
 }
 
 static void load(Context *context, void *data, size_t size)
@@ -114,29 +128,29 @@ void concrete_load(ConcreteContext *wrap, void *data, size_t size, ConcreteError
 {
 	assert(wrap);
 	assert(error);
-	assert(!wrap->context.is_active());
+	assert(!wrap->context->is_active());
 
 	Trace("concrete_load(wrap=%p, data=%p, size=%lu, error=%p)", wrap, data, size, error);
 
-	ScopedContext activate(wrap->context);
-	nonthrowing_call(error, load, &wrap->context, data, size);
+	ScopedContext activate(*wrap->context.get());
+	nonthrowing_call(error, load, wrap->context.get(), data, size);
 }
 
 bool concrete_execute(ConcreteContext *wrap, ConcreteError *error)
 {
 	assert(wrap);
 	assert(error);
-	assert(!wrap->context.is_active());
+	assert(!wrap->context->is_active());
 
 	Trace("concrete_execute(wrap=%p, error=%p)", wrap, error);
 
-	ScopedContext activate(wrap->context);
+	ScopedContext activate(*wrap->context.get());
 	bool result = false;
 
-	nonthrowing_call(error, execute, &wrap->context);
+	nonthrowing_call(error, execute, wrap->context.get());
 
 	if (error->type == CONCRETE_ERROR_CODE)
-		nonthrowing_call(error, executable, &wrap->context, &result);
+		nonthrowing_call(error, executable, wrap->context.get(), &result);
 
 	return result;
 }
@@ -144,11 +158,11 @@ bool concrete_execute(ConcreteContext *wrap, ConcreteError *error)
 void concrete_snapshot(ConcreteContext *wrap, const void **base_ptr, size_t *size_ptr)
 {
 	assert(wrap);
-	assert(!wrap->context.is_active());
+	assert(!wrap->context->is_active());
 
 	Trace("concrete_snapshot(wrap=%p, base_ptr=%p, size_ptr=%lu)", wrap, base_ptr, size_ptr);
 
-	auto snapshot = wrap->context.arena().snapshot();
+	auto snapshot = wrap->context->arena().snapshot();
 	*base_ptr = snapshot.base;
 	*size_ptr = snapshot.size;
 }
@@ -158,7 +172,7 @@ void concrete_destroy(ConcreteContext *wrap)
 	Trace("concrete_destroy(wrap=%p)", wrap);
 
 	if (wrap) {
-		assert(!wrap->context.is_active());
+		assert(!wrap->context->is_active());
 
 		ConcreteError error;
 		nonthrowing_call(&error, destroy, wrap);

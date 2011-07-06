@@ -17,6 +17,7 @@
 #include <event.h>
 
 #include <concrete/context.hpp>
+#include <concrete/event.hpp>
 
 namespace concrete {
 
@@ -47,9 +48,19 @@ int File::fd() const throw ()
 	return m_fd;
 }
 
-void File::wait_readability()
+void File::suspend_until(unsigned int conditions)
 {
-	Context::Active().wait_event(fd(), EV_READ);
+	Context::Active().suspend_until(fd(), conditions);
+}
+
+void File::suspend_until_readable()
+{
+	suspend_until(EventSourceReadable);
+}
+
+void File::suspend_until_writable()
+{
+	suspend_until(EventSourceWritable);
 }
 
 ssize_t File::read(void *buf, size_t bufsize)
@@ -60,11 +71,6 @@ ssize_t File::read(void *buf, size_t bufsize)
 		throw ResourceError();
 
 	return len;
-}
-
-void File::wait_writability()
-{
-	Context::Active().wait_event(fd(), EV_WRITE);
 }
 
 ssize_t File::write(const void *buf, size_t bufsize)

@@ -17,7 +17,6 @@
 
 #include <concrete/context.hpp>
 #include <concrete/util/backtrace.hpp>
-#include <concrete/util/trace.hpp>
 
 namespace concrete {
 
@@ -46,19 +45,10 @@ ResourceManager &ResourceManager::Active() throw ()
 	return Context::Active().resource_manager();
 }
 
-ResourceManager::ResourceManager():
-	m_event_base(event_base_new())
-{
-	if (m_event_base == NULL)
-		throw ResourceError();
-}
-
 ResourceManager::~ResourceManager() throw ()
 {
 	for (auto i = m_map.begin(); i != m_map.end(); ++i)
 		delete i->second;
-
-	event_base_free(m_event_base);
 }
 
 ResourceSlot ResourceManager::add_resource(Resource *resource)
@@ -100,27 +90,6 @@ void ResourceManager::destroy_resource(ResourceSlot slot) throw ()
 bool ResourceManager::is_resource_lost(ResourceSlot slot) const throw ()
 {
 	return m_map.find(slot.key()) == m_map.end();
-}
-
-void ResourceManager::wait_event(int fd, short events, EventCallback *callback)
-{
-	if (event_base_once(m_event_base, fd, events, event_callback, callback, NULL) < 0)
-		throw ResourceError();
-
-	Trace("suspended");
-}
-
-void ResourceManager::poll_events()
-{
-	if (event_base_loop(m_event_base, EVLOOP_ONCE) < 0)
-		throw ResourceError();
-}
-
-void ResourceManager::event_callback(int fd, short events, void *arg)
-{
-	Trace("resumed");
-
-	reinterpret_cast<EventCallback *> (arg)->resume();
 }
 
 ResourceError::ResourceError() throw ()

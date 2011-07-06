@@ -13,8 +13,8 @@
 #include <cassert>
 #include <cstddef>
 
-#include <concrete/arena.hpp>
 #include <concrete/arena-access.hpp>
+#include <concrete/arena.hpp>
 #include <concrete/objects/none.hpp>
 #include <concrete/objects/object-partial.hpp>
 #include <concrete/objects/type.hpp>
@@ -24,10 +24,14 @@
 
 namespace concrete {
 
+class EventCallback;
+class EventLoop;
+class EventSource;
 class Execution;
 class ScopedContext;
 
 class Context: ArenaAccess {
+	friend class EventCallback;
 	friend class ScopedContext;
 
 public:
@@ -35,8 +39,8 @@ public:
 
 	static Context &Active() throw ();
 
-	Context();
-	Context(void *base, size_t size);
+	explicit Context(EventLoop &loop);
+	Context(EventLoop &loop, void *base, size_t size);
 
 	bool is_active() const throw () { return m_active; }
 
@@ -54,18 +58,17 @@ public:
 	void add_execution(const Execution &execution);
 	Portable<Execution> &execution() throw ();
 
-	void wait_event(int fd, short events);
+	void suspend_until(const EventSource &source, unsigned int conditions);
 
 	bool executable() throw ();
 	void execute();
 
 private:
-	class EventCallback;
-
-	Arena           m_arena;
-	ResourceManager m_resource_manager;
-	Pointer           m_none_pointer;
-	bool            m_active;
+	EventLoop       &m_event_loop;
+	Arena            m_arena;
+	ResourceManager  m_resource_manager;
+	Pointer          m_none_pointer;
+	bool             m_active;
 };
 
 class ScopedContext: Noncopyable {

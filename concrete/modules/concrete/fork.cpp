@@ -125,7 +125,7 @@ private:
 		data()->resolve.create(host, port);
 		data()->mode = ResolveMode;
 
-		data()->resolve->wait_addrinfo();
+		data()->resolve->suspend_until_resolved();
 	}
 
 	void resume_resolve() const
@@ -136,7 +136,7 @@ private:
 		if (addrinfo)
 			initiate_connect(addrinfo);
 		else
-			data()->resolve->wait_addrinfo();
+			data()->resolve->suspend_until_resolved();
 	}
 
 	void initiate_connect(const struct addrinfo *addrinfo) const
@@ -162,7 +162,7 @@ private:
 		data()->socket.create(family, SOCK_STREAM);
 		data()->mode = ConnectMode;
 
-		data()->socket->wait_connection(reinterpret_cast<struct sockaddr *> (&addr), addrlen);
+		data()->socket->suspend_until_connected(reinterpret_cast<struct sockaddr *> (&addr), addrlen);
 	}
 
 	void resume_connect() const
@@ -172,7 +172,7 @@ private:
 		if (data()->socket->connected())
 			initiate_write();
 		else
-			data()->socket->wait_connection();
+			data()->socket->suspend_until_connected();
 	}
 
 	void initiate_write() const
@@ -191,7 +191,7 @@ private:
 		std::memcpy(buffer->data(), snapshot.base, snapshot.size);
 		data()->forked = false;
 
-		data()->socket->wait_writability();
+		data()->socket->suspend_until_writable();
 	}
 
 	bool resume_write(Object &result) const
@@ -205,7 +205,7 @@ private:
 			throw ResourceError();
 
 		if (buffer->remaining()) {
-			socket->wait_writability();
+			socket->suspend_until_writable();
 			return false;
 		} else {
 			result = LongObject::New(1);

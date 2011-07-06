@@ -19,8 +19,6 @@
 #include <concrete/util/noncopyable.hpp>
 #include <concrete/util/packed.hpp>
 
-struct event_base;
-
 namespace concrete {
 
 class Resource: Noncopyable {
@@ -49,14 +47,8 @@ protected:
 
 class ResourceManager {
 public:
-	class EventCallback: Noncopyable {
-	public:
-		virtual void resume() throw () = 0;
-	};
-
 	static ResourceManager &Active() throw ();
 
-	ResourceManager();
 	~ResourceManager() throw ();
 
 	template <typename ResourceType, typename... Args> ResourceSlot new_resource(Args... args);
@@ -64,19 +56,13 @@ public:
 	bool is_resource_lost(ResourceSlot slot) const throw ();
 	template <typename ResourceType> ResourceType *resource_cast(ResourceSlot slot) const;
 
-	void wait_event(int fd, short events, EventCallback *callback);
-	void poll_events();
-
 private:
 	typedef std::map<unsigned int, Resource *> Map;
-
-	static void event_callback(int fd, short events, void *arg);
 
 	ResourceSlot add_resource(Resource *resource);
 	Resource *find_resource(ResourceSlot slot) const throw ();
 
-	Map                      m_map;
-	struct event_base *const m_event_base;
+	Map m_map;
 };
 
 template <typename ResourceType>
