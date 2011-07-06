@@ -51,7 +51,7 @@ int main(int argc, char **argv)
 	context = concrete_create(&error);
 	check(&error);
 
-	concrete_load(context, data, size, &error);
+	concrete_load(context, data + 8, size - 8, &error);
 	check(&error);
 
 	do {

@@ -213,15 +213,14 @@ CodeObject CodeObject::New(unsigned int stacksize,
 	return NewObject<CodeObject>(stacksize, bytecode, consts, names, varnames);
 }
 
-CodeObject CodeObject::Load(const void *data, size_t size)
+CodeObject CodeObject::Load(const void *void_data, size_t size)
 {
-	auto bytedata = reinterpret_cast<const uint8_t *> (data);
+	auto byte_data = reinterpret_cast<const uint8_t *> (void_data);
 
-	// TODO: check magic and mtime
+	CodeLoaderState state(byte_data, size);
+	CodeLoader loader(state);
 
-	CodeLoaderState state(bytedata + 8, size - 8);
-	CodeLoader Loader(state);
-	return Loader.load_next<CodeObject>();
+	return loader.load_next<CodeObject>();
 }
 
 unsigned int CodeObject::stacksize() const
