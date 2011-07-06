@@ -1,6 +1,13 @@
 #!/usr/bin/env python3.1
 
-__all__ = ["Context", "Error"]
+__all__ = [
+	"Context",
+	"Error",
+	"SystemError",
+	"IntegrityError",
+	"AllocationError",
+	"CodeError",
+]
 
 import marshal
 from ctypes import *
@@ -41,10 +48,11 @@ ERROR_INTEGRITY  = 2
 ERROR_ALLOCATION = 3
 ERROR_CODE       = 4
 
-class Error(Exception):
-	def __init__(self, struct):
-		Exception.__init__(self, str(struct.message))
-		self.type = struct.type
+class Error(Exception): pass
+class SystemError(Error): pass
+class IntegrityError(Error): pass
+class AllocationError(Error): pass
+class CodeError(Error): pass
 
 class Context(object):
 	def __init__(self, snapshot=None):
@@ -118,4 +126,15 @@ class Context(object):
 
 	def __check_error(self):
 		if self.__error.type:
-			raise Error(self.__error)
+			message = str(self.__error.message)
+
+			if self.__error.type == ERROR_SYSTEM:
+				raise SystemError(message)
+			elif self.__error.type == ERROR_INTEGRITY:
+				raise IntegrityError(message)
+			elif self.__error.type == ERROR_ALLOCATION:
+				raise AllocationError(message)
+			elif self.__error.type == ERROR_CODE:
+				raise CodeError(message)
+
+			assert False
