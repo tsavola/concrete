@@ -1,8 +1,9 @@
 /**
 @mainpage
 
-- <a href="namespaceconcrete.html">API documentation</a>
-- <a href="http://github.com/tsavola/concrete" target="_top">Source code</a>
+- <a href="https://raw.github.com/tsavola/concrete/master/lib/concrete.h">Library API</a>
+- <a href="namespaceconcrete.html">Internal API</a>
+- <a href="https://github.com/tsavola/concrete" target="_top">Source code</a>
 - <a href="http://tsavola.blogspot.com/search/label/Concrete" target="_top">Blog posts</a>
 
 @namespace concrete
