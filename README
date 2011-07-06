@@ -5,18 +5,15 @@ Dependencies:
   svn           (for downloading boost)
   python 3.1    (for compiling to bytecode)
 
-  For Mac OSX:
-    Install gcc46 and boost from macports (http://www.macports.org).
-
 Build instructions:
 
   git submodule update --init
   make
 
-  For Mac OSX:
-    Create config.mk at the top-level directory and put this in it before
-    running make:
--- snip (config.mk) --
-CC = gcc-mp-4.6
-CXX = g++-mp-4.6
--- snip (config.mk) --
+Mac OS X prerequisites:
+
+  - Install gcc46 from macports (http://www.macports.org)
+  - Create config.mk at the top-level directory containing lines:
+      CC  = gcc-mp-4.6
+      CXX = g++-mp-4.6
+
