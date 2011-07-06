@@ -2,6 +2,7 @@
 
 __all__ = ["Context", "Error"]
 
+import marshal
 from ctypes import *
 
 libc = CDLL("libc.so.6")
@@ -75,13 +76,20 @@ class Context(object):
 	def __exit__(self, *exc):
 		self.destroy()
 
-	def load(self, data):
+	def load(self, code):
 		assert self.__context
 
-		libconcrete.concrete_load(self.__context, data, len(data), self.__error)
+		libconcrete.concrete_load(self.__context, code, len(code), self.__error)
 		self.__check_error()
 
 		self.executable = True
+
+	def load_source(self, filename, sourcecode=None):
+		if sourcecode is None:
+			with open(filename) as file:
+				sourcecode = file.read()
+
+		return self.load(marshal.dumps(compile(sourcecode, filename, "exec")))
 
 	def execute(self):
 		assert self.__context
@@ -111,24 +119,3 @@ class Context(object):
 	def __check_error(self):
 		if self.__error.type:
 			raise Error(self.__error)
-
-def test():
-	import sys
-
-	with Context() as context:
-		with open("debug/obj/example/test.pyc", "rb") as file:
-			context.load(file.read())
-
-		snapshot = context.snapshot()
-
-	print("Changing context")
-
-	with Context(snapshot) as context:
-		while context.executable:
-			try:
-				context.execute()
-			except Error as e:
-				print("Error:", e, file=sys.stderr)
-
-if __name__ == "__main__":
-	test()

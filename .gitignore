@@ -5,3 +5,4 @@ doc/Doxyfile.version
 doc/html/
 TAGS
 config.mk
+*.py[co]
