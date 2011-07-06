@@ -34,8 +34,8 @@ public:
 	enum { InitialAllocationAddress = sizeof (Header) };
 
 	struct Snapshot {
-		void   *base;
-		size_t  size;
+		const void *base;
+		size_t      size;
 	};
 
 	struct Allocation {

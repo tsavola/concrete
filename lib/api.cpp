@@ -141,16 +141,16 @@ bool concrete_execute(ConcreteContext *wrap, ConcreteError *error)
 	return result;
 }
 
-void concrete_snapshot(ConcreteContext *wrap, void **base, size_t *size)
+void concrete_snapshot(ConcreteContext *wrap, const void **base_ptr, size_t *size_ptr)
 {
 	assert(wrap);
 	assert(!wrap->context.is_active());
 
-	Trace("concrete_snapshot(wrap=%p, base=%p, size=%lu)", wrap, base, size);
+	Trace("concrete_snapshot(wrap=%p, base_ptr=%p, size_ptr=%lu)", wrap, base_ptr, size_ptr);
 
 	auto snapshot = wrap->context.arena().snapshot();
-	*base = snapshot.base;
-	*size = snapshot.size;
+	*base_ptr = snapshot.base;
+	*size_ptr = snapshot.size;
 }
 
 void concrete_destroy(ConcreteContext *wrap)

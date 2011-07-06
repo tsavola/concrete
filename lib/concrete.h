@@ -47,8 +47,8 @@ CONCRETE_API bool concrete_execute(ConcreteContext *context,
                                    ConcreteError   *error);
 
 CONCRETE_API void concrete_snapshot(ConcreteContext  *context,
-                                    void            **base,
-                                    size_t           *size);
+                                    const void      **base_ptr,
+                                    size_t           *size_ptr);
 
 CONCRETE_API void concrete_destroy(ConcreteContext *context);
 
