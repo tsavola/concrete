@@ -51,7 +51,7 @@ private:
 	Data *data() const;
 };
 
-void CodeObjectTypeInit(const TypeObject &type);
+void CodeObjectTypeInit(const TypeObject &type, const char *name = "code");
 
 } // namespace
 

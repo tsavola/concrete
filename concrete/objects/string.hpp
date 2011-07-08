@@ -48,7 +48,7 @@ private:
 	Data *data() const;
 };
 
-void StringObjectTypeInit(const TypeObject &type);
+void StringObjectTypeInit(const TypeObject &type, const char *name = "string");
 
 } // namespace
 

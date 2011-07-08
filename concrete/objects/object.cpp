@@ -216,11 +216,6 @@ Object::Data *Object::nonthrowing_data() const throw ()
 	return nonthrowing_data_cast<Data>();
 }
 
-Object Object::add(const Object &other) const
-{
-	return protocol()->add->require<InternalObject>().immediate_call(*this, other);
-}
-
 StringObject Object::repr() const
 {
 	return protocol()->repr->require<InternalObject>().immediate_call(*this).require<StringObject>();
@@ -231,9 +226,9 @@ StringObject Object::str() const
 	return protocol()->str->require<InternalObject>().immediate_call(*this).require<StringObject>();
 }
  
-void ObjectTypeInit(const TypeObject &type)
+void ObjectTypeInit(const TypeObject &type, const char *name)
 {
-	type.init_builtin(StringObject::New("object"));
+	type.init_builtin(StringObject::New(name));
 
 	type.protocol()->repr  = InternalObject::New(internal::ObjectType_Repr);
 	type.protocol()->str   = InternalObject::New(internal::ObjectType_Str);

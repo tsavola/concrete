@@ -44,7 +44,7 @@ private:
 	Data *data() const;
 };
 
-void TupleObjectTypeInit(const TypeObject &type);
+void TupleObjectTypeInit(const TypeObject &type, const char *name = "tuple");
 
 } // namespace
 

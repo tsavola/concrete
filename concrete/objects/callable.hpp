@@ -42,6 +42,8 @@ template <> struct TypeCheck<CallableObject> {
 	bool operator()(const TypeObject &type);
 };
 
+void CallableObjectTypeInit(const TypeObject &type, const char *name);
+
 } // namespace
 
 #endif

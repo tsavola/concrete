@@ -37,7 +37,7 @@ private:
 	Data *data() const;
 };
 
-void LongObjectTypeInit(const TypeObject &type);
+void LongObjectTypeInit(const TypeObject &type, const char *name = "long");
 
 } // namespace
 

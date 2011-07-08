@@ -72,9 +72,9 @@ TupleObject::Data *TupleObject::data() const
 	return data_cast<Data>();
 }
 
-void TupleObjectTypeInit(const TypeObject &type)
+void TupleObjectTypeInit(const TypeObject &type, const char *name)
 {
-	type.init_builtin(StringObject::New("tuple"));
+	ObjectTypeInit(type, name);
 
 	Context::Active().data()->tuple_empty = TupleObject::NewWithSize(0);
 }

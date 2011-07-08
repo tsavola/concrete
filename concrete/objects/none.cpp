@@ -44,12 +44,9 @@ NoneObject::Data *NoneObject::data() const
 	return data_cast<Data>();
 }
 
-void NoneObjectTypeInit(const TypeObject &type)
+void NoneObjectTypeInit(const TypeObject &type, const char *name)
 {
-	type.init_builtin(StringObject::New("none"));
-
-	type.protocol()->repr  = InternalObject::New(internal::ObjectType_Repr);
-	type.protocol()->str   = InternalObject::New(internal::ObjectType_Str);
+	ObjectTypeInit(type, name);
 }
 
 } // namespace

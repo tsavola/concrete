@@ -77,9 +77,9 @@ TypeObject::Data *TypeObject::data() const
 	return data_cast<Data>();
 }
 
-void TypeObjectTypeInit(const TypeObject &type)
+void TypeObjectTypeInit(const TypeObject &type, const char *name)
 {
-	type.init_builtin(StringObject::New("type"));
+	ObjectTypeInit(type, name);
 }
 
 } // namespace

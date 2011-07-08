@@ -74,9 +74,9 @@ InternalObject::Data *InternalObject::data() const
 	return data_cast<Data>();
 }
 
-void InternalObjectTypeInit(const TypeObject &type)
+void InternalObjectTypeInit(const TypeObject &type, const char *name)
 {
-	type.init_builtin(StringObject::New("internal"));
+	CallableObjectTypeInit(type, name);
 }
 
 } // namespace

@@ -144,9 +144,9 @@ StringObject::Data *StringObject::data() const
 	return data_cast<Data>();
 }
 
-void StringObjectTypeInit(const TypeObject &type)
+void StringObjectTypeInit(const TypeObject &type, const char *name)
 {
-	type.init_builtin(StringObject::New("string"));
+	ObjectTypeInit(type, name);
 
 	type.protocol()->add   = InternalObject::New(internal::StringType_Add);
 	type.protocol()->repr  = InternalObject::New(internal::StringType_Repr);

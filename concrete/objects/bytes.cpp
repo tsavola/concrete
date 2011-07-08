@@ -54,9 +54,9 @@ BytesObject::Data *BytesObject::data() const
 	return data_cast<Data>();
 }
 
-void BytesObjectTypeInit(const TypeObject &type)
+void BytesObjectTypeInit(const TypeObject &type, const char *name)
 {
-	type.init_builtin(StringObject::New("bytes"));
+	ObjectTypeInit(type, name);
 }
 
 } // namespace

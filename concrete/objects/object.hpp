@@ -35,7 +35,7 @@ struct PortableObjectProtocol: Noncopyable {
 	Portable<Object> str;
 } CONCRETE_PACKED;
 
-void ObjectTypeInit(const TypeObject &type);
+void ObjectTypeInit(const TypeObject &type, const char *name = "object");
 
 } // namespace
 

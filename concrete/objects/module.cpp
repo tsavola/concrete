@@ -41,9 +41,9 @@ ModuleObject::Data *ModuleObject::data() const
 	return data_cast<Data>();
 }
 
-void ModuleObjectTypeInit(const TypeObject &type)
+void ModuleObjectTypeInit(const TypeObject &type, const char *name)
 {
-	type.init_builtin(StringObject::New("module"));
+	ObjectTypeInit(type, name);
 }
 
 } // namespace

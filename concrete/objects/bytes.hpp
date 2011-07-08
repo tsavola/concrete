@@ -39,7 +39,7 @@ private:
 	Data *data() const;
 };
 
-void BytesObjectTypeInit(const TypeObject &type);
+void BytesObjectTypeInit(const TypeObject &type, const char *name = "bytes");
 
 } // namespace
 

@@ -43,7 +43,7 @@ private:
 	Data *data() const;
 };
 
-void DictObjectTypeInit(const TypeObject &type);
+void DictObjectTypeInit(const TypeObject &type, const char *name = "dict");
 
 } // namespace
 

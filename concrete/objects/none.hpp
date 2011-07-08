@@ -35,7 +35,7 @@ private:
 	Data *data() const;
 };
 
-void NoneObjectTypeInit(const TypeObject &type);
+void NoneObjectTypeInit(const TypeObject &type, const char *name = "none");
 
 } // namespace
 

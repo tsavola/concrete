@@ -35,7 +35,7 @@ private:
 	Data *data() const;
 };
 
-void ModuleObjectTypeInit(const TypeObject &type);
+void ModuleObjectTypeInit(const TypeObject &type, const char *name = "module");
 
 } // namespace
 

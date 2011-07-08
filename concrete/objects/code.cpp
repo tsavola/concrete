@@ -253,9 +253,9 @@ CodeObject::Data *CodeObject::data() const
 	return data_cast<Data>();
 }
 
-void CodeObjectTypeInit(const TypeObject &type)
+void CodeObjectTypeInit(const TypeObject &type, const char *name)
 {
-	type.init_builtin(StringObject::New("code"));
+	ObjectTypeInit(type, name);
 }
 
 } // namespace

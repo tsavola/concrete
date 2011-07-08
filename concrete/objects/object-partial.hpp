@@ -20,8 +20,8 @@ class TypeObject;
 struct PortableObjectProtocol;
 
 class Object: public Pointer {
-	friend class Pointer;
 	friend class NoneObject;
+	friend class Pointer;
 	friend class TypeObject;
 
 public:
@@ -44,7 +44,6 @@ public:
 	TypeObject type() const;
 	const PortableObjectProtocol *protocol() const;
 
-	Object add(const Object &) const;
 	StringObject repr() const;
 	StringObject str() const;
 

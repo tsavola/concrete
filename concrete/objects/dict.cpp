@@ -144,9 +144,9 @@ DictObject::Data *DictObject::data() const
 	return c;
 }
 
-void DictObjectTypeInit(const TypeObject &type)
+void DictObjectTypeInit(const TypeObject &type, const char *name)
 {
-	type.init_builtin(StringObject::New("dict"));
+	ObjectTypeInit(type, name);
 }
 
 } // namespace

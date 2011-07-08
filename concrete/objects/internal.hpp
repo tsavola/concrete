@@ -58,7 +58,7 @@ private:
 	Data *data() const;
 };
 
-void InternalObjectTypeInit(const TypeObject &type);
+void InternalObjectTypeInit(const TypeObject &type, const char *name = "internal");
 
 namespace internal_symbol {
 #	define CONCRETE_INTERNAL_SYMBOL(Symbol)  InternalObject::Function Symbol;

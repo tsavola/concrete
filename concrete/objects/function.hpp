@@ -62,7 +62,7 @@ private:
 	Data *data() const;
 };
 
-void FunctionObjectTypeInit(const TypeObject &type);
+void FunctionObjectTypeInit(const TypeObject &type, const char *name = "function");
 
 } // namespace
 

@@ -44,13 +44,14 @@ LongObject::Data *LongObject::data() const
 	return data_cast<Data>();
 }
 
-void LongObjectTypeInit(const TypeObject &type)
+void LongObjectTypeInit(const TypeObject &type, const char *name)
 {
-	type.init_builtin(StringObject::New("long"));
+	ObjectTypeInit(type, name);
 
-	type.protocol()->add   = InternalObject::New(internal::LongType_Add);
 	type.protocol()->repr  = InternalObject::New(internal::LongType_Repr);
 	type.protocol()->str   = InternalObject::New(internal::LongType_Str);
+
+	type.protocol()->add   = InternalObject::New(internal::LongType_Add);
 }
 
 static Object LongAdd(const TupleObject &args, const DictObject &kwargs)

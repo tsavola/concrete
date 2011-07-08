@@ -83,9 +83,9 @@ FunctionObject::Data *FunctionObject::data() const
 	return data_cast<Data>();
 }
 
-void FunctionObjectTypeInit(const TypeObject &type)
+void FunctionObjectTypeInit(const TypeObject &type, const char *name)
 {
-	type.init_builtin(StringObject::New("function"));
+	CallableObjectTypeInit(type, name);
 }
 
 } // namespace

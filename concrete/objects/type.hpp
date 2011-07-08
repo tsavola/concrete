@@ -44,12 +44,12 @@ private:
 	Data *data() const;
 };
 
-void TypeObjectTypeInit(const TypeObject &type);
-
 template <typename ObjectType>
 struct TypeCheck {
 	bool operator()(const TypeObject &type);
 };
+
+void TypeObjectTypeInit(const TypeObject &type, const char *name = "type");
 
 } // namespace
 
