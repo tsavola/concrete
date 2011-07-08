@@ -29,50 +29,20 @@ PointerType Pointer::RawAccess::Materialize(RawType address, PointerType *) thro
 template <typename PointerType, typename... Args>
 PointerType Pointer::NewPointer(Args... args)
 {
-	return NewCustomSizePointer<PointerType>(sizeof (typename PointerType::Data), args...);
+	return PointerType(NewData<typename PointerType::Data>(args...));
 }
 
 template <typename PointerType, typename... Args>
 PointerType Pointer::NewCustomSizePointer(size_t size, Args... args)
 {
-	assert(size >= sizeof (typename PointerType::Data));
-
-	auto allocated = Arena::Active().allocate(size);
-	new (allocated.data) typename PointerType::Data(args...);
-
-	return PointerType(allocated.address);
-}
-
-template <typename DataType>
-DataType *Pointer::NonthrowingDataCast(unsigned int address) throw ()
-{
-	if (address == 0) {
-		Trace("pointer %1% access (minimum size %2%)", address, sizeof (DataType));
-		Arena::Active().defer_access_error(address);
-		return NULL;
-	}
-
-	return static_cast<DataType *> (
-		Arena::Active().nonthrowing_access(address, sizeof (DataType)).data);
+	return PointerType(NewCustomSizeData<typename PointerType::Data>(size, args...));
 }
 
 template <typename PointerType>
 void Pointer::DestroyPointer(PointerType &pointer) throw ()
 {
-	if (pointer.m_address) {
-		auto data = NonthrowingDataCast<typename PointerType::Data>(pointer.m_address);
-		if (data)
-			DestroyData(pointer.m_address, data);
-
-		pointer.reset_address(0);
-	}
-}
-
-template <typename DataType>
-void Pointer::DestroyData(unsigned int address, DataType *data) throw ()
-{
-	data->~DataType();
-	Arena::Active().free(address, data);
+	DestroyData<typename PointerType::Data>(pointer.m_address);
+	pointer.reset_address(0);
 }
 
 inline Pointer::Pointer(const Pointer &other) throw ():

@@ -13,7 +13,6 @@
 #include <cassert>
 #include <cstddef>
 
-#include <concrete/arena-access.hpp>
 #include <concrete/arena.hpp>
 #include <concrete/objects/none.hpp>
 #include <concrete/objects/object-partial.hpp>

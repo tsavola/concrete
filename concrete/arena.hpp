@@ -10,8 +10,6 @@
 #ifndef CONCRETE_ARENA_HPP
 #define CONCRETE_ARENA_HPP
 
-#include "arena-access.hpp"
-
 #include <cstddef>
 #include <cstdint>
 #include <exception>
@@ -21,6 +19,40 @@
 #include <concrete/util/packed.hpp>
 
 namespace concrete {
+
+class ArenaAccess {
+public:
+	void operator=(const ArenaAccess &other) throw ();
+
+protected:
+	template <typename T, typename... Args>
+	static unsigned int NewData(Args... args);
+
+	template <typename T, typename... Args>
+	static unsigned int NewCustomSizeData(size_t size, Args... args);
+
+	template <typename T>
+	static void DestroyData(unsigned int address) throw ();
+
+	template <typename T>
+	static void DestroyData(unsigned int address, T *data) throw ();
+
+	template <typename T>
+	static T *DataCast(unsigned int address);
+
+	template <typename T>
+	static T *NonthrowingDataCast(unsigned int address) throw ();
+
+	ArenaAccess() throw (): m_version(0) {}
+	ArenaAccess(const ArenaAccess &other) throw ();
+
+	void *arena_access(unsigned int address, size_t minimum_size) const;
+	void *nonthrowing_arena_access(unsigned int address, size_t minimum_size) const throw ();
+
+private:
+	mutable unsigned int  m_version;
+	mutable void         *m_data;
+};
 
 class Arena: Noncopyable {
 private:
@@ -92,6 +124,19 @@ private:
 	const size_t m_size;
 };
 
+class IntegrityError: public std::exception {
+public:
+	explicit IntegrityError(unsigned int address) throw ();
+
+	virtual const char *what() const throw ();
+	unsigned int address() const throw () { return m_address; }
+
+private:
+	const unsigned int m_address;
+};
+
 } // namespace
+
+#include "arena-inline.hpp"
 
 #endif

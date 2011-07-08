@@ -13,7 +13,6 @@
 
 #include <cstdint>
 
-#include <concrete/arena-access.hpp>
 #include <concrete/arena.hpp>
 #include <concrete/pointer.hpp>
 #include <concrete/util/byteorder.hpp>

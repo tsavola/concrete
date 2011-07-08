@@ -18,6 +18,48 @@
 
 namespace concrete {
 
+ArenaAccess::ArenaAccess(const ArenaAccess &other) throw ():
+	m_version(other.m_version),
+	m_data(other.m_data)
+{
+}
+
+void ArenaAccess::operator=(const ArenaAccess &other) throw ()
+{
+	m_version = other.m_version;
+	m_data = other.m_data;
+}
+
+void *ArenaAccess::arena_access(unsigned int address, size_t minimum_size) const
+{
+	Arena &arena = Arena::Active();
+
+	if (m_version != arena.version()) {
+		auto accession = arena.access(address, minimum_size);
+
+		m_version = accession.version;
+		m_data = accession.data;
+	}
+
+	return m_data;
+}
+
+void *ArenaAccess::nonthrowing_arena_access(unsigned int address, size_t minimum_size) const throw ()
+{
+	Arena &arena = Arena::Active();
+
+	if (m_version != arena.version()) {
+		auto accession = arena.nonthrowing_access(address, minimum_size);
+		if (accession.data == NULL)
+			return NULL;
+
+		m_version = accession.version;
+		m_data = accession.data;
+	}
+
+	return m_data;
+}
+
 Arena &Arena::Active() throw ()
 {
 	return Context::Active().arena();
@@ -204,46 +246,15 @@ void Arena::check_access_error()
 	}
 }
 
-ArenaAccess::ArenaAccess(const ArenaAccess &other) throw ():
-	m_version(other.m_version),
-	m_data(other.m_data)
+AllocationError::AllocationError(size_t size) throw ():
+	m_size(size)
 {
+	Backtrace();
 }
 
-void ArenaAccess::operator=(const ArenaAccess &other) throw ()
+const char *AllocationError::what() const throw ()
 {
-	m_version = other.m_version;
-	m_data = other.m_data;
-}
-
-void *ArenaAccess::arena_access(unsigned int address, size_t minimum_size) const
-{
-	Arena &arena = Arena::Active();
-
-	if (m_version != arena.version()) {
-		auto accession = arena.access(address, minimum_size);
-
-		m_version = accession.version;
-		m_data = accession.data;
-	}
-
-	return m_data;
-}
-
-void *ArenaAccess::nonthrowing_arena_access(unsigned int address, size_t minimum_size) const throw ()
-{
-	Arena &arena = Arena::Active();
-
-	if (m_version != arena.version()) {
-		auto accession = arena.nonthrowing_access(address, minimum_size);
-		if (accession.data == NULL)
-			return NULL;
-
-		m_version = accession.version;
-		m_data = accession.data;
-	}
-
-	return m_data;
+	return "Out of memory";
 }
 
 IntegrityError::IntegrityError(unsigned int address) throw ():
@@ -255,17 +266,6 @@ IntegrityError::IntegrityError(unsigned int address) throw ():
 const char *IntegrityError::what() const throw ()
 {
 	return "Arena integrity violation";
-}
-
-AllocationError::AllocationError(size_t size) throw ():
-	m_size(size)
-{
-	Backtrace();
-}
-
-const char *AllocationError::what() const throw ()
-{
-	return "Out of memory";
 }
 
 } // namespace

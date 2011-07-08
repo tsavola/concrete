@@ -10,7 +10,7 @@
 #include <cstddef>
 #include <memory>
 
-#include <concrete/arena-access.hpp>
+#include <concrete/arena.hpp>
 
 namespace concrete {
 

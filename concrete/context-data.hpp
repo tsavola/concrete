@@ -12,7 +12,7 @@
 
 #include "context.hpp"
 
-#include <concrete/arena-access.hpp>
+#include <concrete/arena.hpp>
 #include <concrete/execution.hpp>
 #include <concrete/list.hpp>
 #include <concrete/objects/object-data.hpp>

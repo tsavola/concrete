@@ -14,7 +14,7 @@
 #include <cstdint>
 #include <exception>
 
-#include <concrete/arena-access.hpp>
+#include <concrete/arena.hpp>
 
 namespace concrete {
 
@@ -66,14 +66,8 @@ protected:
 	template <typename PointerType, typename... Args>
 	static PointerType NewCustomSizePointer(size_t size, Args... args);
 
-	template <typename DataType>
-	static DataType *NonthrowingDataCast(unsigned int address) throw ();
-
 	template <typename PointerType>
 	static void DestroyPointer(PointerType &pointer) throw ();
-
-	template <typename DataType>
-	static void DestroyData(unsigned int address, DataType *data) throw ();
 
 	explicit Pointer(unsigned int address) throw (): m_address(address) {}
 
