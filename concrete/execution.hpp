@@ -32,7 +32,7 @@ class ExecutionFrame: public Pointer {
 
 private:
 	struct Data: Noncopyable {
-		Data(ExecutionFrame parent, const CodeObject &code, const DictObject &dict) throw ();
+		Data(const ExecutionFrame &parent, const CodeObject &code, const DictObject &dict);
 		~Data() throw ();
 
 		unsigned int stack_size() const throw ();
@@ -55,7 +55,9 @@ public:
 	void destroy() throw ();
 
 private:
-	static ExecutionFrame New(ExecutionFrame parent, const CodeObject &code, const DictObject &dict);
+	static ExecutionFrame New(const ExecutionFrame &parent,
+	                          const CodeObject &code,
+	                          const DictObject &dict);
 
 	explicit ExecutionFrame(unsigned int address) throw ():
 		Pointer(address) {}
@@ -94,7 +96,7 @@ public:
 
 private:
 	struct Data: ListNode<Execution>::Data {
-		Data(ExecutionFrame frame) throw ();
+		Data(const ExecutionFrame &frame) throw ();
 		~Data() throw ();
 
 		Portable<ExecutionFrame> initial;

@@ -28,9 +28,7 @@ namespace concrete {
  * Frame Data
  */
 
-ExecutionFrame::Data::Data(ExecutionFrame parent,
-                                 const CodeObject &code,
-                                 const DictObject &dict) throw ():
+ExecutionFrame::Data::Data(const ExecutionFrame &parent, const CodeObject &code, const DictObject &dict):
 	parent(parent),
 	code(code),
 	dict(dict)
@@ -62,7 +60,7 @@ unsigned int ExecutionFrame::Data::stack_size() const throw ()
  * Frame
  */
 
-ExecutionFrame ExecutionFrame::New(ExecutionFrame parent,
+ExecutionFrame ExecutionFrame::New(const ExecutionFrame &parent,
                                    const CodeObject &code,
                                    const DictObject &dict)
 {
@@ -162,7 +160,7 @@ ExecutionFrame::Data *ExecutionFrame::data() const
  * Frame Data
  */
 
-Execution::Data::Data(ExecutionFrame frame) throw ():
+Execution::Data::Data(const ExecutionFrame &frame) throw ():
 	initial(frame),
 	current(frame)
 {
