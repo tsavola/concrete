@@ -298,6 +298,7 @@ void Execution::execute_op()
 	case OpLoadConst:           op_load_const(arg); return;
 	case OpLoadName:            op_load_name(arg); return;
 	case OpLoadAttr:            op_load_attr(arg); return;
+	case OpCompareOp:           op_compare_op(arg); return;
 	case OpImportName:          op_import_name(arg); return;
 	case OpImportFrom:          op_import_from(arg); return;
 	case OpLoadFast:            op_load_fast(arg); return;
@@ -362,6 +363,34 @@ void Execution::op_load_attr(unsigned int namei)
 
 	auto name = code().names().get_item(namei);
 	push(dict.get_item(name));
+}
+
+void Execution::op_compare_op(unsigned int opname)
+{
+	auto right = pop();
+	auto left = pop();
+
+	Object callable;
+	bool not_filter = false;
+
+	switch (opname) {
+	case CompareLT:        callable = left.protocol()->lt; break;
+	case CompareLE:        callable = left.protocol()->le; break;
+	case CompareEQ:        callable = left.protocol()->eq; break;
+	case CompareNE:        callable = left.protocol()->ne; break;
+	case CompareGT:        callable = left.protocol()->gt; break;
+	case CompareGE:        callable = left.protocol()->ge; break;
+	case CompareIn:        callable = left.protocol()->contains; break;
+	case CompareNotIn:     callable = left.protocol()->contains; not_filter = true; break;
+	case CompareIs:        push(BoolObject::FromBool(left == right)); return;
+	case CompareIsNot:     push(BoolObject::FromBool(left != right)); return;
+	case CompareException: throw RuntimeError("CompareException not implemented");
+
+	default:
+		throw RuntimeError("Unknown comparison");
+	}
+
+	initiate_call(callable, TupleObject::New(left, right), not_filter);
 }
 
 void Execution::op_import_name(unsigned int namei)

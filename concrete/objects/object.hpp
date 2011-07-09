@@ -30,9 +30,13 @@ struct Object::RawAccess: Pointer::RawAccess {
 };
 
 struct PortableObjectProtocol: Noncopyable {
-	Portable<Object> add;
 	Portable<Object> repr;
 	Portable<Object> str;
+	Portable<Object> lt, le, eq, ne, gt, ge;
+
+	Portable<Object> contains;
+
+	Portable<Object> add;
 } CONCRETE_PACKED;
 
 void ObjectTypeInit(const TypeObject &type, const char *name = "object");

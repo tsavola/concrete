@@ -123,6 +123,7 @@ private:
 	void op_load_const(unsigned int consti);
 	void op_load_name(unsigned int namei);
 	void op_load_attr(unsigned int namei);
+	void op_compare_op(unsigned int opname);
 	void op_import_name(unsigned int namei);
 	void op_import_from(unsigned int namei);
 	void op_load_fast(unsigned int var_num);

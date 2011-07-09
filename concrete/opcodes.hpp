@@ -25,6 +25,7 @@ enum Opcode {
 	OpLoadConst           = 100,
 	OpLoadName            = 101,
 	OpLoadAttr            = 106,
+	OpCompareOp           = 107,
 	OpImportName          = 108,
 	OpImportFrom          = 109,
 
@@ -33,6 +34,15 @@ enum Opcode {
 
 	OpCallFunction        = 131,
 	OpMakeFunction        = 132,
+};
+
+enum CompareOp {
+	CompareLT, CompareLE,
+	CompareEQ, CompareNE,
+	CompareGT, CompareGE,
+	CompareIn, CompareNotIn,
+	CompareIs, CompareIsNot,
+	CompareException,
 };
 
 } // namespace
