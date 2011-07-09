@@ -12,6 +12,7 @@
 #include <cassert>
 
 #include <concrete/exception.hpp>
+#include <concrete/objects/bool.hpp>
 #include <concrete/objects/callable.hpp>
 #include <concrete/objects/function.hpp>
 #include <concrete/objects/long.hpp>
@@ -82,25 +83,10 @@ void ExecutionFrame::destroy() throw ()
 	DestroyPointer(*this);
 }
 
-ExecutionFrame ExecutionFrame::parent() const
-{
-	return data()->parent;
-}
-
-CodeObject ExecutionFrame::code() const
-{
-	return data()->code;
-}
-
-DictObject ExecutionFrame::dict() const
-{
-	return data()->dict;
-}
-
 template <typename T>
 T ExecutionFrame::load_bytecode()
 {
-	BytesObject bytecode = code().bytecode();
+	BytesObject bytecode = data()->code->bytecode();
 	size_t pos = *data()->bytecode_position;
 
 	if (pos + sizeof (T) > bytecode.size())
@@ -111,22 +97,6 @@ T ExecutionFrame::load_bytecode()
 	data()->bytecode_position = pos + sizeof (T);
 
 	return *reinterpret_cast<const T *> (ptr);
-}
-
-Object ExecutionFrame::call_callable() const
-{
-	return data()->call_callable;
-}
-
-Continuation ExecutionFrame::call_continuation() const
-{
-	return data()->call_continuation;
-}
-
-void ExecutionFrame::set_call(const Object &callable, Continuation cont)
-{
-	data()->call_callable = callable;
-	data()->call_continuation = cont;
 }
 
 void ExecutionFrame::push(const Object &object)
@@ -220,18 +190,12 @@ ExecutionFrame Execution::frame() const
 
 CodeObject Execution::code() const
 {
-	return frame().code();
+	return frame().data()->code;
 }
 
 DictObject Execution::dict() const
 {
-	return frame().dict();
-}
-
-template <typename T>
-T Execution::load()
-{
-	return frame().load_bytecode<T>();
+	return frame().data()->dict;
 }
 
 void Execution::push(const Object &object)
@@ -244,19 +208,20 @@ Object Execution::pop()
 	return frame().pop();
 }
 
-void Execution::initiate_call(const Object &callable)
+void Execution::initiate_call(const Object &callable, bool not_filter)
 {
-	initiate_call(callable, TupleObject::New());
+	initiate_call(callable, TupleObject::New(), not_filter);
 }
 
-void Execution::initiate_call(const Object &callable, const TupleObject &args)
+void Execution::initiate_call(const Object &callable, const TupleObject &args, bool not_filter)
 {
-	initiate_call(callable, args, DictObject::NewEmpty());
+	initiate_call(callable, args, DictObject::NewEmpty(), not_filter);
 }
 
 void Execution::initiate_call(const Object &callable,
                               const TupleObject &args,
-                              const DictObject &kwargs)
+                              const DictObject &kwargs,
+                              bool not_filter)
 {
 	ExecutionFrame current = frame();
 	Continuation cont;
@@ -270,21 +235,24 @@ void Execution::initiate_call(const Object &callable,
 	      callable.address(), current.address(),
 	      (cont ? "false" : "true"), result.address());
 
-	if (cont)
-		current.set_call(callable, cont);
-	else
+	if (cont) {
+		current.data()->call_callable = callable;
+		current.data()->call_continuation = cont;
+		current.data()->call_not_filter = not_filter;
+	} else {
 		current.push(result);
+	}
 }
 
 bool Execution::resume_call()
 {
 	ExecutionFrame current = frame();
-	Continuation cont = current.call_continuation();
+	Continuation cont = current.data()->call_continuation;
 
 	if (!cont)
 		return false;
 
-	Object callable = current.call_callable();
+	Object callable = current.data()->call_callable;
 
 	Trace("call resume enter: callable=%u frame=%u",
 	      callable.address(), current.address());

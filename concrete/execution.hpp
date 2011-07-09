@@ -43,6 +43,7 @@ private:
 		Portable<uint32_t>             bytecode_position;
 		Portable<Object>               call_callable;
 		Portable<Continuation>         call_continuation;
+		Portable<bool>                 call_not_filter;
 		Portable<uint32_t>             stack_pointer;
 		Portable<Object>               stack_objects[0]; // must be last
 	} CONCRETE_PACKED;
@@ -62,16 +63,7 @@ private:
 	explicit ExecutionFrame(unsigned int address) throw ():
 		Pointer(address) {}
 
-	ExecutionFrame parent() const;
-
-	CodeObject code() const;
-	DictObject dict() const;
-
 	template <typename T> T load_bytecode();
-
-	Object call_callable() const;
-	Continuation call_continuation() const;
-	void set_call(const Object &callable, Continuation cont);
 
 	void push(const Object &object);
 	Object pop();
@@ -111,11 +103,12 @@ private:
 	CodeObject code() const;
 	DictObject dict() const;
 
-	template <typename T> T load();
-
-	void initiate_call(const Object &callable);
-	void initiate_call(const Object &callable, const TupleObject &args);
-	void initiate_call(const Object &callable, const TupleObject &args, const DictObject &kwargs);
+	void initiate_call(const Object &callable, bool not_filter = false);
+	void initiate_call(const Object &callable, const TupleObject &args, bool not_filter = false);
+	void initiate_call(const Object &callable,
+	                   const TupleObject &args,
+	                   const DictObject &kwargs,
+	                   bool not_filter = false);
 	bool resume_call();
 
 	void push(const Object &object);
