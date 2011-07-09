@@ -53,6 +53,11 @@ ExecutionFrame::Data::~Data() throw ()
 		stack_objects[i].~Portable<Object>();
 }
 
+unsigned int ExecutionFrame::Data::stack_size() const throw ()
+{
+	return (Arena::AllocationSize(this) - sizeof (Data)) / sizeof (Portable<Object>);
+}
+
 /*
  * Frame
  */
@@ -128,7 +133,7 @@ void ExecutionFrame::set_call(const Object &callable, Continuation cont)
 void ExecutionFrame::push(const Object &object)
 {
 	unsigned int i = data()->stack_pointer;
-	if (i >= data()->code->stacksize())
+	if (i >= data()->stack_size())
 		throw RuntimeError("stack overflow");
 
 	new (&data()->stack_objects[i]) Portable<Object>(object);

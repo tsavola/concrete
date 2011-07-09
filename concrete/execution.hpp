@@ -35,6 +35,8 @@ private:
 		Data(ExecutionFrame parent, const CodeObject &code, const DictObject &dict) throw ();
 		~Data() throw ();
 
+		unsigned int stack_size() const throw ();
+
 		const Portable<ExecutionFrame> parent;
 		const Portable<CodeObject>     code;
 		const Portable<DictObject>     dict;
