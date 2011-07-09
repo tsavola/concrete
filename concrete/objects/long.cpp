@@ -9,9 +9,12 @@
 
 #include "long-data.hpp"
 
+#include <functional>
+
 #include <boost/format.hpp>
 
 #include <concrete/context-data.hpp>
+#include <concrete/objects/bool.hpp>
 #include <concrete/objects/internal.hpp>
 #include <concrete/objects/string.hpp>
 #include <concrete/objects/type.hpp>
@@ -50,6 +53,12 @@ void LongObjectTypeInit(const TypeObject &type, const char *name)
 
 	type.protocol()->repr  = InternalObject::New(internal::LongType_Repr);
 	type.protocol()->str   = InternalObject::New(internal::LongType_Str);
+	type.protocol()->lt    = InternalObject::New(internal::LongType_LT);
+	type.protocol()->le    = InternalObject::New(internal::LongType_LE);
+	type.protocol()->eq    = InternalObject::New(internal::LongType_EQ);
+	type.protocol()->ne    = InternalObject::New(internal::LongType_NE);
+	type.protocol()->gt    = InternalObject::New(internal::LongType_GT);
+	type.protocol()->ge    = InternalObject::New(internal::LongType_GE);
 
 	type.protocol()->add   = InternalObject::New(internal::LongType_Add);
 }
@@ -70,8 +79,22 @@ static Object LongStr(const TupleObject &args, const DictObject &kwargs)
 		(boost::format("%ld") % args.get_item(0).require<LongObject>().value()).str());
 }
 
+template <typename Predicate>
+static Object LongCompare(const TupleObject &args, const DictObject &kwargs)
+{
+	return BoolObject::FromBool(Predicate()(
+		args.get_item(0).require<LongObject>().value(),
+		args.get_item(1).require<LongObject>().value()));
+}
+
 } // namespace
 
 CONCRETE_INTERNAL_FUNCTION(LongType_Add,  LongAdd)
 CONCRETE_INTERNAL_FUNCTION(LongType_Repr, LongStr)
 CONCRETE_INTERNAL_FUNCTION(LongType_Str,  LongStr)
+CONCRETE_INTERNAL_FUNCTION(LongType_LT,   LongCompare<std::less<LongObject::Value>>)
+CONCRETE_INTERNAL_FUNCTION(LongType_LE,   LongCompare<std::less_equal<LongObject::Value>>)
+CONCRETE_INTERNAL_FUNCTION(LongType_EQ,   LongCompare<std::equal_to<LongObject::Value>>)
+CONCRETE_INTERNAL_FUNCTION(LongType_NE,   LongCompare<std::not_equal_to<LongObject::Value>>)
+CONCRETE_INTERNAL_FUNCTION(LongType_GT,   LongCompare<std::greater<LongObject::Value>>)
+CONCRETE_INTERNAL_FUNCTION(LongType_GE,   LongCompare<std::greater_equal<LongObject::Value>>)
