@@ -17,6 +17,7 @@
 #include <concrete/execution.hpp>
 #include <concrete/modules/builtins.hpp>
 #include <concrete/modules/concrete.hpp>
+#include <concrete/objects/bool.hpp>
 #include <concrete/objects/bytes.hpp>
 #include <concrete/objects/code.hpp>
 #include <concrete/objects/dict.hpp>
@@ -51,6 +52,7 @@ Context::Data::Data(const NoneObject &none,
                           const TypeObject &none_type,
                           const TypeObject &string_type,
                           const TypeObject &long_type,
+                          const TypeObject &bool_type,
                           const TypeObject &bytes_type,
                           const TypeObject &tuple_type,
                           const TypeObject &dict_type,
@@ -64,6 +66,7 @@ Context::Data::Data(const NoneObject &none,
 	none_type     (none_type),
 	string_type   (string_type),
 	long_type     (long_type),
+	bool_type     (bool_type),
 	bytes_type    (bytes_type),
 	tuple_type    (tuple_type),
 	tuple_empty   (none),
@@ -97,6 +100,7 @@ Context::Context(EventLoop &loop):
 	auto none_type     = TypeObject::NewBuiltin(type_type);
 	auto string_type   = TypeObject::NewBuiltin(type_type);
 	auto long_type     = TypeObject::NewBuiltin(type_type);
+	auto bool_type     = TypeObject::NewBuiltin(type_type);
 	auto bytes_type    = TypeObject::NewBuiltin(type_type);
 	auto tuple_type    = TypeObject::NewBuiltin(type_type);
 	auto dict_type     = TypeObject::NewBuiltin(type_type);
@@ -111,6 +115,7 @@ Context::Context(EventLoop &loop):
 	                        none_type,
 	                        string_type,
 	                        long_type,
+	                        bool_type,
 	                        bytes_type,
 	                        tuple_type,
 	                        dict_type,
@@ -126,6 +131,7 @@ Context::Context(EventLoop &loop):
 	NoneObjectTypeInit     (data()->none_type);
 	StringObjectTypeInit   (data()->string_type);
 	LongObjectTypeInit     (data()->long_type);
+	BoolObjectTypeInit     (data()->bool_type);
 	BytesObjectTypeInit    (data()->bytes_type);
 	TupleObjectTypeInit    (data()->tuple_type);
 	DictObjectTypeInit     (data()->dict_type);

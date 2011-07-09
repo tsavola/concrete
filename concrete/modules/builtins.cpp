@@ -12,6 +12,7 @@
 #include <iostream>
 
 #include <concrete/nested-data.hpp>
+#include <concrete/objects/bool.hpp>
 #include <concrete/objects/dict.hpp>
 #include <concrete/objects/internal.hpp>
 #include <concrete/objects/long.hpp>
@@ -25,6 +26,8 @@ DictObject BuiltinsModuleInit(const DictObject &modules)
 	auto dict = DictObject::New();
 
 	dict.set_item(StringObject::New("None"),  Object());
+	dict.set_item(StringObject::New("True"),  BoolObject::True());
+	dict.set_item(StringObject::New("False"), BoolObject::False());
 
 	dict.set_item(StringObject::New("id"),    InternalObject::New(internal::BuiltinsModule_Id));
 	dict.set_item(StringObject::New("print"), InternalObject::New(internal::BuiltinsModule_Print));

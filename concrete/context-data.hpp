@@ -29,6 +29,7 @@ struct Context::Data: Noncopyable {
 	        const TypeObject &none_type,
 	        const TypeObject &string_type,
 	        const TypeObject &long_type,
+	        const TypeObject &bool_type,
 	        const TypeObject &bytes_type,
 	        const TypeObject &tuple_type,
 	        const TypeObject &dict_type,
@@ -43,6 +44,9 @@ struct Context::Data: Noncopyable {
 	const Portable<TypeObject> none_type;
 	const Portable<TypeObject> string_type;
 	const Portable<TypeObject> long_type;
+	const Portable<TypeObject> bool_type;
+	Portable<Object>           bool_false;
+	Portable<Object>           bool_true;
 	const Portable<TypeObject> bytes_type;
 	const Portable<TypeObject> tuple_type;
 	Portable<Object>           tuple_empty;
