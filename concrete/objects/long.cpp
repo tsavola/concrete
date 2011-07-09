@@ -63,16 +63,6 @@ void LongObjectTypeInit(const TypeObject &type, const char *name)
 	type.protocol()->add   = InternalObject::New(internal::LongType_Add);
 }
 
-static Object LongAdd(const TupleObject &args, const DictObject &kwargs)
-{
-	LongObject::Value value = 0;
-
-	for (unsigned int i = args.size(); i-- > 0; )
-		value += args.get_item(i).require<LongObject>().value();
-
-	return LongObject::New(value);
-}
-
 static Object LongStr(const TupleObject &args, const DictObject &kwargs)
 {
 	return StringObject::New(
@@ -87,9 +77,18 @@ static Object LongCompare(const TupleObject &args, const DictObject &kwargs)
 		args.get_item(1).require<LongObject>().value()));
 }
 
+static Object LongAdd(const TupleObject &args, const DictObject &kwargs)
+{
+	LongObject::Value value = 0;
+
+	for (unsigned int i = args.size(); i-- > 0; )
+		value += args.get_item(i).require<LongObject>().value();
+
+	return LongObject::New(value);
+}
+
 } // namespace
 
-CONCRETE_INTERNAL_FUNCTION(LongType_Add,  LongAdd)
 CONCRETE_INTERNAL_FUNCTION(LongType_Repr, LongStr)
 CONCRETE_INTERNAL_FUNCTION(LongType_Str,  LongStr)
 CONCRETE_INTERNAL_FUNCTION(LongType_LT,   LongCompare<std::less<LongObject::Value>>)
@@ -98,3 +97,4 @@ CONCRETE_INTERNAL_FUNCTION(LongType_EQ,   LongCompare<std::equal_to<LongObject::
 CONCRETE_INTERNAL_FUNCTION(LongType_NE,   LongCompare<std::not_equal_to<LongObject::Value>>)
 CONCRETE_INTERNAL_FUNCTION(LongType_GT,   LongCompare<std::greater<LongObject::Value>>)
 CONCRETE_INTERNAL_FUNCTION(LongType_GE,   LongCompare<std::greater_equal<LongObject::Value>>)
+CONCRETE_INTERNAL_FUNCTION(LongType_Add,  LongAdd)
