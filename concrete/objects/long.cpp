@@ -18,7 +18,7 @@
 
 namespace concrete {
 
-LongObject::Data::Data(const TypeObject &type, int64_t value):
+LongObject::Data::Data(const TypeObject &type, Value value):
 	Object::Data(type),
 	value(value)
 {
@@ -29,12 +29,12 @@ TypeObject LongObject::Type()
 	return Context::Active().data()->long_type;
 }
 
-LongObject LongObject::New(int64_t value)
+LongObject LongObject::New(Value value)
 {
 	return NewObject<LongObject>(value);
 }
 
-int64_t LongObject::value() const
+LongObject::Value LongObject::value() const
 {
 	return data()->value;
 }
@@ -56,7 +56,7 @@ void LongObjectTypeInit(const TypeObject &type, const char *name)
 
 static Object LongAdd(const TupleObject &args, const DictObject &kwargs)
 {
-	int64_t value = 0;
+	LongObject::Value value = 0;
 
 	for (unsigned int i = args.size(); i-- > 0; )
 		value += args.get_item(i).require<LongObject>().value();

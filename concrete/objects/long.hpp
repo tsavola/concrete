@@ -21,12 +21,14 @@ class LongObject: public Object {
 	friend class Object;
 
 public:
+	typedef int64_t Value;
+
 	static TypeObject Type();
-	static LongObject New(int64_t value);
+	static LongObject New(Value value);
 
 	LongObject(const LongObject &other) throw (): Object(other) {}
 
-	int64_t value() const;
+	Value value() const;
 
 protected:
 	struct Data;

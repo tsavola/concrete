@@ -18,9 +18,9 @@
 namespace concrete {
 
 struct LongObject::Data: Object::Data {
-	Portable<int64_t> value;
+	Portable<Value> value;
 
-	Data(const TypeObject &type, int64_t value);
+	Data(const TypeObject &type, Value value);
 
 } CONCRETE_PACKED;
 
