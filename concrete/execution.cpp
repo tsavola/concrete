@@ -20,6 +20,7 @@
 #include <concrete/objects/object.hpp>
 #include <concrete/objects/tuple.hpp>
 #include <concrete/opcodes.hpp>
+#include <concrete/util/byteorder.hpp>
 #include <concrete/util/trace.hpp>
 
 namespace concrete {
@@ -295,42 +296,48 @@ bool Execution::resume_call()
 	      (cont ? "false" : "true"), result.address());
 
 	if (!cont) {
-		callable = Object();
+		if (current.data()->call_not_filter)
+			result = BoolObject::FromBool(!result.require<LongObject>().value());
+
 		current.push(result);
+
+		current.data()->call_callable = Object();
+		current.data()->call_not_filter = false;
 	}
 
-	current.set_call(callable, cont);
+	current.data()->call_continuation = cont;
 
 	return true;
 }
 
 void Execution::execute_op()
 {
-	using namespace opcodes;
-
-	unsigned int op = load<uint8_t>();
+	unsigned int op = frame().load_bytecode<uint8_t>();
 
 	Trace("opcode %3u", op);
 
-	switch (Opcode(op)) {
-	case PopTop:              op_pop_top(); break;
-	case Nop:                 break;
-	case BinaryAdd:           op_binary_add(); break;
-	case ReturnValue:         op_return_value(); break;
-	case StoreName:           op_store_name(); break;
-	case LoadConst:           op_load_const(); break;
-	case LoadName:            op_load_name(); break;
-	case LoadAttr:            op_load_attr(); break;
-	case ImportName:          op_import_name(); break;
-	case ImportFrom:          op_import_from(); break;
-	case LoadFast:            op_load_fast(); break;
-	case CallFunction:        op_call_function(); break;
-	case MakeFunction:        op_make_function(); break;
-
-	default:
-		Trace("unsupported opcode: %u", op);
-		throw RuntimeError("unsupported opcode");
+	switch (op) {
+	case OpPopTop:              op_pop_top(); return;
+	case OpNop:                 return;
+	case OpBinaryAdd:           op_binary_add(); return;
+	case OpReturnValue:         op_return_value(); return;
 	}
+
+	unsigned int arg = frame().load_bytecode<uint16_t>();
+
+	switch (op) {
+	case OpStoreName:           op_store_name(arg); return;
+	case OpLoadConst:           op_load_const(arg); return;
+	case OpLoadName:            op_load_name(arg); return;
+	case OpLoadAttr:            op_load_attr(arg); return;
+	case OpImportName:          op_import_name(arg); return;
+	case OpImportFrom:          op_import_from(arg); return;
+	case OpLoadFast:            op_load_fast(arg); return;
+	case OpCallFunction:        op_call_function(arg); return;
+	case OpMakeFunction:        op_make_function(arg); return;
+	}
+
+	throw RuntimeError("unsupported opcode");
 }
 
 void Execution::op_pop_top()
@@ -351,24 +358,24 @@ void Execution::op_return_value()
 
 	Trace("frame exit %u", current.address());
 
-	data()->current = current.parent();
+	data()->current = current.data()->parent;
 }
 
-void Execution::op_store_name()
+void Execution::op_store_name(unsigned int namei)
 {
-	auto name = code().names().get_item(load<uint16_t>());
+	auto name = code().names().get_item(namei);
 	auto value = pop();
 	dict().set_item(name, value);
 }
 
-void Execution::op_load_const()
+void Execution::op_load_const(unsigned int consti)
 {
-	push(code().consts().get_item(load<uint16_t>()));
+	push(code().consts().get_item(consti));
 }
 
-void Execution::op_load_name()
+void Execution::op_load_name(unsigned int namei)
 {
-	auto name = code().names().get_item(load<uint16_t>());
+	auto name = code().names().get_item(namei);
 	Object value;
 
 	if (!dict().get_item(name, value))
@@ -377,22 +384,22 @@ void Execution::op_load_name()
 	push(value);
 }
 
-void Execution::op_load_attr()
+void Execution::op_load_attr(unsigned int namei)
 {
 	auto object = pop();
 
 	// TODO: support all object types
 	auto dict = object.require<ModuleObject>().dict();
 
-	auto name = code().names().get_item(load<uint16_t>());
+	auto name = code().names().get_item(namei);
 	push(dict.get_item(name));
 }
 
-void Execution::op_import_name()
+void Execution::op_import_name(unsigned int namei)
 {
 	auto from = pop();
 	auto level = pop().require<LongObject>();
-	auto name = code().names().get_item(load<uint16_t>());
+	auto name = code().names().get_item(namei);
 	auto module = Context::Active().import_builtin_module(name);
 
 	if (!from.check<NoneObject>()) {
@@ -404,23 +411,22 @@ void Execution::op_import_name()
 	push(module);
 }
 
-void Execution::op_import_from()
+void Execution::op_import_from(unsigned int namei)
 {
 	auto module = pop().require<ModuleObject>();
-	auto name = code().names().get_item(load<uint16_t>());
+	auto name = code().names().get_item(namei);
 	push(module.dict().get_item(name));
 }
 
-void Execution::op_load_fast()
+void Execution::op_load_fast(unsigned int var_num)
 {
-	auto varname = code().varnames().get_item(load<uint16_t>());
-	push(dict().get_item(varname));
+	push(dict().get_item(code().varnames().get_item(var_num)));
 }
 
-void Execution::op_call_function()
+void Execution::op_call_function(uint16_t portable_argc)
 {
-	unsigned int argc = load<uint8_t>();
-	unsigned int kwargc = load<uint8_t>();
+	unsigned int argc = PortByteorder(portable_argc) & 0xff;
+	unsigned int kwargc = PortByteorder(portable_argc) >> 8;
 
 	auto args = TupleObject::NewWithSize(argc);
 	auto kwargs = DictObject::NewWithCapacity(kwargc);
@@ -438,9 +444,9 @@ void Execution::op_call_function()
 	initiate_call(pop(), args, kwargs);
 }
 
-void Execution::op_make_function()
+void Execution::op_make_function(uint16_t portable_argc)
 {
-	if (load<uint16_t>() > 0)
+	if (portable_argc)
 		throw RuntimeError("default function arguments not supported");
 
 	auto code = pop().require<CodeObject>();

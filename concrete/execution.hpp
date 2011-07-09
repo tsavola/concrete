@@ -126,15 +126,15 @@ private:
 	void op_pop_top();
 	void op_binary_add();
 	void op_return_value();
-	void op_store_name();
-	void op_load_const();
-	void op_load_name();
-	void op_load_attr();
-	void op_import_name();
-	void op_import_from();
-	void op_load_fast();
-	void op_call_function();
-	void op_make_function();
+	void op_store_name(unsigned int namei);
+	void op_load_const(unsigned int consti);
+	void op_load_name(unsigned int namei);
+	void op_load_attr(unsigned int namei);
+	void op_import_name(unsigned int namei);
+	void op_import_from(unsigned int namei);
+	void op_load_fast(unsigned int var_num);
+	void op_call_function(uint16_t argc);
+	void op_make_function(uint16_t argc);
 };
 
 } // namespace

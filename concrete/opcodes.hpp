@@ -12,23 +12,27 @@
 
 namespace concrete {
 
-namespace opcodes {
-	enum Opcode {
-		PopTop              = 1,
-		Nop                 = 9,
-		BinaryAdd           = 23,
-		ReturnValue         = 83,
-		StoreName           = 90,
-		LoadConst           = 100,
-		LoadName            = 101,
-		LoadAttr            = 106,
-		ImportName          = 108,
-		ImportFrom          = 109,
-		LoadFast            = 124,
-		CallFunction        = 131,
-		MakeFunction        = 132,
-	};
-}
+enum Opcode {
+	OpPopTop              = 1,
+	OpNop                 = 9,
+
+	OpBinaryAdd           = 23,
+
+	OpReturnValue         = 83,
+
+	OpStoreName           = 90,
+
+	OpLoadConst           = 100,
+	OpLoadName            = 101,
+	OpLoadAttr            = 106,
+	OpImportName          = 108,
+	OpImportFrom          = 109,
+
+	OpLoadFast            = 124,
+
+	OpCallFunction        = 131,
+	OpMakeFunction        = 132,
+};
 
 } // namespace
 
