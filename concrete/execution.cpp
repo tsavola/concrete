@@ -333,6 +333,7 @@ void Execution::execute_op()
 	case OpImportName:          op_import_name(arg); return;
 	case OpImportFrom:          op_import_from(arg); return;
 	case OpLoadFast:            op_load_fast(arg); return;
+	case OpStoreFast:           op_store_fast(arg); return;
 	case OpCallFunction:        op_call_function(arg); return;
 	case OpMakeFunction:        op_make_function(arg); return;
 	}
@@ -421,6 +422,11 @@ void Execution::op_import_from(unsigned int namei)
 void Execution::op_load_fast(unsigned int var_num)
 {
 	push(dict().get_item(code().varnames().get_item(var_num)));
+}
+
+void Execution::op_store_fast(unsigned int var_num)
+{
+	dict().set_item(code().varnames().get_item(var_num), pop());
 }
 
 void Execution::op_call_function(uint16_t portable_argc)

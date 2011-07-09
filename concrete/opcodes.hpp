@@ -29,6 +29,7 @@ enum Opcode {
 	OpImportFrom          = 109,
 
 	OpLoadFast            = 124,
+	OpStoreFast           = 125,
 
 	OpCallFunction        = 131,
 	OpMakeFunction        = 132,

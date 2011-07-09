@@ -133,6 +133,7 @@ private:
 	void op_import_name(unsigned int namei);
 	void op_import_from(unsigned int namei);
 	void op_load_fast(unsigned int var_num);
+	void op_store_fast(unsigned int var_num);
 	void op_call_function(uint16_t argc);
 	void op_make_function(uint16_t argc);
 };
