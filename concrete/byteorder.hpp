@@ -7,8 +7,8 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#ifndef CONCRETE_UTIL_BYTEORDER_HPP
-#define CONCRETE_UTIL_BYTEORDER_HPP
+#ifndef CONCRETE_BYTEORDER_HPP
+#define CONCRETE_BYTEORDER_HPP
 
 #ifdef __linux__
 # include <endian.h>
@@ -16,7 +16,13 @@
 # include <sys/types.h>
 #endif
 
-#if defined(__BYTE_ORDER)
+#if defined(BYTE_ORDER)
+# if BYTE_ORDER == LITTLE_ENDIAN
+#  define CONCRETE_PORTABLE_BYTEORDER true
+# else
+#  define CONCRETE_PORTABLE_BYTEORDER false
+# endif
+#elif defined(__BYTE_ORDER)
 # if __BYTE_ORDER == __LITTLE_ENDIAN
 #  define CONCRETE_PORTABLE_BYTEORDER true
 # else
@@ -49,15 +55,15 @@ template <typename T> struct PortableByteorder<T, 1> {
 };
 
 template <typename T> struct PortableByteorder<T, 2> {
-	static T Adapt(T x) throw () { return bswap_16(x); }
+	static T Adapt(T x) throw () { return __bswap_16(x); }
 };
 
 template <typename T> struct PortableByteorder<T, 4> {
-	static T Adapt(T x) throw () { return bswap_32(x); }
+	static T Adapt(T x) throw () { return __bswap_32(x); }
 };
 
 template <typename T> struct PortableByteorder<T, 8> {
-	static T Adapt(T x) throw () { return bswap_64(x); }
+	static T Adapt(T x) throw () { return __bswap_64(x); }
 };
 
 #endif

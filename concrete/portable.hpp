@@ -12,7 +12,7 @@
 
 #include <cstdint>
 
-#include <concrete/util/byteorder.hpp>
+#include <concrete/byteorder.hpp>
 #include <concrete/util/packed.hpp>
 
 namespace concrete {
