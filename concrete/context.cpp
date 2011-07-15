@@ -156,6 +156,11 @@ Context::Context(EventLoop &loop, void *base, size_t size):
 	ScopedContext activate(*this);
 
 	m_none_pointer = *data()->none;
+
+	if (*data()->current) {
+		data()->runnable.append(data()->current);
+		data()->current = Execution();
+	}
 }
 
 Object Context::load_builtin_name(const Object &name)
@@ -190,7 +195,9 @@ void Context::suspend_until(const EventSource &source, unsigned int conditions)
 
 bool Context::executable() throw ()
 {
-	assert(!data()->current);
+	// error condition
+	if (*data()->current)
+		return false;
 
 	return data()->runnable || data()->waiting;
 }
