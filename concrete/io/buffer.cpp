@@ -9,100 +9,121 @@
 
 #include "buffer.hpp"
 
+#include <cassert>
+#include <cstdlib>
 #include <cstring>
+#include <new>
 
 namespace concrete {
 
 Buffer::Buffer():
 	m_data(NULL),
 	m_size(0),
-	m_transferred(0)
+	m_produce_offset(0),
+	m_consume_offset(0)
 {
 }
 
 Buffer::Buffer(size_t size):
-	m_data(new char[size]),
 	m_size(size),
-	m_transferred(0)
+	m_produce_offset(0),
+	m_consume_offset(0)
 {
-}
-
-Buffer::Buffer(void *data, size_t size):
-	m_data(new char[size]),
-	m_size(size),
-	m_transferred(0)
-{
-	std::memcpy(m_data, data, size);
+	m_data = reinterpret_cast<char *> (std::malloc(size));
+	if (m_data == NULL)
+		throw std::bad_alloc();
 }
 
 Buffer::~Buffer() throw ()
 {
-	delete[] m_data;
+	std::free(m_data);
 }
 
 void Buffer::reset()
 {
-	if (m_data)
-		delete[] m_data;
+	std::free(m_data);
 
 	m_data = NULL;
 	m_size = 0;
-	m_transferred = 0;
+	m_produce_offset = 0;
+	m_consume_offset = 0;
 }
 
 void Buffer::reset(size_t size)
 {
-	reset();
+	char *data = reinterpret_cast<char *> (std::realloc(m_data, size));
+	if (data == NULL)
+		throw std::bad_alloc();
 
-	m_data = new char[size];
+	m_data = data;
 	m_size = size;
+	m_produce_offset = 0;
+	m_consume_offset = 0;
 }
 
-void Buffer::reset(void *data, size_t size)
+size_t Buffer::production_space() const throw ()
 {
-	reset(size);
+	if (m_consume_offset == m_size) {
+		assert(m_produce_offset == m_size);
 
-	std::memcpy(m_data, data, size);
+		m_produce_offset = 0;
+		m_consume_offset = 0;
+	}
+
+	assert(m_produce_offset <= m_size);
+
+	return m_size - m_produce_offset;
 }
 
-char *Buffer::data() throw ()
+char *Buffer::production_ptr() const throw ()
 {
-	return m_data;
+	return m_data + m_produce_offset;
 }
 
-const char *Buffer::data() const throw ()
+void Buffer::produced_length(size_t length) throw ()
 {
-	return m_data;
+	assert(length <= production_space());
+
+	m_produce_offset += length;
 }
 
-size_t Buffer::size() const throw ()
+void Buffer::produce(const void *data, size_t size) throw ()
 {
-	return m_size;
+	size_t space = production_space();
+	assert(size <= space);
+	if (size > space)
+		size = space;
+
+	std::memcpy(production_ptr(), data, size);
+	produced_length(size);
 }
 
-size_t Buffer::remaining() const throw ()
+size_t Buffer::consumable_size() const throw ()
 {
-	return m_size - m_transferred;
+	assert(m_produce_offset <= m_size);
+	assert(m_consume_offset <= m_produce_offset);
+
+	return m_produce_offset - m_consume_offset;
 }
 
-bool Buffer::read(File &file)
+const char *Buffer::consumable_data() const throw ()
 {
-	auto len = file.read(m_data + m_transferred, m_size - m_transferred);
-
-	if (len > 0)
-		m_transferred += len;
-
-	return len != 0;
+	return m_data + m_consume_offset;
 }
 
-bool Buffer::write(File &file)
+void Buffer::consumed_length(size_t length) throw ()
 {
-	auto len = file.write(m_data + m_transferred, m_size - m_transferred);
+	assert(length <= consumable_size());
 
-	if (len > 0)
-		m_transferred += len;
+	m_consume_offset += length;
+}
 
-	return len != 0;
+void Buffer::shift() throw ()
+{
+	std::memmove(m_data, consumable_data(), consumable_size());
+
+	m_produce_offset -= m_consume_offset;
+	m_consume_offset = 0;
 }
 
 } // namespace

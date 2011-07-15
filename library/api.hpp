@@ -7,8 +7,8 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#ifndef LIB_API_HPP
-#define LIB_API_HPP
+#ifndef LIBRARY_API_HPP
+#define LIBRARY_API_HPP
 
 #define CONCRETE_API __attribute__ ((visibility ("default")))
 

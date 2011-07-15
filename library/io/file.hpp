@@ -7,28 +7,34 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#ifndef CONCRETE_IO_FILE_HPP
-#define CONCRETE_IO_FILE_HPP
+#ifndef LIBRARY_IO_FILE_HPP
+#define LIBRARY_IO_FILE_HPP
 
 #include <cstddef>
 
-#include <concrete/resource.hpp>
+#include <concrete/io/buffer.hpp>
+#include <concrete/util/noncopyable.hpp>
 
 namespace concrete {
 
-class File: public Resource {
+class File: Noncopyable {
 public:
 	explicit File(int fd);
-	virtual ~File() throw ();
+	~File() throw ();
 
 	int fd() const throw ();
+
+	bool read(Buffer &buffer);
+	bool read(Buffer &buffer, size_t size);
+	ssize_t read(char *data, size_t size);
+
+	bool write(Buffer &buffer);
+	bool write(Buffer &buffer, size_t size);
+	ssize_t write(const char *data, size_t size);
 
 	void suspend_until(unsigned int conditions);
 	void suspend_until_readable();
 	void suspend_until_writable();
-
-	ssize_t read(void *buf, size_t bufsize);
-	ssize_t write(const void *buf, size_t bufsize);
 
 private:
 	const int m_fd;

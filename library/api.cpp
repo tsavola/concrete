@@ -16,9 +16,7 @@
 #include <concrete/objects/code.hpp>
 #include <concrete/util/trace.hpp>
 
-using namespace concrete;
-
-namespace {
+namespace concrete {
 
 template <typename Function, typename... Args>
 static void nonthrowing_call(ConcreteError *error, Function function, Args... args) throw ()
@@ -99,6 +97,8 @@ static void destroy(ConcreteContext *wrap)
 }
 
 } // namespace
+
+using namespace concrete;
 
 ConcreteContext *concrete_create(ConcreteError *error)
 {

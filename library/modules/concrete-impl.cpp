@@ -16,9 +16,7 @@
 #include <concrete/objects/object.hpp>
 #include <concrete/objects/tuple.hpp>
 
-using namespace concrete;
-
-namespace {
+namespace concrete {
 
 static Object Test(const TupleObject &args, const DictObject &kwargs)
 {

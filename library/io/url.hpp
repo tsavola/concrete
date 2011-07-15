@@ -7,25 +7,27 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#ifndef CONCRETE_IO_RESOLVE_HPP
-#define CONCRETE_IO_RESOLVE_HPP
+#ifndef LIBRARY_IO_URL_HPP
+#define LIBRARY_IO_URL_HPP
 
 #include <string>
 
-#include <concrete/resource.hpp>
-
-struct addrinfo;
-
 namespace concrete {
 
-class Resolve: public Resource {
+class URL {
 public:
-	void suspend_until_resolved();
-	struct addrinfo *addrinfo();
-};
+	enum { MaxLength = 4096 };
 
-template <> struct ResourceCreate<Resolve> {
-	static Resolve *New(const std::string &node, const std::string &service);
+	explicit URL(const char *url);
+
+	const std::string &host() const throw () { return m_host; }
+	const std::string &port() const throw () { return m_port; }
+	const std::string &path() const throw () { return m_path; }
+
+private:
+	std::string m_host;
+	std::string m_port;
+	std::string m_path;
 };
 
 } // namespace

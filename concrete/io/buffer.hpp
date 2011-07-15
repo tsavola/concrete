@@ -12,7 +12,6 @@
 
 #include <cstddef>
 
-#include <concrete/io/file.hpp>
 #include <concrete/resource.hpp>
 
 namespace concrete {
@@ -21,25 +20,28 @@ class Buffer: public Resource {
 public:
 	Buffer();
 	explicit Buffer(size_t size);
-	Buffer(void *data, size_t size);
-	~Buffer() throw ();
+	virtual ~Buffer() throw ();
 
 	void reset();
 	void reset(size_t size);
-	void reset(void *data, size_t size);
 
-	char *data() throw ();
-	const char *data() const throw ();
-	size_t size() const throw ();
-	size_t remaining() const throw ();
+	size_t production_space() const throw ();
+	char *production_ptr() const throw ();
+	void produced_length(size_t length) throw ();
 
-	bool read(File &source);
-	bool write(File &target);
+	void produce(const void *data, size_t size) throw ();
+
+	size_t consumable_size() const throw ();
+	const char *consumable_data() const throw ();
+	void consumed_length(size_t length) throw ();
+
+	void shift() throw ();
 
 private:
-	char   *m_data;
-	size_t  m_size;
-	size_t  m_transferred;
+	char           *m_data;
+	size_t          m_size;
+	mutable size_t  m_produce_offset;
+	mutable size_t  m_consume_offset;
 };
 
 } // namespace

@@ -14,18 +14,11 @@
 
 namespace concrete {
 
+class EventSource;
+
 enum EventCondition {
 	EventSourceReadable = 1,
 	EventSourceWritable = 2,
-};
-
-class EventSource {
-public:
-	EventSource(int fd) throw (): m_fd(fd) {}
-	operator int() const throw () { return m_fd; }
-
-private:
-	int m_fd;
 };
 
 class EventCallback: Noncopyable {

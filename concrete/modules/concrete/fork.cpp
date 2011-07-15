@@ -9,18 +9,14 @@
 
 #include <cstring>
 
-#include <sys/socket.h>
-#include <netdb.h>
-
 #include <concrete/context.hpp>
 #include <concrete/continuation.hpp>
 #include <concrete/execution.hpp>
 #include <concrete/io/buffer.hpp>
-#include <concrete/io/resolve.hpp>
-#include <concrete/io/socket.hpp>
+#include <concrete/io/http.hpp>
+#include <concrete/objects/bool.hpp>
 #include <concrete/objects/dict.hpp>
 #include <concrete/objects/internal.hpp>
-#include <concrete/objects/long.hpp>
 #include <concrete/objects/module.hpp>
 #include <concrete/objects/tuple.hpp>
 #include <concrete/portable.hpp>
@@ -33,13 +29,11 @@ namespace concrete {
 class Fork: public Continuation {
 	friend class Pointer;
 
-protected:
-	enum {
-		ResolveMode,
-		ConnectMode,
-		WriteMode,
-	};
+private:
+	enum State { Connecting, Sending, ReceivingHeaders, ReceivingContent, Done };
+	enum { ResponseBufferSize = 4096 };
 
+protected:
 	struct Data: Noncopyable {
 		~Data() throw ()
 		{
@@ -48,169 +42,183 @@ protected:
 
 		void reset() throw ()
 		{
-			resolve.destroy();
-			socket.destroy();
+			http.destroy();
 			buffer.destroy();
 		}
 
 		bool is_lost() const throw ()
 		{
-			return resolve.is_lost() || socket.is_lost() || buffer.is_lost();
+			return http.is_lost() || buffer.is_lost();
 		}
 
-		Portable<Object>          host;
-		Portable<Object>          port;
-		PortableResource<Resolve> resolve;
-		PortableResource<Socket>  socket;
-		PortableResource<Buffer>  buffer;
-		Portable<uint8_t>         mode;
-		Portable<bool>            forked;
+		Portable<Object>                  url;
+		Portable<uint8_t>                 state;
+		PortableResource<HTTPTransaction> http;
+		PortableResource<Buffer>          buffer;
+		Portable<bool>                    forked;
 	} CONCRETE_PACKED;
 
-	explicit Fork(unsigned int address) throw ():
-		Continuation(address)
-	{
-	}
+	explicit Fork(unsigned int address) throw (): Continuation(address) {}
 
 public:
 	bool initiate(Object &result, const TupleObject &args, const DictObject &kwargs) const
 	{
-		auto address = args.get_item(0).require<TupleObject>();
-		auto host = address.get_item(0).require<StringObject>();
-		auto port = address.get_item(1).require<LongObject>().str();
-
-		data()->host = host;
-		data()->port = port;
-
-		initiate_resolve();
-		return false;
+		data()->url = args.get_item(0).require<StringObject>();
+		return leave_state(connect(result));
 	}
 
 	bool resume(Object &result) const
 	{
-		if (data()->forked)
+		if (data()->forked) {
+			result = BoolObject::False();
 			return true;
+		}
 
 		if (data()->is_lost()) {
+			Trace("fork resources lost");
+
 			data()->reset();
-			initiate_resolve();
-			return false;
+			return leave_state(connect(result));
 		}
 
-		switch (data()->mode) {
-		case ResolveMode:
-			resume_resolve();
-			return false;
+		State state = State(*data()->state);
 
-		case ConnectMode:
-			resume_connect();
-			return false;
-
-		case WriteMode:
-			return resume_write(result);
-
-		default:
-			throw IntegrityError(address());
+		switch (state) {
+		case Connecting:       state = connecting(result);        break;
+		case Sending:          state = sending(result);           break;
+		case ReceivingHeaders: state = receiving_headers(result); break;
+		case ReceivingContent: state = receiving_content(result); break;
+		case Done:             assert(false);
+		default:               throw IntegrityError(address());
 		}
+
+		return leave_state(state);
 	}
 
 private:
-	void initiate_resolve() const
+	bool leave_state(State state) const
 	{
-		Trace("fork: initiate resolve");
-
-		auto host = data()->host->cast<StringObject>().string();
-		auto port = data()->port->cast<StringObject>().string();
-
-		data()->resolve.create(host, port);
-		data()->mode = ResolveMode;
-
-		data()->resolve->suspend_until_resolved();
+		data()->state = state;
+		return state == Done;
 	}
 
-	void resume_resolve() const
+	State connect(Object &result) const
 	{
-		Trace("fork: resume resolve");
+		Trace("fork connect");
 
-		auto addrinfo = data()->resolve->addrinfo();
-		if (addrinfo)
-			initiate_connect(addrinfo);
-		else
-			data()->resolve->suspend_until_resolved();
+		auto url = data()->url->require<StringObject>();
+
+		auto resource = PortableResource<HTTPTransaction>::New(HTTP::POST, url);
+		data()->http = resource;
+
+		return connecting(result);
 	}
 
-	void initiate_connect(const struct addrinfo *addrinfo) const
+	State connecting(Object &result) const
 	{
-		Trace("fork: initiate connect");
+		Trace("fork connecting");
 
-		int family;
-		socklen_t addrlen = 0;
-		struct sockaddr_storage addr;
+		if (data()->http->connected())
+			return send(result);
 
-		for (auto i = addrinfo; i; i = i->ai_next)
-			if (i->ai_socktype == SOCK_STREAM) {
-				family = i->ai_family;
-				addrlen = i->ai_addrlen;
-				std::memcpy(&addr, i->ai_addr, addrlen);
-
-				break;
-			}
-
-		if (addrlen == 0)
-			throw ResourceError();
-
-		data()->socket.create(family, SOCK_STREAM);
-		data()->mode = ConnectMode;
-
-		data()->socket->suspend_until_connected(reinterpret_cast<struct sockaddr *> (&addr), addrlen);
+		data()->http->suspend_until_connected();
+		return Connecting;
 	}
 
-	void resume_connect() const
+	State send(Object &result) const
 	{
-		Trace("fork: resume connect");
+		Trace("fork send");
 
-		if (data()->socket->connected())
-			initiate_write();
-		else
-			data()->socket->suspend_until_connected();
-	}
-
-	void initiate_write() const
-	{
-		Trace("fork: initiate write");
-
-		data()->buffer.create();
-		data()->mode = WriteMode;
+		// create buffer resource before snapshotting because it affects arena
+		auto resource = PortableResource<Buffer>::New();
+		data()->buffer = resource;
 
 		auto snapshot = Arena::Active().snapshot();
 
-		auto buffer = *data()->buffer;
+		auto buffer = *resource;
 		buffer->reset(snapshot.size);
 
-		data()->forked = true;
-		std::memcpy(buffer->data(), snapshot.base, snapshot.size);
-		data()->forked = false;
+		auto data_ptr = data();
+		// critical section
+		data_ptr->forked = true;
+		buffer->produce(snapshot.base, snapshot.size);
+		data_ptr->forked = false;
 
-		data()->socket->suspend_until_writable();
+		data()->http->set_request_length(snapshot.size);
+		data()->http->reset_request_buffer(buffer);
+
+		return sending(result);
 	}
 
-	bool resume_write(Object &result) const
+	State sending(Object &result) const
 	{
-		Trace("fork: resume write");
+		Trace("fork sending");
 
-		auto socket = *data()->socket;
-		auto buffer = *data()->buffer;
+		if (data()->http->content_sent())
+			return receive_headers(result);
 
-		if (!buffer->write(*socket))
-			throw ResourceError();
+		data()->http->suspend_until_content_sent();
+		return Sending;
+	}
 
-		if (buffer->remaining()) {
-			socket->suspend_until_writable();
-			return false;
-		} else {
-			result = LongObject::New(1);
-			return true;
-		}
+	State receive_headers(Object &result) const
+	{
+		Trace("fork receive headers");
+
+		data()->http->reset_request_buffer();
+
+		data()->buffer->reset(ResponseBufferSize);
+		data()->http->reset_response_buffer(*data()->buffer);
+
+		return receiving_headers(result);
+	}
+
+	State receiving_headers(Object &result) const
+	{
+		Trace("fork receiving headers");
+
+		if (data()->http->headers_received())
+			return receive_content(result);
+
+		data()->http->suspend_until_headers_received();
+		return ReceivingHeaders;
+	}
+
+	State receive_content(Object &result) const
+	{
+		Trace("fork receive content");
+
+		if (data()->http->response_status() != HTTP::OK)
+			throw RuntimeError("HTTP response error");
+
+		auto length = data()->http->response_length();
+
+		if (length < 0)
+			throw RuntimeError("HTTP response length not specified");
+
+		if (length > ResponseBufferSize)
+			throw RuntimeError("HTTP response too long");
+
+		return receiving_content(result);
+	}
+
+	State receiving_content(Object &result) const
+	{
+		Trace("fork receiving content");
+
+		if (data()->http->content_received())
+			return done(result);
+
+		data()->http->suspend_until_content_received();
+		return ReceivingContent;
+	}
+
+	State done(Object &result) const
+	{
+		Trace("fork done");
+
+		result = BoolObject::True();
+		return Done;
 	}
 
 	Data *data() const

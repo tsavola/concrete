@@ -57,6 +57,9 @@ void PortableResource<T>::destroy() throw ()
 template <typename T>
 bool PortableResource<T>::is_lost() const throw ()
 {
+	if (!m_slot)
+		return false;
+
 	return ResourceManager::Active().is_resource_lost(m_slot);
 }
 

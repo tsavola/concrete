@@ -14,6 +14,8 @@
 
 #include <concrete/util/trace.hpp>
 
+#include <library/event-source.hpp>
+
 namespace concrete {
 
 LibeventLoop::LibeventLoop():

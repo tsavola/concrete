@@ -14,6 +14,8 @@
 #include <concrete/context.hpp>
 #include <concrete/resource.hpp>
 
+#include <library/io/error.hpp>
+
 namespace concrete {
 
 Socket::Socket(int domain, int type, int protocol):
@@ -22,23 +24,16 @@ Socket::Socket(int domain, int type, int protocol):
 {
 }
 
-void Socket::suspend_until_connected(const struct sockaddr *addr, socklen_t addrlen)
+void Socket::connect(const struct sockaddr *addr, socklen_t addrlen)
 {
 	assert(!m_connected);
 
-	if (connect(fd(), addr, addrlen) < 0) {
-		if (errno == EINPROGRESS)
-			suspend_until_connected();
-		else
-			throw ResourceError();
+	if (::connect(fd(), addr, addrlen) < 0) {
+		if (errno != EINPROGRESS)
+			throw IOResourceError();
 	} else {
 		m_connected = true;
 	}
-}
-
-void Socket::suspend_until_connected()
-{
-	suspend_until_writable();
 }
 
 bool Socket::connected()
@@ -47,10 +42,14 @@ bool Socket::connected()
 		return true;
 
 	int error;
-	socklen_t len;
+	socklen_t len = sizeof (error);
 
-	if (getsockopt(fd(), SOL_SOCKET, SO_ERROR, &error, &len) < 0)
-		throw ResourceError();
+	if (getsockopt(fd(), SOL_SOCKET, SO_ERROR, &error, &len) < 0) {
+		if (errno == EINPROGRESS)
+			return false;
+
+		throw IOResourceError();
+	}
 
 	if (error == 0) {
 		m_connected = true;
@@ -60,7 +59,12 @@ bool Socket::connected()
 	if (error == EINPROGRESS)
 		return false;
 
-	throw ResourceError();
+	throw IOResourceError(error);
+}
+
+void Socket::suspend_until_connected()
+{
+	suspend_until_writable();
 }
 
 } // namespace
