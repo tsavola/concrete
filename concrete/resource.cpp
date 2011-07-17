@@ -33,11 +33,6 @@ void ResourceSlot::destroy() throw ()
 	DestroyPointer(*this);
 }
 
-unsigned int ResourceSlot::key() const throw ()
-{
-	return address();
-}
-
 ResourceManager &ResourceManager::Active() throw ()
 {
 	return Context::Active().resource_manager();
@@ -56,7 +51,7 @@ ResourceSlot ResourceManager::add_resource(Resource *resource)
 	std::unique_ptr<ResourceSlot, void (*)(ResourceSlot *)> slot_deleter(
 		&slot, ResourceSlot::Destroy);
 
-	m_map[slot.key()] = resource;
+	m_map[slot.address()] = resource;
 
 	slot_deleter.release();
 
@@ -65,7 +60,7 @@ ResourceSlot ResourceManager::add_resource(Resource *resource)
 
 Resource *ResourceManager::find_resource(ResourceSlot slot) const throw ()
 {
-	auto i = m_map.find(slot.key());
+	auto i = m_map.find(slot.address());
 	if (i != m_map.end())
 		return i->second;
 
@@ -75,7 +70,7 @@ Resource *ResourceManager::find_resource(ResourceSlot slot) const throw ()
 void ResourceManager::destroy_resource(ResourceSlot slot) throw ()
 {
 	if (slot) {
-		auto i = m_map.find(slot.key());
+		auto i = m_map.find(slot.address());
 		if (i != m_map.end()) {
 			delete i->second;
 			m_map.erase(i);
@@ -87,7 +82,7 @@ void ResourceManager::destroy_resource(ResourceSlot slot) throw ()
 
 bool ResourceManager::is_resource_lost(ResourceSlot slot) const throw ()
 {
-	return m_map.find(slot.key()) == m_map.end();
+	return m_map.find(slot.address()) == m_map.end();
 }
 
 ResourceError::ResourceError() throw ()

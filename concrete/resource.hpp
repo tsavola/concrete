@@ -37,7 +37,6 @@ public:
 	ResourceSlot(const ResourceSlot &other) throw (): Pointer(other) {}
 
 	void destroy() throw ();
-	unsigned int key() const throw ();
 
 protected:
 	struct Data {} CONCRETE_PACKED;
@@ -66,7 +65,7 @@ private:
 };
 
 template <typename ResourceType>
-class PortableResource {
+class PortableResource: Noncopyable {
 public:
 	~PortableResource() throw ();
 
