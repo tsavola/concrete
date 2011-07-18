@@ -9,7 +9,6 @@
 
 #include "resource.hpp"
 
-#include <cassert>
 #include <memory>
 #include <utility>
 

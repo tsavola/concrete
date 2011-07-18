@@ -24,6 +24,7 @@
 #include <concrete/objects/string-data.hpp>
 #include <concrete/objects/tuple-data.hpp>
 #include <concrete/objects/type-data.hpp>
+#include <concrete/util/assert.hpp>
 
 namespace concrete {
 

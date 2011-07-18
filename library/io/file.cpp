@@ -16,6 +16,7 @@
 
 #include <concrete/context.hpp>
 #include <concrete/event.hpp>
+#include <concrete/util/assert.hpp>
 
 #include <library/event-source.hpp>
 #include <library/io/error.hpp>

@@ -10,7 +10,6 @@
 #ifndef CONCRETE_CONTEXT_HPP
 #define CONCRETE_CONTEXT_HPP
 
-#include <cassert>
 #include <cstddef>
 
 #include <concrete/arena.hpp>

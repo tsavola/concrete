@@ -13,6 +13,7 @@
 
 #include <concrete/context.hpp>
 #include <concrete/resource.hpp>
+#include <concrete/util/assert.hpp>
 
 #include <library/io/error.hpp>
 

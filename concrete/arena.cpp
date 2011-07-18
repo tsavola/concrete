@@ -13,6 +13,7 @@
 #include <cstring>
 
 #include <concrete/context.hpp>
+#include <concrete/util/assert.hpp>
 #include <concrete/util/backtrace.hpp>
 #include <concrete/util/trace.hpp>
 

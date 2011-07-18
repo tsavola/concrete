@@ -9,10 +9,11 @@
 
 #include "buffer.hpp"
 
-#include <cassert>
 #include <cstdlib>
 #include <cstring>
 #include <new>
+
+#include <concrete/util/assert.hpp>
 
 namespace concrete {
 

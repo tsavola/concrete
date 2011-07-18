@@ -9,11 +9,11 @@
 
 #include "api.hpp"
 
-#include <cassert>
 #include <exception>
 
 #include <concrete/execution.hpp>
 #include <concrete/objects/code.hpp>
+#include <concrete/util/assert.hpp>
 #include <concrete/util/trace.hpp>
 
 namespace concrete {

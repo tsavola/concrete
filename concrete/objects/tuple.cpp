@@ -13,6 +13,7 @@
 #include <concrete/exception.hpp>
 #include <concrete/objects/string.hpp>
 #include <concrete/objects/type.hpp>
+#include <concrete/util/assert.hpp>
 
 namespace concrete {
 

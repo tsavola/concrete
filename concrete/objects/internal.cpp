@@ -9,12 +9,11 @@
 
 #include "internal-data.hpp"
 
-#include <cassert>
-
 #include <concrete/context-data.hpp>
 #include <concrete/context.hpp>
 #include <concrete/objects/string.hpp>
 #include <concrete/objects/type.hpp>
+#include <concrete/util/assert.hpp>
 
 namespace concrete {
 

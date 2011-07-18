@@ -9,7 +9,6 @@
 
 #include "http-impl.hpp"
 
-#include <cassert>
 #include <cctype>
 #include <cstdlib>
 #include <cstring>
@@ -21,6 +20,7 @@
 #include <boost/format.hpp>
 
 #include <concrete/exception.hpp>
+#include <concrete/util/assert.hpp>
 
 namespace concrete {
 

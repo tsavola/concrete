@@ -10,7 +10,6 @@
 #include "dict-data.hpp"
 
 #include <algorithm>
-#include <cassert>
 
 #include <concrete/arena.hpp>
 #include <concrete/context-data.hpp>

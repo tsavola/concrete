@@ -21,6 +21,7 @@
 #include <concrete/objects/tuple.hpp>
 #include <concrete/portable.hpp>
 #include <concrete/resource.hpp>
+#include <concrete/util/assert.hpp>
 #include <concrete/util/noncopyable.hpp>
 #include <concrete/util/trace.hpp>
 

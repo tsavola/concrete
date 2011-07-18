@@ -16,6 +16,7 @@
 #include <concrete/arena.hpp>
 #include <concrete/byteorder.hpp>
 #include <concrete/pointer.hpp>
+#include <concrete/util/assert.hpp>
 
 namespace concrete {
 

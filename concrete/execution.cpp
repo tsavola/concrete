@@ -9,8 +9,6 @@
 
 #include "execution.hpp"
 
-#include <cassert>
-
 #include <concrete/byteorder.hpp>
 #include <concrete/exception.hpp>
 #include <concrete/objects/bool.hpp>
@@ -22,6 +20,7 @@
 #include <concrete/objects/object.hpp>
 #include <concrete/objects/tuple.hpp>
 #include <concrete/opcodes.hpp>
+#include <concrete/util/assert.hpp>
 #include <concrete/util/trace.hpp>
 
 namespace concrete {

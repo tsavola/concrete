@@ -9,7 +9,6 @@
 
 #include "context-data.hpp"
 
-#include <cassert>
 #include <cstdlib>
 #include <memory>
 
@@ -28,6 +27,7 @@
 #include <concrete/objects/object.hpp>
 #include <concrete/objects/string.hpp>
 #include <concrete/objects/tuple.hpp>
+#include <concrete/util/assert.hpp>
 #include <concrete/util/packed.hpp>
 #include <concrete/util/thread.hpp>
 

@@ -12,6 +12,7 @@
 #include <concrete/objects/function-data.hpp>
 #include <concrete/objects/internal-data.hpp>
 #include <concrete/objects/type.hpp>
+#include <concrete/util/assert.hpp>
 
 namespace concrete {
 
