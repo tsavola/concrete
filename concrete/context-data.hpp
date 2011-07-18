@@ -24,19 +24,19 @@ namespace concrete {
 
 struct Context::Data: Noncopyable {
 	Data(const NoneObject &none,
-	        const TypeObject &type_type,
-	        const TypeObject &object_type,
-	        const TypeObject &none_type,
-	        const TypeObject &string_type,
-	        const TypeObject &long_type,
-	        const TypeObject &bool_type,
-	        const TypeObject &bytes_type,
-	        const TypeObject &tuple_type,
-	        const TypeObject &dict_type,
-	        const TypeObject &code_type,
-	        const TypeObject &function_type,
-	        const TypeObject &internal_type,
-	        const TypeObject &module_type) throw ();
+	     const TypeObject &type_type,
+	     const TypeObject &object_type,
+	     const TypeObject &none_type,
+	     const TypeObject &string_type,
+	     const TypeObject &long_type,
+	     const TypeObject &bool_type,
+	     const TypeObject &bytes_type,
+	     const TypeObject &tuple_type,
+	     const TypeObject &dict_type,
+	     const TypeObject &code_type,
+	     const TypeObject &function_type,
+	     const TypeObject &internal_type,
+	     const TypeObject &module_type) throw ();
 
 	const Portable<NoneObject> none;
 	const Portable<TypeObject> type_type;

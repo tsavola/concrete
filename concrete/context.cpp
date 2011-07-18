@@ -47,19 +47,19 @@ private:
 static CONCRETE_THREAD_LOCAL Context *active_context;
 
 Context::Data::Data(const NoneObject &none,
-                          const TypeObject &type_type,
-                          const TypeObject &object_type,
-                          const TypeObject &none_type,
-                          const TypeObject &string_type,
-                          const TypeObject &long_type,
-                          const TypeObject &bool_type,
-                          const TypeObject &bytes_type,
-                          const TypeObject &tuple_type,
-                          const TypeObject &dict_type,
-                          const TypeObject &code_type,
-                          const TypeObject &function_type,
-                          const TypeObject &internal_type,
-                          const TypeObject &module_type) throw ():
+                    const TypeObject &type_type,
+                    const TypeObject &object_type,
+                    const TypeObject &none_type,
+                    const TypeObject &string_type,
+                    const TypeObject &long_type,
+                    const TypeObject &bool_type,
+                    const TypeObject &bytes_type,
+                    const TypeObject &tuple_type,
+                    const TypeObject &dict_type,
+                    const TypeObject &code_type,
+                    const TypeObject &function_type,
+                    const TypeObject &internal_type,
+                    const TypeObject &module_type) throw ():
 	none          (none),
 	type_type     (type_type),
 	object_type   (object_type),
@@ -110,19 +110,19 @@ Context::Context(EventLoop &loop):
 	auto module_type   = TypeObject::NewBuiltin(type_type);
 
 	new (data()) Data(none,
-	                        type_type,
-	                        object_type,
-	                        none_type,
-	                        string_type,
-	                        long_type,
-	                        bool_type,
-	                        bytes_type,
-	                        tuple_type,
-	                        dict_type,
-	                        code_type,
-	                        function_type,
-	                        internal_type,
-	                        module_type);
+	                  type_type,
+	                  object_type,
+	                  none_type,
+	                  string_type,
+	                  long_type,
+	                  bool_type,
+	                  bytes_type,
+	                  tuple_type,
+	                  dict_type,
+	                  code_type,
+	                  function_type,
+	                  internal_type,
+	                  module_type);
 
 	none.init_builtin      (data()->none_type);
 
