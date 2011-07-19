@@ -32,6 +32,8 @@ public:
 
 	void init_builtin(const StringObject &name) const;
 
+	template <typename Member> void set(Member member, const Object &value) const;
+
 	StringObject name() const;
 	PortableObjectProtocol *protocol() const;
 

@@ -9,6 +9,12 @@
 
 namespace concrete {
 
+template <typename Member>
+void TypeObject::set(Member member, const Object &value) const
+{
+	protocol()->*member = value;
+}
+
 template <typename ObjectType>
 bool TypeCheck<ObjectType>::operator()(const TypeObject &type)
 {

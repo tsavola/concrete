@@ -46,8 +46,8 @@ void BoolObjectTypeInit(const TypeObject &type, const char *name)
 {
 	LongObjectTypeInit(type, name);
 
-	type.protocol()->repr  = InternalObject::New(internal::BoolType_Repr);
-	type.protocol()->str   = InternalObject::New(internal::BoolType_Str);
+	type.set(&PortableObjectProtocol::repr, InternalObject::New(internal::BoolType_Repr));
+	type.set(&PortableObjectProtocol::str,  InternalObject::New(internal::BoolType_Str));
 
 	Context::Active().data()->bool_true  = BoolObject::NewBuiltin(true);
 	Context::Active().data()->bool_false = BoolObject::NewBuiltin(false);

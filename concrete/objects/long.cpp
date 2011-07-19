@@ -51,16 +51,16 @@ void LongObjectTypeInit(const TypeObject &type, const char *name)
 {
 	ObjectTypeInit(type, name);
 
-	type.protocol()->repr  = InternalObject::New(internal::LongType_Repr);
-	type.protocol()->str   = InternalObject::New(internal::LongType_Str);
-	type.protocol()->lt    = InternalObject::New(internal::LongType_LT);
-	type.protocol()->le    = InternalObject::New(internal::LongType_LE);
-	type.protocol()->eq    = InternalObject::New(internal::LongType_EQ);
-	type.protocol()->ne    = InternalObject::New(internal::LongType_NE);
-	type.protocol()->gt    = InternalObject::New(internal::LongType_GT);
-	type.protocol()->ge    = InternalObject::New(internal::LongType_GE);
+	type.set(&PortableObjectProtocol::repr, InternalObject::New(internal::LongType_Repr));
+	type.set(&PortableObjectProtocol::str,  InternalObject::New(internal::LongType_Str));
+	type.set(&PortableObjectProtocol::lt,   InternalObject::New(internal::LongType_LT));
+	type.set(&PortableObjectProtocol::le,   InternalObject::New(internal::LongType_LE));
+	type.set(&PortableObjectProtocol::eq,   InternalObject::New(internal::LongType_EQ));
+	type.set(&PortableObjectProtocol::ne,   InternalObject::New(internal::LongType_NE));
+	type.set(&PortableObjectProtocol::gt,   InternalObject::New(internal::LongType_GT));
+	type.set(&PortableObjectProtocol::ge,   InternalObject::New(internal::LongType_GE));
 
-	type.protocol()->add   = InternalObject::New(internal::LongType_Add);
+	type.set(&PortableObjectProtocol::add,  InternalObject::New(internal::LongType_Add));
 }
 
 static Object LongStr(const TupleObject &args, const DictObject &kwargs)
