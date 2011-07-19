@@ -231,8 +231,11 @@ void ObjectTypeInit(const TypeObject &type, const char *name)
 {
 	type.init_builtin(StringObject::New(name));
 
-	type.set(&PortableObjectProtocol::repr, InternalObject::New(internal::ObjectType_Repr));
-	type.set(&PortableObjectProtocol::str,  InternalObject::New(internal::ObjectType_Str));
+	auto repr = InternalObject::New(internal::ObjectType_Repr);
+	auto str  = InternalObject::New(internal::ObjectType_Str);
+
+	type.set(&PortableObjectProtocol::repr, repr);
+	type.set(&PortableObjectProtocol::str,  str);
 }
 
 static Object ObjectRepr(const TupleObject &args, const DictObject &kwargs)

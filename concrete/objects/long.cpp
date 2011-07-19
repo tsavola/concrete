@@ -51,16 +51,27 @@ void LongObjectTypeInit(const TypeObject &type, const char *name)
 {
 	ObjectTypeInit(type, name);
 
-	type.set(&PortableObjectProtocol::repr, InternalObject::New(internal::LongType_Repr));
-	type.set(&PortableObjectProtocol::str,  InternalObject::New(internal::LongType_Str));
-	type.set(&PortableObjectProtocol::lt,   InternalObject::New(internal::LongType_LT));
-	type.set(&PortableObjectProtocol::le,   InternalObject::New(internal::LongType_LE));
-	type.set(&PortableObjectProtocol::eq,   InternalObject::New(internal::LongType_EQ));
-	type.set(&PortableObjectProtocol::ne,   InternalObject::New(internal::LongType_NE));
-	type.set(&PortableObjectProtocol::gt,   InternalObject::New(internal::LongType_GT));
-	type.set(&PortableObjectProtocol::ge,   InternalObject::New(internal::LongType_GE));
+	auto repr = InternalObject::New(internal::LongType_Repr);
+	auto str  = InternalObject::New(internal::LongType_Str);
+	auto lt   = InternalObject::New(internal::LongType_LT);
+	auto le   = InternalObject::New(internal::LongType_LE);
+	auto eq   = InternalObject::New(internal::LongType_EQ);
+	auto ne   = InternalObject::New(internal::LongType_NE);
+	auto gt   = InternalObject::New(internal::LongType_GT);
+	auto ge   = InternalObject::New(internal::LongType_GE);
 
-	type.set(&PortableObjectProtocol::add,  InternalObject::New(internal::LongType_Add));
+	auto add  = InternalObject::New(internal::LongType_Add);
+
+	type.set(&PortableObjectProtocol::repr, repr);
+	type.set(&PortableObjectProtocol::str,  str);
+	type.set(&PortableObjectProtocol::lt,   lt);
+	type.set(&PortableObjectProtocol::le,   le);
+	type.set(&PortableObjectProtocol::eq,   eq);
+	type.set(&PortableObjectProtocol::ne,   ne);
+	type.set(&PortableObjectProtocol::gt,   gt);
+	type.set(&PortableObjectProtocol::ge,   ge);
+
+	type.set(&PortableObjectProtocol::add,  add);
 }
 
 static Object LongStr(const TupleObject &args, const DictObject &kwargs)

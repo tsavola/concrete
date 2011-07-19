@@ -148,9 +148,13 @@ void StringObjectTypeInit(const TypeObject &type, const char *name)
 {
 	ObjectTypeInit(type, name);
 
-	type.set(&PortableObjectProtocol::add,  InternalObject::New(internal::StringType_Add));
-	type.set(&PortableObjectProtocol::repr, InternalObject::New(internal::StringType_Repr));
-	type.set(&PortableObjectProtocol::str,  InternalObject::New(internal::StringType_Str));
+	auto add  = InternalObject::New(internal::StringType_Add);
+	auto repr = InternalObject::New(internal::StringType_Repr);
+	auto str  = InternalObject::New(internal::StringType_Str);
+
+	type.set(&PortableObjectProtocol::add,  add);
+	type.set(&PortableObjectProtocol::repr, repr);
+	type.set(&PortableObjectProtocol::str,  str);
 }
 
 static Object StringAdd(const TupleObject &args, const DictObject &kwargs)
