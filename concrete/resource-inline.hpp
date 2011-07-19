@@ -39,17 +39,10 @@ T *ResourceManager::resource_cast(ResourceSlot slot) const
 }
 
 template <typename T>
-PortableResource<T>::~PortableResource() throw ()
-{
-	destroy();
-}
-
-template <typename T>
 template <typename... Args>
-void PortableResource<T>::create(Args... args)
+PortableResource<T> PortableResource<T>::New(Args... args)
 {
-	destroy();
-	m_slot = ResourceManager::Active().new_resource<T>(args...);
+	return PortableResource<T>(ResourceManager::Active().new_resource<T>(args...));
 }
 
 template <typename T>
@@ -68,34 +61,9 @@ bool PortableResource<T>::is_lost() const throw ()
 }
 
 template <typename T>
-PortableResource<T>::operator bool() const throw ()
-{
-	return m_slot->operator bool();
-}
-
-template <typename T>
-bool PortableResource<T>::operator!() const throw ()
-{
-	return m_slot->operator!();
-}
-
-template <typename T>
 T *PortableResource<T>::operator*() const throw ()
 {
 	return ResourceManager::Active().resource_cast<T>(m_slot);
-}
-
-template <typename T>
-T *PortableResource<T>::operator->() const throw ()
-{
-	return operator*();
-}
-
-template <typename T>
-template <typename... Args>
-T *ResourceCreate<T>::New(Args... args)
-{
-	return new T(args...);
 }
 
 } // namespace

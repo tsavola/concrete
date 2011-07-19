@@ -50,10 +50,10 @@ public:
 
 	~ResourceManager() throw ();
 
-	template <typename ResourceType, typename... Args> ResourceSlot new_resource(Args... args);
+	template <typename T, typename... Args> ResourceSlot new_resource(Args... args);
 	void destroy_resource(ResourceSlot slot) throw ();
 	bool is_resource_lost(ResourceSlot slot) const throw ();
-	template <typename ResourceType> ResourceType *resource_cast(ResourceSlot slot) const;
+	template <typename T> T *resource_cast(ResourceSlot slot) const;
 
 private:
 	typedef std::map<unsigned int, Resource *> Map;
@@ -64,27 +64,33 @@ private:
 	Map m_map;
 };
 
-template <typename ResourceType>
-class PortableResource: Noncopyable {
+template <typename T>
+class PortableResource {
 public:
-	~PortableResource() throw ();
+	template <typename... Args> static PortableResource New(Args... args);
 
-	template <typename... Args> void create(Args... args);
+	PortableResource() throw () {}
+	PortableResource(const PortableResource &other) throw (): m_slot(other.m_slot) {}
+
+	void operator=(const PortableResource &other) throw () { m_slot = other.m_slot; }
+
 	void destroy() throw ();
 	bool is_lost() const throw ();
 
-	operator bool() const throw ();
-	bool operator!() const throw ();
-	ResourceType *operator*() const throw ();
-	ResourceType *operator->() const throw ();
+	operator bool() const throw () { return bool(m_slot); }
+	bool operator!() const throw () { return !m_slot; }
+	T *operator*() const throw ();
+	T *operator->() const throw () { return operator*(); }
 
 private:
+	explicit PortableResource(const ResourceSlot &slot) throw (): m_slot(slot) {}
+
 	Portable<ResourceSlot> m_slot;
 } CONCRETE_PACKED;
 
-template <typename ResourceType>
+template <typename T>
 struct ResourceCreate {
-	template <typename... Args> static ResourceType *New(Args... args);
+	template <typename... Args> static T *New(Args... args) { return new T(args...); }
 };
 
 class ResourceError: public std::exception {

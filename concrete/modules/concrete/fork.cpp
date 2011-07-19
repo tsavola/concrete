@@ -41,6 +41,11 @@ protected:
 	};
 
 	struct Data: Noncopyable {
+		~Data() throw ()
+		{
+			reset();
+		}
+
 		void reset() throw ()
 		{
 			resolve.destroy();
