@@ -36,7 +36,7 @@ DictObject::Data::Data(const TypeObject &type):
 
 DictObject::Data::~Data() throw ()
 {
-	for (unsigned int i = std::min(uint32_t(size), capacity()); i-- > 0; )
+	for (unsigned int i = std::min(uint32_t(size), uint32_t(capacity())); i-- > 0; )
 		items[i].~Item();
 }
 
