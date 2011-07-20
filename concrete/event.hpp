@@ -14,12 +14,7 @@
 
 namespace concrete {
 
-class EventSource;
-
-enum EventCondition {
-	EventSourceReadable = 1,
-	EventSourceWritable = 2,
-};
+class EventTrigger;
 
 class EventCallback: Noncopyable {
 public:
@@ -30,10 +25,7 @@ class EventLoop: Noncopyable {
 public:
 	virtual ~EventLoop() throw () {}
 
-	virtual void wait(const EventSource &source,
-	                  unsigned int conditions,
-	                  EventCallback *callback) = 0;
-
+	virtual void wait(const EventTrigger &trigger, EventCallback *callback) = 0;
 	virtual void poll() = 0;
 };
 

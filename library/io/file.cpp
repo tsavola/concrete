@@ -18,7 +18,7 @@
 #include <concrete/event.hpp>
 #include <concrete/util/assert.hpp>
 
-#include <library/event-source.hpp>
+#include <library/event-trigger.hpp>
 #include <library/io/error.hpp>
 
 namespace concrete {
@@ -112,17 +112,17 @@ ssize_t File::write(const char *data, size_t size)
 
 void File::suspend_until(unsigned int conditions)
 {
-	Context::Active().suspend_until(fd(), conditions);
+	Context::Active().suspend_until(EventTrigger(fd(), conditions));
 }
 
 void File::suspend_until_readable()
 {
-	suspend_until(EventSourceReadable);
+	suspend_until(EventFileReadable);
 }
 
 void File::suspend_until_writable()
 {
-	suspend_until(EventSourceWritable);
+	suspend_until(EventFileWritable);
 }
 
 } // namespace

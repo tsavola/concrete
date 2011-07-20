@@ -21,10 +21,7 @@ public:
 	LibeventLoop();
 	virtual ~LibeventLoop() throw ();
 
-	virtual void wait(const EventSource &source,
-	                  unsigned int conditions,
-	                  EventCallback *callback);
-
+	virtual void wait(const EventTrigger &trigger, EventCallback *callback);
 	virtual void poll();
 
 private:

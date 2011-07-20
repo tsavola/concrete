@@ -14,7 +14,7 @@
 
 #include <concrete/util/trace.hpp>
 
-#include <library/event-source.hpp>
+#include <library/event-trigger.hpp>
 
 namespace concrete {
 
@@ -30,15 +30,15 @@ LibeventLoop::~LibeventLoop() throw ()
 	event_base_free(m_base);
 }
 
-void LibeventLoop::wait(const EventSource &source, unsigned int conditions, EventCallback *arg)
+void LibeventLoop::wait(const EventTrigger &trigger, EventCallback *arg)
 {
-	int fd = source;
+	int fd = trigger.fd;
 	short events = 0;
 
-	if (conditions & EventSourceReadable)
+	if (trigger.conditions & EventFileReadable)
 		events |= EV_READ;
 
-	if (conditions & EventSourceWritable)
+	if (trigger.conditions & EventFileWritable)
 		events |= EV_WRITE;
 
 	if (event_base_once(m_base, fd, events, callback, arg, NULL) < 0)

@@ -24,7 +24,7 @@ namespace concrete {
 
 class EventCallback;
 class EventLoop;
-class EventSource;
+class EventTrigger;
 class Execution;
 class ScopedContext;
 
@@ -56,7 +56,7 @@ public:
 	void add_execution(const Execution &execution);
 	Portable<Execution> &execution() throw ();
 
-	void suspend_until(const EventSource &source, unsigned int conditions);
+	void suspend_until(const EventTrigger &trigger);
 
 	bool executable() throw ();
 	void execute();

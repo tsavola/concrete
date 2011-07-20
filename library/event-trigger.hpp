@@ -7,20 +7,24 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#ifndef LIBRARY_EVENT_SOURCE_HPP
-#define LIBRARY_EVENT_SOURCE_HPP
+#ifndef LIBRARY_EVENT_TRIGGER_HPP
+#define LIBRARY_EVENT_TRIGGER_HPP
 
 #include <concrete/event.hpp>
 
 namespace concrete {
 
-class EventSource {
-public:
-	EventSource(int fd) throw (): m_fd(fd) {}
-	operator int() const throw () { return m_fd; }
+enum EventCondition {
+	EventFileReadable = 1,
+	EventFileWritable = 2,
+};
 
-private:
-	int m_fd;
+class EventTrigger {
+public:
+	EventTrigger(int fd, unsigned int conditions) throw (): fd(fd), conditions(conditions) {}
+
+	const int          fd;
+	const unsigned int conditions;
 };
 
 } // namespace

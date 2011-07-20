@@ -183,10 +183,10 @@ Portable<Execution> &Context::execution() throw ()
 	return data()->current;
 }
 
-void Context::suspend_until(const EventSource &source, unsigned int conditions)
+void Context::suspend_until(const EventTrigger &trigger)
 {
 	std::unique_ptr<ContextCallback> callback(new ContextCallback(*this, data()->current));
-	m_event_loop.wait(source, conditions, callback.get());
+	m_event_loop.wait(trigger, callback.get());
 	callback.release();
 
 	data()->waiting.append(data()->current);
