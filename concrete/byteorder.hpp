@@ -10,32 +10,36 @@
 #ifndef CONCRETE_BYTEORDER_HPP
 #define CONCRETE_BYTEORDER_HPP
 
-#ifdef __linux__
-# include <endian.h>
-#else
-# include <sys/types.h>
-#endif
+#ifndef CONCRETE_PORTABLE_BYTEORDER
 
-#if defined(BYTE_ORDER)
-# if BYTE_ORDER == LITTLE_ENDIAN
-#  define CONCRETE_PORTABLE_BYTEORDER true
+# ifdef __linux__
+#  include <endian.h>
 # else
-#  define CONCRETE_PORTABLE_BYTEORDER false
+#  include <sys/types.h>
 # endif
-#elif defined(__BYTE_ORDER)
-# if __BYTE_ORDER == __LITTLE_ENDIAN
-#  define CONCRETE_PORTABLE_BYTEORDER true
+
+# if defined(BYTE_ORDER)
+#  if BYTE_ORDER == LITTLE_ENDIAN
+#   define CONCRETE_PORTABLE_BYTEORDER true
+#  else
+#   define CONCRETE_PORTABLE_BYTEORDER false
+#  endif
+# elif defined(__BYTE_ORDER)
+#  if __BYTE_ORDER == __LITTLE_ENDIAN
+#   define CONCRETE_PORTABLE_BYTEORDER true
+#  else
+#   define CONCRETE_PORTABLE_BYTEORDER false
+#  endif
+# elif defined(__APPLE__)
+#  if defined(__LITTLE_ENDIAN__)
+#   define CONCRETE_PORTABLE_BYTEORDER true
+#  else
+#   define CONCRETE_PORTABLE_BYTEORDER false
+#  endif
 # else
-#  define CONCRETE_PORTABLE_BYTEORDER false
+#  error cannot figure out byteorder
 # endif
-#elif defined(__APPLE__)
-# if defined(__LITTLE_ENDIAN__)
-#  define CONCRETE_PORTABLE_BYTEORDER true
-# else
-#  define CONCRETE_PORTABLE_BYTEORDER false
-# endif
-#else
-# error cannot figure out byteorder
+
 #endif
 
 namespace concrete {
