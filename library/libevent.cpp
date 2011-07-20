@@ -14,7 +14,7 @@
 
 #include <concrete/util/trace.hpp>
 
-#include <library/event-trigger.hpp>
+#include <library/event.hpp>
 
 namespace concrete {
 

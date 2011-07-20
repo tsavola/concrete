@@ -7,8 +7,8 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#ifndef LIBRARY_EVENT_TRIGGER_HPP
-#define LIBRARY_EVENT_TRIGGER_HPP
+#ifndef LIBRARY_EVENT_HPP
+#define LIBRARY_EVENT_HPP
 
 #include <concrete/event.hpp>
 

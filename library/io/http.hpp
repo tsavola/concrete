@@ -7,8 +7,8 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#ifndef LIBRARY_IO_HTTP_IMPL_HPP
-#define LIBRARY_IO_HTTP_IMPL_HPP
+#ifndef LIBRARY_IO_HTTP_HPP
+#define LIBRARY_IO_HTTP_HPP
 
 #include <memory>
 #include <string>
@@ -23,12 +23,12 @@ struct addrinfo;
 
 namespace concrete {
 
-class HTTPTransactionImpl: public HTTPTransaction {
+class SysHTTPTransaction: public HTTPTransaction {
 	friend class HTTPTransaction;
 
 public:
-	HTTPTransactionImpl(HTTP::Method method, const StringObject &url, size_t request_length);
-	virtual ~HTTPTransactionImpl() throw () {}
+	SysHTTPTransaction(HTTP::Method method, const StringObject &url, size_t request_length);
+	virtual ~SysHTTPTransaction() throw () {}
 
 private:
 	enum State {

@@ -15,10 +15,9 @@
 #include <unistd.h>
 
 #include <concrete/context.hpp>
-#include <concrete/event.hpp>
 #include <concrete/util/assert.hpp>
 
-#include <library/event-trigger.hpp>
+#include <library/event.hpp>
 #include <library/io/error.hpp>
 
 namespace concrete {

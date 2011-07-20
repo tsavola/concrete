@@ -7,7 +7,7 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#include "http-impl.hpp"
+#include "http.hpp"
 
 #include <cctype>
 #include <cstdlib>
@@ -24,9 +24,9 @@
 
 namespace concrete {
 
-HTTPTransactionImpl::HTTPTransactionImpl(HTTP::Method method,
-                                         const StringObject &url,
-                                         size_t request_length):
+SysHTTPTransaction::SysHTTPTransaction(HTTP::Method method,
+                                       const StringObject &url,
+                                       size_t request_length):
 	m_method(method),
 	m_url(url.c_str()),
 	m_state(Resolve),
@@ -40,7 +40,7 @@ HTTPTransactionImpl::HTTPTransactionImpl(HTTP::Method method,
 {
 }
 
-void HTTPTransactionImpl::suspend_until(State objective)
+void SysHTTPTransaction::suspend_until(State objective)
 {
 	if (objective <= m_state) {
 		assert(false);
@@ -64,14 +64,14 @@ void HTTPTransactionImpl::suspend_until(State objective)
 	}
 }
 
-HTTPTransactionImpl::State HTTPTransactionImpl::init_resolve()
+SysHTTPTransaction::State SysHTTPTransaction::init_resolve()
 {
 	m_addrinfo.reset(new AddrInfo(m_url.host(), m_url.port()));
 
 	return cont_resolve();
 }
 
-HTTPTransactionImpl::State HTTPTransactionImpl::cont_resolve()
+SysHTTPTransaction::State SysHTTPTransaction::cont_resolve()
 {
 	assert(m_addrinfo);
 
@@ -83,7 +83,7 @@ HTTPTransactionImpl::State HTTPTransactionImpl::cont_resolve()
 	return Resolving;
 }
 
-HTTPTransactionImpl::State HTTPTransactionImpl::init_connect(const struct addrinfo *addrinfo)
+SysHTTPTransaction::State SysHTTPTransaction::init_connect(const struct addrinfo *addrinfo)
 {
 	int family;
 	socklen_t addrlen = 0;
@@ -108,7 +108,7 @@ HTTPTransactionImpl::State HTTPTransactionImpl::init_connect(const struct addrin
 	return cont_connect();
 }
 
-HTTPTransactionImpl::State HTTPTransactionImpl::cont_connect()
+SysHTTPTransaction::State SysHTTPTransaction::cont_connect()
 {
 	assert(m_socket);
 
@@ -119,7 +119,7 @@ HTTPTransactionImpl::State HTTPTransactionImpl::cont_connect()
 	return Connecting;
 }
 
-HTTPTransactionImpl::State HTTPTransactionImpl::init_send_headers()
+SysHTTPTransaction::State SysHTTPTransaction::init_send_headers()
 {
 	std::string s;
 
@@ -145,7 +145,7 @@ HTTPTransactionImpl::State HTTPTransactionImpl::init_send_headers()
 	return cont_send_headers();
 }
 
-HTTPTransactionImpl::State HTTPTransactionImpl::cont_send_headers()
+SysHTTPTransaction::State SysHTTPTransaction::cont_send_headers()
 {
 	if (m_socket->write(m_request_headers))
 		throw RuntimeError("EOF while sending headers");
@@ -157,7 +157,7 @@ HTTPTransactionImpl::State HTTPTransactionImpl::cont_send_headers()
 	return SendingHeaders;
 }
 
-HTTPTransactionImpl::State HTTPTransactionImpl::init_send_content()
+SysHTTPTransaction::State SysHTTPTransaction::init_send_content()
 {
 	if (m_method == HTTP::GET || m_request_length == 0)
 		return SentContent;
@@ -165,7 +165,7 @@ HTTPTransactionImpl::State HTTPTransactionImpl::init_send_content()
 		return cont_send_content();
 }
 
-HTTPTransactionImpl::State HTTPTransactionImpl::cont_send_content()
+SysHTTPTransaction::State SysHTTPTransaction::cont_send_content()
 {
 	assert(m_method == HTTP::POST);
 	assert(m_request_length > 0);
@@ -192,12 +192,12 @@ HTTPTransactionImpl::State HTTPTransactionImpl::cont_send_content()
 	return SendingContent;
 }
 
-HTTPTransactionImpl::State HTTPTransactionImpl::init_receive_headers()
+SysHTTPTransaction::State SysHTTPTransaction::init_receive_headers()
 {
 	return cont_receive_headers();
 }
 
-HTTPTransactionImpl::State HTTPTransactionImpl::cont_receive_headers()
+SysHTTPTransaction::State SysHTTPTransaction::cont_receive_headers()
 {
 	assert(m_response_buffer);
 
@@ -221,7 +221,7 @@ HTTPTransactionImpl::State HTTPTransactionImpl::cont_receive_headers()
 	return ReceivingHeaders;
 }
 
-HTTPTransactionImpl::State HTTPTransactionImpl::init_receive_content()
+SysHTTPTransaction::State SysHTTPTransaction::init_receive_content()
 {
 	if (m_response_length == 0)
 		return ReceivedContent;
@@ -229,7 +229,7 @@ HTTPTransactionImpl::State HTTPTransactionImpl::init_receive_content()
 	return cont_receive_content();
 }
 
-HTTPTransactionImpl::State HTTPTransactionImpl::cont_receive_content()
+SysHTTPTransaction::State SysHTTPTransaction::cont_receive_content()
 {
 	assert(m_response_buffer);
 
@@ -264,14 +264,14 @@ HTTPTransactionImpl::State HTTPTransactionImpl::cont_receive_content()
 	return ReceivingContent;
 }
 
-HTTPTransactionImpl::State HTTPTransactionImpl::done_receive_content()
+SysHTTPTransaction::State SysHTTPTransaction::done_receive_content()
 {
 	m_socket.reset();
 
 	return ReceivedContent;
 }
 
-bool HTTPTransactionImpl::parse_headers()
+bool SysHTTPTransaction::parse_headers()
 {
 next:
 	while (true) {
@@ -316,7 +316,7 @@ static const char *header_value(const char *line) throw ()
 	return ptr;
 }
 
-void HTTPTransactionImpl::parse_header(const char *line, size_t length)
+void SysHTTPTransaction::parse_header(const char *line, size_t length)
 {
 	if (m_response_status == 0) {
 		if (std::strncmp(line, "HTTP/1.0 ", 9) != 0 && std::strncmp(line, "HTTP/1.1 ", 9) != 0)
@@ -351,24 +351,24 @@ void HTTPTransactionImpl::parse_header(const char *line, size_t length)
 
 void HTTPTransaction::set_request_length(size_t length)
 {
-	static_cast<HTTPTransactionImpl *> (this)->m_request_length = length;
+	static_cast<SysHTTPTransaction *> (this)->m_request_length = length;
 }
 
 void HTTPTransaction::reset_request_buffer(Buffer *buffer)
 {
-	static_cast<HTTPTransactionImpl *> (this)->m_request_buffer = buffer;
+	static_cast<SysHTTPTransaction *> (this)->m_request_buffer = buffer;
 }
 
 void HTTPTransaction::reset_response_buffer(Buffer *buffer)
 {
-	static_cast<HTTPTransactionImpl *> (this)->m_response_buffer = buffer;
+	static_cast<SysHTTPTransaction *> (this)->m_response_buffer = buffer;
 }
 
 HTTP::Status HTTPTransaction::response_status() const
 {
-	auto impl = static_cast<const HTTPTransactionImpl *> (this);
+	auto impl = static_cast<const SysHTTPTransaction *> (this);
 
-	assert(impl->m_state >= HTTPTransactionImpl::ReceivedHeaders);
+	assert(impl->m_state >= SysHTTPTransaction::ReceivedHeaders);
 
 	auto status = impl->m_response_status;
 	assert(status > 0);
@@ -378,28 +378,28 @@ HTTP::Status HTTPTransaction::response_status() const
 
 long HTTPTransaction::response_length() const
 {
-	auto impl = static_cast<const HTTPTransactionImpl *> (this);
+	auto impl = static_cast<const SysHTTPTransaction *> (this);
 
-	assert(impl->m_state >= HTTPTransactionImpl::ReceivedHeaders);
+	assert(impl->m_state >= SysHTTPTransaction::ReceivedHeaders);
 
 	return impl->m_response_length;
 }
 
 bool HTTPTransaction::connected()
 {
-	return static_cast<HTTPTransactionImpl *> (this)->m_state >= HTTPTransactionImpl::Connected;
+	return static_cast<SysHTTPTransaction *> (this)->m_state >= SysHTTPTransaction::Connected;
 }
 
 bool HTTPTransaction::headers_sent()
 {
-	return static_cast<HTTPTransactionImpl *> (this)->m_state >= HTTPTransactionImpl::SentHeaders;
+	return static_cast<SysHTTPTransaction *> (this)->m_state >= SysHTTPTransaction::SentHeaders;
 }
 
 bool HTTPTransaction::content_producable()
 {
-	auto impl = static_cast<HTTPTransactionImpl *> (this);
+	auto impl = static_cast<SysHTTPTransaction *> (this);
 
-	if (impl->m_state != HTTPTransactionImpl::SendingContent)
+	if (impl->m_state != SysHTTPTransaction::SendingContent)
 		return false;
 
 	assert(impl->m_request_buffer);
@@ -409,19 +409,19 @@ bool HTTPTransaction::content_producable()
 
 bool HTTPTransaction::content_sent()
 {
-	return static_cast<HTTPTransactionImpl *> (this)->m_state >= HTTPTransactionImpl::SentContent;
+	return static_cast<SysHTTPTransaction *> (this)->m_state >= SysHTTPTransaction::SentContent;
 }
 
 bool HTTPTransaction::headers_received()
 {
-	return static_cast<HTTPTransactionImpl *> (this)->m_state >= HTTPTransactionImpl::ReceivedHeaders;
+	return static_cast<SysHTTPTransaction *> (this)->m_state >= SysHTTPTransaction::ReceivedHeaders;
 }
 
 bool HTTPTransaction::content_consumable()
 {
-	auto impl = static_cast<HTTPTransactionImpl *> (this);
+	auto impl = static_cast<SysHTTPTransaction *> (this);
 
-	if (impl->m_state != HTTPTransactionImpl::ReceivingContent)
+	if (impl->m_state != SysHTTPTransaction::ReceivingContent)
 		return false;
 
 	assert(impl->m_response_buffer);
@@ -431,17 +431,17 @@ bool HTTPTransaction::content_consumable()
 
 bool HTTPTransaction::content_received()
 {
-	return static_cast<HTTPTransactionImpl *> (this)->m_state >= HTTPTransactionImpl::ReceivedContent;
+	return static_cast<SysHTTPTransaction *> (this)->m_state >= SysHTTPTransaction::ReceivedContent;
 }
 
 void HTTPTransaction::suspend_until_connected()
 {
-	static_cast<HTTPTransactionImpl *> (this)->suspend_until(HTTPTransactionImpl::Connected);
+	static_cast<SysHTTPTransaction *> (this)->suspend_until(SysHTTPTransaction::Connected);
 }
 
 void HTTPTransaction::suspend_until_headers_sent()
 {
-	static_cast<HTTPTransactionImpl *> (this)->suspend_until(HTTPTransactionImpl::SentHeaders);
+	static_cast<SysHTTPTransaction *> (this)->suspend_until(SysHTTPTransaction::SentHeaders);
 }
 
 void HTTPTransaction::suspend_until_content_producable()
@@ -451,12 +451,12 @@ void HTTPTransaction::suspend_until_content_producable()
 
 void HTTPTransaction::suspend_until_content_sent()
 {
-	static_cast<HTTPTransactionImpl *> (this)->suspend_until(HTTPTransactionImpl::SentContent);
+	static_cast<SysHTTPTransaction *> (this)->suspend_until(SysHTTPTransaction::SentContent);
 }
 
 void HTTPTransaction::suspend_until_headers_received()
 {
-	static_cast<HTTPTransactionImpl *> (this)->suspend_until(HTTPTransactionImpl::ReceivedHeaders);
+	static_cast<SysHTTPTransaction *> (this)->suspend_until(SysHTTPTransaction::ReceivedHeaders);
 }
 
 void HTTPTransaction::suspend_until_content_consumable()
@@ -466,14 +466,14 @@ void HTTPTransaction::suspend_until_content_consumable()
 
 void HTTPTransaction::suspend_until_content_received()
 {
-	static_cast<HTTPTransactionImpl *> (this)->suspend_until(HTTPTransactionImpl::ReceivedContent);
+	static_cast<SysHTTPTransaction *> (this)->suspend_until(SysHTTPTransaction::ReceivedContent);
 }
 
 HTTPTransaction *ResourceCreate<HTTPTransaction>::New(HTTP::Method method,
                                                       const StringObject &url,
                                                       size_t request_length)
 {
-	return new HTTPTransactionImpl(method, url, request_length);
+	return new SysHTTPTransaction(method, url, request_length);
 }
 
 } // namespace
