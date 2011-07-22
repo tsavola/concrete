@@ -59,7 +59,7 @@ public:
 	void suspend_until(const EventTrigger &trigger);
 
 	bool executable() throw ();
-	void execute();
+	bool execute();
 
 private:
 	EventLoop       &m_event_loop;

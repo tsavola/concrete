@@ -24,9 +24,7 @@ public:
 class EventLoop: Noncopyable {
 public:
 	virtual ~EventLoop() throw () {}
-
 	virtual void wait(const EventTrigger &trigger, EventCallback *callback) = 0;
-	virtual void poll() = 0;
 };
 
 } // namespace

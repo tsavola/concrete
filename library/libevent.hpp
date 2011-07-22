@@ -22,7 +22,7 @@ public:
 	virtual ~LibeventLoop() throw ();
 
 	virtual void wait(const EventTrigger &trigger, EventCallback *callback);
-	virtual void poll();
+	void poll();
 
 private:
 	static void callback(int fd, short events, void *arg) throw ();

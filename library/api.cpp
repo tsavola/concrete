@@ -81,9 +81,13 @@ static void load(Context *context, void *data, size_t size)
 	context->add_execution(Execution::New(CodeObject::Load(data, size)));
 }
 
-static void execute(Context *context)
+static void execute(Context *context, LibeventLoop *event_loop)
 {
-	context->execute();
+	do {
+		if (!context->execute() && context->executable())
+			event_loop->poll();
+
+	} while (context->executable());
 }
 
 static void executable(Context *context, bool *result)
@@ -147,7 +151,7 @@ bool concrete_execute(ConcreteContext *wrap, ConcreteError *error)
 	ScopedContext activate(*wrap->context.get());
 	bool result = false;
 
-	nonthrowing_call(error, execute, wrap->context.get());
+	nonthrowing_call(error, execute, wrap->context.get(), wrap->event_loop.get());
 
 	if (error->type == CONCRETE_ERROR_CODE)
 		nonthrowing_call(error, executable, wrap->context.get(), &result);

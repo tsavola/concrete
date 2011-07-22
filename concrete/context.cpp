@@ -202,28 +202,25 @@ bool Context::executable() throw ()
 	return data()->runnable || data()->waiting;
 }
 
-void Context::execute()
+bool Context::execute()
 {
-	while (executable()) {
-		data()->current = data()->runnable.head();
+	data()->current = data()->runnable.head();
 
-		if (*data()->current) {
-			data()->runnable.remove(data()->current);
+	if (*data()->current) {
+		data()->runnable.remove(data()->current);
 
-			if (data()->current->execute()) {
-				if (*data()->current)
-					data()->runnable.append(data()->current);
-			} else {
-				assert(*data()->current);
-				data()->current->destroy();
-			}
-
-			data()->current = Execution();
+		if (data()->current->execute()) {
+			if (*data()->current)
+				data()->runnable.append(data()->current);
 		} else {
-			assert(data()->waiting);
-			m_event_loop.poll();
+			assert(*data()->current);
+			data()->current->destroy();
 		}
+
+		data()->current = Execution();
 	}
+
+	return bool(data()->runnable);
 }
 
 Context::Data *Context::data()
