@@ -32,25 +32,15 @@ namespace HTTP {
 
 class HTTPTransaction: public Resource {
 public:
-	void set_request_length(size_t length);
-	void reset_request_buffer(Buffer *buffer = NULL);
-	void reset_response_buffer(Buffer *buffer = NULL);
+	void reset_response_buffer(Buffer *buffer);
 
 	HTTP::Status response_status() const;
 	long response_length() const;
 
-	bool connected();
-	bool headers_sent();
-	bool content_producable();
-	bool content_sent();
 	bool headers_received();
 	bool content_consumable();
 	bool content_received();
 
-	void suspend_until_connected();
-	void suspend_until_headers_sent();
-	void suspend_until_content_producable();
-	void suspend_until_content_sent();
 	void suspend_until_headers_received();
 	void suspend_until_content_consumable();
 	void suspend_until_content_received();
@@ -59,7 +49,7 @@ public:
 template <> struct ResourceCreate<HTTPTransaction> {
 	static HTTPTransaction *New(HTTP::Method method,
 	                            const StringObject &url,
-	                            size_t request_length = 0);
+	                            Buffer *request_content = NULL);
 };
 
 } // namespace

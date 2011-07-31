@@ -27,7 +27,7 @@ class SysHTTPTransaction: public HTTPTransaction {
 	friend class HTTPTransaction;
 
 public:
-	SysHTTPTransaction(HTTP::Method method, const StringObject &url, size_t request_length);
+	SysHTTPTransaction(HTTP::Method method, const StringObject &url, Buffer *request_content);
 	virtual ~SysHTTPTransaction() throw () {}
 
 private:
@@ -49,19 +49,19 @@ private:
 
 	void suspend_until(State objective);
 
-	State init_resolve();
-	State cont_resolve();
-	State init_connect(const struct addrinfo *addrinfo);
-	State cont_connect();
-	State init_send_headers();
-	State cont_send_headers();
-	State init_send_content();
-	State cont_send_content();
-	State init_receive_headers();
-	State cont_receive_headers();
-	State init_receive_content();
-	State cont_receive_content();
-	State done_receive_content();
+	State resolve();
+	State resolving();
+	State connect(const struct addrinfo *addrinfo);
+	State connecting();
+	State send_headers();
+	State sending_headers();
+	State send_content();
+	State sending_content();
+	State receive_headers();
+	State receiving_headers();
+	State receive_content();
+	State receiving_content();
+	State received_content();
 
 	bool parse_headers();
 	void parse_header(const char *line, size_t length);
@@ -73,9 +73,9 @@ private:
 	std::unique_ptr<AddrInfo> m_addrinfo;
 	std::unique_ptr<Socket>   m_socket;
 
-	size_t                    m_request_length;
 	Buffer                    m_request_headers;
-	Buffer                   *m_request_buffer;
+	Buffer                   *m_request_content;
+	size_t                    m_request_length;
 	size_t                    m_request_sent;
 
 	Buffer                   *m_response_buffer;

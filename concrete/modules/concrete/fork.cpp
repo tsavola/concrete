@@ -31,7 +31,7 @@ class Fork: public Continuation {
 	friend class Pointer;
 
 private:
-	enum State { Connecting, Sending, ReceivingHeaders, ReceivingContent, Done };
+	enum State { Opening, ReceivingContent, Done };
 	enum { ResponseBufferSize = 4096 };
 
 protected:
@@ -65,7 +65,7 @@ public:
 	bool initiate(Object &result, const TupleObject &args, const DictObject &kwargs) const
 	{
 		data()->url = args.get_item(0).require<StringObject>();
-		return leave_state(connect(result));
+		return leave_state(open(result));
 	}
 
 	bool resume(Object &result) const
@@ -79,15 +79,13 @@ public:
 			Trace("fork resources lost");
 
 			data()->reset();
-			return leave_state(connect(result));
+			return leave_state(open(result));
 		}
 
 		State state = State(*data()->state);
 
 		switch (state) {
-		case Connecting:       state = connecting(result);        break;
-		case Sending:          state = sending(result);           break;
-		case ReceivingHeaders: state = receiving_headers(result); break;
+		case Opening:          state = opening(result);           break;
 		case ReceivingContent: state = receiving_content(result); break;
 		case Done:             assert(false);
 		default:               throw IntegrityError(address());
@@ -103,86 +101,30 @@ private:
 		return state == Done;
 	}
 
-	State connect(Object &result) const
+	State open(Object &result) const
 	{
-		Trace("fork connect");
+		Trace("fork open");
 
 		auto url = data()->url->require<StringObject>();
 
-		auto resource = PortableResource<HTTPTransaction>::New(HTTP::POST, url);
+		data()->buffer->reset(ResponseBufferSize);
+
+		auto resource = PortableResource<HTTPTransaction>::New(HTTP::POST, url, *data()->buffer);
 		data()->http = resource;
 
-		return connecting(result);
+		return opening(result);
 	}
 
-	State connecting(Object &result) const
+	State opening(Object &result) const
 	{
-		Trace("fork connecting");
-
-		if (data()->http->connected())
-			return send(result);
-
-		data()->http->suspend_until_connected();
-		return Connecting;
-	}
-
-	State send(Object &result) const
-	{
-		Trace("fork send");
-
-		// create buffer resource before snapshotting because it affects arena
-		auto resource = PortableResource<Buffer>::New();
-		data()->buffer = resource;
-
-		auto snapshot = Arena::Active().snapshot();
-
-		auto buffer = *resource;
-		buffer->reset(snapshot.size);
-
-		auto data_ptr = data();
-		// critical section
-		data_ptr->forked = true;
-		buffer->produce(snapshot.base, snapshot.size);
-		data_ptr->forked = false;
-
-		data()->http->set_request_length(snapshot.size);
-		data()->http->reset_request_buffer(buffer);
-
-		return sending(result);
-	}
-
-	State sending(Object &result) const
-	{
-		Trace("fork sending");
-
-		if (data()->http->content_sent())
-			return receive_headers(result);
-
-		data()->http->suspend_until_content_sent();
-		return Sending;
-	}
-
-	State receive_headers(Object &result) const
-	{
-		Trace("fork receive headers");
-
-		data()->http->reset_request_buffer();
-
-		data()->buffer->reset(ResponseBufferSize);
-		data()->http->reset_response_buffer(*data()->buffer);
-
-		return receiving_headers(result);
-	}
-
-	State receiving_headers(Object &result) const
-	{
-		Trace("fork receiving headers");
+		Trace("fork opening");
 
 		if (data()->http->headers_received())
 			return receive_content(result);
 
 		data()->http->suspend_until_headers_received();
-		return ReceivingHeaders;
+
+		return Opening;
 	}
 
 	State receive_content(Object &result) const
@@ -211,6 +153,7 @@ private:
 			return done(result);
 
 		data()->http->suspend_until_content_received();
+
 		return ReceivingContent;
 	}
 
@@ -219,6 +162,7 @@ private:
 		Trace("fork done");
 
 		result = BoolObject::True();
+
 		return Done;
 	}
 
