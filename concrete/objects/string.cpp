@@ -17,6 +17,7 @@
 #include <concrete/context-data.hpp>
 #include <concrete/exception.hpp>
 #include <concrete/objects/internal.hpp>
+#include <concrete/objects/long.hpp>
 #include <concrete/objects/type.hpp>
 
 namespace concrete {
@@ -148,38 +149,19 @@ void StringObjectTypeInit(const TypeObject &type, const char *name)
 {
 	ObjectTypeInit(type, name);
 
-	auto add  = InternalObject::New(internal::StringType_Add);
 	auto repr = InternalObject::New(internal::StringType_Repr);
 	auto str  = InternalObject::New(internal::StringType_Str);
 
-	type.set(&PortableObjectProtocol::add,  add);
+	auto len  = InternalObject::New(internal::StringType_Len);
+
+	auto add  = InternalObject::New(internal::StringType_Add);
+
 	type.set(&PortableObjectProtocol::repr, repr);
 	type.set(&PortableObjectProtocol::str,  str);
-}
 
-static Object StringAdd(const TupleObject &args, const DictObject &kwargs)
-{
-	auto s1 = args.get_item(0).require<StringObject>();
-	auto s2 = args.get_item(1).require<StringObject>();
+	type.set(&PortableObjectProtocol::len,  len);
 
-	auto s1size = s1.size();
-	auto s2size = s2.size();
-
-	if (s1size == 0)
-		return s2;
-
-	if (s2size == 0)
-		return s1;
-
-	auto r = StringObject::NewUninitialized(s1size + s2size);
-	auto r_mem = r.c_str();
-
-	std::memcpy(r_mem, s1.c_str(), s1size);
-	std::memcpy(r_mem + s1size, s2.c_str(), s2size);
-
-	r.init_uninitialized();
-
-	return r;
+	type.set(&PortableObjectProtocol::add,  add);
 }
 
 static Object StringRepr(const TupleObject &args, const DictObject &kwargs)
@@ -223,8 +205,39 @@ static Object StringStr(const TupleObject &args, const DictObject &kwargs)
 	return args.get_item(0);
 }
 
+static Object StringLen(const TupleObject &args, const DictObject &kwargs)
+{
+	return LongObject::New(args.get_item(0).require<StringObject>().length());
+}
+
+static Object StringAdd(const TupleObject &args, const DictObject &kwargs)
+{
+	auto s1 = args.get_item(0).require<StringObject>();
+	auto s2 = args.get_item(1).require<StringObject>();
+
+	auto s1size = s1.size();
+	auto s2size = s2.size();
+
+	if (s1size == 0)
+		return s2;
+
+	if (s2size == 0)
+		return s1;
+
+	auto r = StringObject::NewUninitialized(s1size + s2size);
+	auto r_mem = r.c_str();
+
+	std::memcpy(r_mem, s1.c_str(), s1size);
+	std::memcpy(r_mem + s1size, s2.c_str(), s2size);
+
+	r.init_uninitialized();
+
+	return r;
+}
+
 } // namespace
 
-CONCRETE_INTERNAL_FUNCTION(StringType_Add,  StringAdd)
 CONCRETE_INTERNAL_FUNCTION(StringType_Repr, StringRepr)
 CONCRETE_INTERNAL_FUNCTION(StringType_Str,  StringStr)
+CONCRETE_INTERNAL_FUNCTION(StringType_Len,  StringLen)
+CONCRETE_INTERNAL_FUNCTION(StringType_Add,  StringAdd)

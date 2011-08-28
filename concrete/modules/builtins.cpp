@@ -33,6 +33,7 @@ DictObject BuiltinsModuleInit(const DictObject &modules)
 	dict.set_item(StringObject::New("print"), InternalObject::New(internal::BuiltinsModule_Print));
 	dict.set_item(StringObject::New("repr"),  InternalObject::New(internal::BuiltinsModule_Repr));
 	dict.set_item(StringObject::New("str"),   InternalObject::New(internal::BuiltinsModule_Str));
+	dict.set_item(StringObject::New("len"),   InternalObject::New(internal::BuiltinsModule_Len));
 
 	modules.set_item(StringObject::New("builtins"), ModuleObject::New(dict));
 
@@ -135,9 +136,15 @@ static NestedCall Str(const TupleObject &args, const DictObject &kwargs)
 	return NestedCall(args.get_item(0).protocol()->repr, args, kwargs);
 }
 
+static NestedCall Len(const TupleObject &args, const DictObject &kwargs)
+{
+	return NestedCall(args.get_item(0).protocol()->len, args, kwargs);
+}
+
 } // namespace
 
 CONCRETE_INTERNAL_FUNCTION    (BuiltinsModule_Id,    Id)
 CONCRETE_INTERNAL_CONTINUATION(BuiltinsModule_Print, Print)
 CONCRETE_INTERNAL_FUNCTION    (BuiltinsModule_Repr,  Repr)
 CONCRETE_INTERNAL_NESTED_CALL (BuiltinsModule_Str,   Str)
+CONCRETE_INTERNAL_NESTED_CALL (BuiltinsModule_Len,   Len)

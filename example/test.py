@@ -14,6 +14,7 @@ print("r =", r)
 def passthrough(x):
 	return x
 
-print(repr("hello" + passthrough(" ") + "world"))
+s = "hello" + passthrough(" ") + "world"
+print(repr(s), len(s))
 print("id(None) =", id(None))
 print(None, 1234, None)
