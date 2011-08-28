@@ -37,6 +37,7 @@ public:
 	void operator=(const Object &other) throw ();
 
 	operator bool() const throw ();
+	bool operator!() const throw () { return !operator bool(); }
 
 	template <typename ObjectType> bool check() const;
 	template <typename ObjectType> ObjectType require() const;
