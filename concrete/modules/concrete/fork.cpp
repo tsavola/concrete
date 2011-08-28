@@ -31,7 +31,7 @@ class Fork: public Continuation {
 	friend class Pointer;
 
 private:
-	enum State { Opening, ReceivingContent, Done };
+	enum State { Open, Opening, ReceivingContent, Done };
 	enum { ResponseBufferSize = 4096 };
 
 protected:
@@ -43,19 +43,21 @@ protected:
 
 		void reset() throw ()
 		{
+			request.destroy();
+			response.destroy();
 			http.destroy();
-			buffer.destroy();
 		}
 
 		bool is_lost() const throw ()
 		{
-			return http.is_lost() || buffer.is_lost();
+			return request.is_lost() || response.is_lost() || http.is_lost();
 		}
 
 		Portable<Object>                  url;
 		Portable<uint8_t>                 state;
+		PortableResource<Buffer>          request;
+		PortableResource<Buffer>          response;
 		PortableResource<HTTPTransaction> http;
-		PortableResource<Buffer>          buffer;
 		Portable<bool>                    forked;
 	} CONCRETE_PACKED;
 
@@ -65,7 +67,10 @@ public:
 	bool initiate(Object &result, const TupleObject &args, const DictObject &kwargs) const
 	{
 		data()->url = args.get_item(0).require<StringObject>();
-		return leave_state(open(result));
+
+		// postpone actual work to resume() so that everything is set
+		// up by Execution::initiate_call
+		return leave_state(Open);
 	}
 
 	bool resume(Object &result) const
@@ -85,6 +90,7 @@ public:
 		State state = State(*data()->state);
 
 		switch (state) {
+		case Open:             state = open(result);              break;
 		case Opening:          state = opening(result);           break;
 		case ReceivingContent: state = receiving_content(result); break;
 		case Done:             assert(false);
@@ -107,10 +113,27 @@ private:
 
 		auto url = data()->url->require<StringObject>();
 
-		data()->buffer->reset(ResponseBufferSize);
+		// create buffer resource before snapshotting because it affects arena
+		auto request = PortableResource<Buffer>::New();
+		data()->request = request;
 
-		auto resource = PortableResource<HTTPTransaction>::New(HTTP::POST, url, *data()->buffer);
-		data()->http = resource;
+		auto snapshot = Arena::Active().snapshot();
+
+		request->reset(snapshot.size);
+
+		auto data_ptr = data();
+		// critical section
+		data_ptr->forked = true;
+		request->produce(snapshot.base, snapshot.size);
+		data_ptr->forked = false;
+
+		auto response = PortableResource<Buffer>::New(size_t(ResponseBufferSize));
+		data()->response = response;
+
+		auto http = PortableResource<HTTPTransaction>::New(HTTP::POST, url, *request);
+		data()->http = http;
+
+		http->reset_response_buffer(*response);
 
 		return opening(result);
 	}
