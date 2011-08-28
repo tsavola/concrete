@@ -14,6 +14,7 @@
 #include <concrete/objects/bool.hpp>
 #include <concrete/objects/callable.hpp>
 #include <concrete/objects/function.hpp>
+#include <concrete/objects/internal.hpp>
 #include <concrete/objects/long.hpp>
 #include <concrete/objects/module.hpp>
 #include <concrete/objects/none.hpp>
@@ -96,6 +97,16 @@ T ExecutionFrame::load_bytecode()
 	data()->bytecode_position = pos + sizeof (T);
 
 	return *reinterpret_cast<const T *> (ptr);
+}
+
+void ExecutionFrame::jump_to_bytecode(unsigned int target)
+{
+	BytesObject bytecode = data()->code->bytecode();
+
+	if (target > bytecode.size())
+		throw RuntimeError("Jump target outside execution frame bytecode");
+
+	data()->bytecode_position = target;
 }
 
 void ExecutionFrame::push(const Object &object)
@@ -300,6 +311,8 @@ void Execution::execute_op()
 	case OpCompareOp:           op_compare_op(arg); return;
 	case OpImportName:          op_import_name(arg); return;
 	case OpImportFrom:          op_import_from(arg); return;
+	case OpPopJumpIfFalse:      op_pop_jump_if_false(arg); return;
+	case OpPopJumpIfTrue:       op_pop_jump_if_true(arg); return;
 	case OpLoadFast:            op_load_fast(arg); return;
 	case OpStoreFast:           op_store_fast(arg); return;
 	case OpCallFunction:        op_call_function(arg); return;
@@ -415,6 +428,20 @@ void Execution::op_import_from(unsigned int namei)
 	push(module.dict().get_item(name));
 }
 
+void Execution::op_pop_jump_if_false(unsigned int target)
+{
+	Object object = pop();
+	if (!object.protocol()->nonzero->require<InternalObject>().immediate_call(object).require<LongObject>().value())
+		frame().jump_to_bytecode(target);
+}
+
+void Execution::op_pop_jump_if_true(unsigned int target)
+{
+	Object object = pop();
+	if (object.protocol()->nonzero->require<InternalObject>().immediate_call(object).require<LongObject>().value())
+		frame().jump_to_bytecode(target);
+}
+
 void Execution::op_load_fast(unsigned int var_num)
 {
 	push(dict().get_item(code().varnames().get_item(var_num)));
@@ -453,6 +480,21 @@ void Execution::op_make_function(uint16_t portable_argc)
 
 	auto code = pop().require<CodeObject>();
 	push(FunctionObject::New(code));
+}
+
+bool Execution::nonzero(Object object)
+{
+	Object call;
+
+	call = object.protocol()->nonzero;
+	if (call)
+		return call.require<InternalObject>().immediate_call(object).require<LongObject>().value() != 0;
+
+	call = object.protocol()->len;
+	if (call)
+		return nonzero(call.require<InternalObject>().immediate_call(object));
+
+	return true;
 }
 
 } // namespace

@@ -64,6 +64,7 @@ private:
 		Pointer(address) {}
 
 	template <typename T> T load_bytecode();
+	void jump_to_bytecode(unsigned int target);
 
 	void push(const Object &object);
 	Object pop();
@@ -126,10 +127,14 @@ private:
 	void op_compare_op(unsigned int opname);
 	void op_import_name(unsigned int namei);
 	void op_import_from(unsigned int namei);
+	void op_pop_jump_if_false(unsigned int target);
+	void op_pop_jump_if_true(unsigned int target);
 	void op_load_fast(unsigned int var_num);
 	void op_store_fast(unsigned int var_num);
 	void op_call_function(uint16_t argc);
 	void op_make_function(uint16_t argc);
+
+	bool nonzero(Object object);
 };
 
 } // namespace

@@ -14,6 +14,9 @@ print("r =", r)
 def passthrough(x):
 	return x
 
+if 1 == 2:
+	print("foo")
+
 s = "hello" + passthrough(" ") + "world"
 print(repr(s), len(s))
 print("id(None) =", id(None))

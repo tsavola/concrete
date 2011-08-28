@@ -29,6 +29,9 @@ enum Opcode {
 	OpImportName          = 108,
 	OpImportFrom          = 109,
 
+	OpPopJumpIfFalse      = 114,
+	OpPopJumpIfTrue       = 115,
+
 	OpLoadFast            = 124,
 	OpStoreFast           = 125,
 
