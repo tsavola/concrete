@@ -39,6 +39,10 @@ private:
 	Data *data() const;
 };
 
+template <> struct TypeCheck<LongObject> {
+	bool operator()(const TypeObject &type);
+};
+
 void LongObjectTypeInit(const TypeObject &type, const char *name = "long");
 
 } // namespace
