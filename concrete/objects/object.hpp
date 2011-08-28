@@ -33,6 +33,7 @@ struct PortableObjectProtocol: Noncopyable {
 	Portable<Object> repr;
 	Portable<Object> str;
 	Portable<Object> lt, le, eq, ne, gt, ge;
+	Portable<Object> nonzero;
 
 	Portable<Object> len;
 	Portable<Object> contains;

@@ -56,27 +56,29 @@ void LongObjectTypeInit(const TypeObject &type, const char *name)
 {
 	ObjectTypeInit(type, name);
 
-	auto repr = InternalObject::New(internal::LongType_Repr);
-	auto str  = InternalObject::New(internal::LongType_Str);
-	auto lt   = InternalObject::New(internal::LongType_LT);
-	auto le   = InternalObject::New(internal::LongType_LE);
-	auto eq   = InternalObject::New(internal::LongType_EQ);
-	auto ne   = InternalObject::New(internal::LongType_NE);
-	auto gt   = InternalObject::New(internal::LongType_GT);
-	auto ge   = InternalObject::New(internal::LongType_GE);
+	auto repr    = InternalObject::New(internal::LongType_Repr);
+	auto str     = InternalObject::New(internal::LongType_Str);
+	auto lt      = InternalObject::New(internal::LongType_LT);
+	auto le      = InternalObject::New(internal::LongType_LE);
+	auto eq      = InternalObject::New(internal::LongType_EQ);
+	auto ne      = InternalObject::New(internal::LongType_NE);
+	auto gt      = InternalObject::New(internal::LongType_GT);
+	auto ge      = InternalObject::New(internal::LongType_GE);
+	auto nonzero = InternalObject::New(internal::LongType_Nonzero);
 
-	auto add  = InternalObject::New(internal::LongType_Add);
+	auto add     = InternalObject::New(internal::LongType_Add);
 
-	type.set(&PortableObjectProtocol::repr, repr);
-	type.set(&PortableObjectProtocol::str,  str);
-	type.set(&PortableObjectProtocol::lt,   lt);
-	type.set(&PortableObjectProtocol::le,   le);
-	type.set(&PortableObjectProtocol::eq,   eq);
-	type.set(&PortableObjectProtocol::ne,   ne);
-	type.set(&PortableObjectProtocol::gt,   gt);
-	type.set(&PortableObjectProtocol::ge,   ge);
+	type.set(&PortableObjectProtocol::repr,    repr);
+	type.set(&PortableObjectProtocol::str,     str);
+	type.set(&PortableObjectProtocol::lt,      lt);
+	type.set(&PortableObjectProtocol::le,      le);
+	type.set(&PortableObjectProtocol::eq,      eq);
+	type.set(&PortableObjectProtocol::ne,      ne);
+	type.set(&PortableObjectProtocol::gt,      gt);
+	type.set(&PortableObjectProtocol::ge,      ge);
+	type.set(&PortableObjectProtocol::nonzero, nonzero);
 
-	type.set(&PortableObjectProtocol::add,  add);
+	type.set(&PortableObjectProtocol::add,     add);
 }
 
 static Object LongStr(const TupleObject &args, const DictObject &kwargs)
@@ -93,6 +95,11 @@ static Object LongCompare(const TupleObject &args, const DictObject &kwargs)
 		args.get_item(1).require<LongObject>().value()));
 }
 
+static Object LongNonzero(const TupleObject &args, const DictObject &kwargs)
+{
+	return BoolObject::FromBool(args.get_item(0).require<LongObject>().value() != 0);
+}
+
 static Object LongAdd(const TupleObject &args, const DictObject &kwargs)
 {
 	LongObject::Value value = 0;
@@ -105,12 +112,13 @@ static Object LongAdd(const TupleObject &args, const DictObject &kwargs)
 
 } // namespace
 
-CONCRETE_INTERNAL_FUNCTION(LongType_Repr, LongStr)
-CONCRETE_INTERNAL_FUNCTION(LongType_Str,  LongStr)
-CONCRETE_INTERNAL_FUNCTION(LongType_LT,   LongCompare<std::less<LongObject::Value>>)
-CONCRETE_INTERNAL_FUNCTION(LongType_LE,   LongCompare<std::less_equal<LongObject::Value>>)
-CONCRETE_INTERNAL_FUNCTION(LongType_EQ,   LongCompare<std::equal_to<LongObject::Value>>)
-CONCRETE_INTERNAL_FUNCTION(LongType_NE,   LongCompare<std::not_equal_to<LongObject::Value>>)
-CONCRETE_INTERNAL_FUNCTION(LongType_GT,   LongCompare<std::greater<LongObject::Value>>)
-CONCRETE_INTERNAL_FUNCTION(LongType_GE,   LongCompare<std::greater_equal<LongObject::Value>>)
-CONCRETE_INTERNAL_FUNCTION(LongType_Add,  LongAdd)
+CONCRETE_INTERNAL_FUNCTION(LongType_Repr,    LongStr)
+CONCRETE_INTERNAL_FUNCTION(LongType_Str,     LongStr)
+CONCRETE_INTERNAL_FUNCTION(LongType_LT,      LongCompare<std::less<LongObject::Value>>)
+CONCRETE_INTERNAL_FUNCTION(LongType_LE,      LongCompare<std::less_equal<LongObject::Value>>)
+CONCRETE_INTERNAL_FUNCTION(LongType_EQ,      LongCompare<std::equal_to<LongObject::Value>>)
+CONCRETE_INTERNAL_FUNCTION(LongType_NE,      LongCompare<std::not_equal_to<LongObject::Value>>)
+CONCRETE_INTERNAL_FUNCTION(LongType_GT,      LongCompare<std::greater<LongObject::Value>>)
+CONCRETE_INTERNAL_FUNCTION(LongType_GE,      LongCompare<std::greater_equal<LongObject::Value>>)
+CONCRETE_INTERNAL_FUNCTION(LongType_Nonzero, LongNonzero)
+CONCRETE_INTERNAL_FUNCTION(LongType_Add,     LongAdd)
