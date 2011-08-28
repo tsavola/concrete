@@ -430,15 +430,13 @@ void Execution::op_import_from(unsigned int namei)
 
 void Execution::op_pop_jump_if_false(unsigned int target)
 {
-	Object object = pop();
-	if (!object.protocol()->nonzero->require<InternalObject>().immediate_call(object).require<LongObject>().value())
+	if (!nonzero(pop()))
 		frame().jump_to_bytecode(target);
 }
 
 void Execution::op_pop_jump_if_true(unsigned int target)
 {
-	Object object = pop();
-	if (object.protocol()->nonzero->require<InternalObject>().immediate_call(object).require<LongObject>().value())
+	if (nonzero(pop()))
 		frame().jump_to_bytecode(target);
 }
 
@@ -484,17 +482,14 @@ void Execution::op_make_function(uint16_t portable_argc)
 
 bool Execution::nonzero(Object object)
 {
-	Object call;
+	Object call = object.protocol()->nonzero;
+	if (!call) {
+		call = object.protocol()->len;
+		if (!call)
+			return true;
+	}
 
-	call = object.protocol()->nonzero;
-	if (call)
-		return call.require<InternalObject>().immediate_call(object).require<LongObject>().value() != 0;
-
-	call = object.protocol()->len;
-	if (call)
-		return nonzero(call.require<InternalObject>().immediate_call(object));
-
-	return true;
+	return call.require<InternalObject>().immediate_call(object).require<LongObject>().value() != 0;
 }
 
 } // namespace
