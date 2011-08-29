@@ -32,7 +32,9 @@ class ExecutionFrame: public Pointer {
 
 private:
 	struct Data: Noncopyable {
-		Data(const ExecutionFrame &parent, const CodeObject &code, const DictObject &dict);
+		Data(const ExecutionFrame &parent,
+		     const CodeObject &code,
+		     const DictObject &dict) throw ();
 		~Data() throw ();
 
 		unsigned int stack_size() const throw ();

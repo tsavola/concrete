@@ -30,7 +30,9 @@ namespace concrete {
  * Frame Data
  */
 
-ExecutionFrame::Data::Data(const ExecutionFrame &parent, const CodeObject &code, const DictObject &dict):
+ExecutionFrame::Data::Data(const ExecutionFrame &parent,
+                           const CodeObject &code,
+                           const DictObject &dict) throw ():
 	parent(parent),
 	code(code),
 	dict(dict)
@@ -138,7 +140,7 @@ ExecutionFrame::Data *ExecutionFrame::data() const
 }
 
 /*
- * Frame Data
+ * Execution Data
  */
 
 Execution::Data::Data(const ExecutionFrame &frame) throw ():
