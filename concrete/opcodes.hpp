@@ -20,6 +20,8 @@ enum Opcode {
 
 	OpReturnValue         = 83,
 
+	OpPopBlock            = 87,
+
 	OpStoreName           = 90,
 
 	OpLoadConst           = 100,
@@ -29,8 +31,14 @@ enum Opcode {
 	OpImportName          = 108,
 	OpImportFrom          = 109,
 
+	OpJumpForward         = 110,
+	OpJumpIfFalseOrPop    = 111,
+	OpJumpIfTrueOrPop     = 112,
+	OpJumpAbsolute        = 113,
 	OpPopJumpIfFalse      = 114,
 	OpPopJumpIfTrue       = 115,
+
+	OpSetupLoop           = 120,
 
 	OpLoadFast            = 124,
 	OpStoreFast           = 125,

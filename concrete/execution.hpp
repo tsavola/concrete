@@ -31,6 +31,13 @@ class ExecutionFrame: public Pointer {
 	friend class Execution;
 
 private:
+	enum { MaxBlocks = 20 };
+
+	struct Block {
+		Portable<uint16_t> position;
+		Portable<uint16_t> delta;
+	} CONCRETE_PACKED;
+
 	struct Data: Noncopyable {
 		Data(const ExecutionFrame &parent,
 		     const CodeObject &code,
@@ -46,6 +53,8 @@ private:
 		Portable<Object>               call_callable;
 		Portable<Continuation>         call_continuation;
 		Portable<bool>                 call_not_filter;
+		Portable<uint32_t>             block_pointer;
+		Block                          blocks[MaxBlocks];
 		Portable<uint32_t>             stack_pointer;
 		Portable<Object>               stack_objects[0]; // must be last
 	} CONCRETE_PACKED;
@@ -66,10 +75,17 @@ private:
 		Pointer(address) {}
 
 	template <typename T> T load_bytecode();
-	void jump_to_bytecode(unsigned int target);
+
+	void jump_absolute(unsigned int target);
+	void jump_forward(unsigned int delta);
 
 	void push(const Object &object);
+	Object peek() const;
 	Object pop();
+
+	void setup_block(unsigned int delta);
+	const Block &peek_block() const;
+	void pop_block();
 
 	Data *data() const;
 };
@@ -121,6 +137,7 @@ private:
 
 	void op_pop_top();
 	void op_binary_add();
+	void op_pop_block();
 	void op_return_value();
 	void op_store_name(unsigned int namei);
 	void op_load_const(unsigned int consti);
@@ -129,8 +146,13 @@ private:
 	void op_compare_op(unsigned int opname);
 	void op_import_name(unsigned int namei);
 	void op_import_from(unsigned int namei);
+	void op_jump_forward(unsigned int delta);
+	void op_jump_if_false_or_pop(unsigned int target);
+	void op_jump_if_true_or_pop(unsigned int target);
+	void op_jump_absolute(unsigned int target);
 	void op_pop_jump_if_false(unsigned int target);
 	void op_pop_jump_if_true(unsigned int target);
+	void op_setup_loop(unsigned int delta);
 	void op_load_fast(unsigned int var_num);
 	void op_store_fast(unsigned int var_num);
 	void op_call_function(uint16_t argc);

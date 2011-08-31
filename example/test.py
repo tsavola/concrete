@@ -14,8 +14,9 @@ print("r =", r)
 def passthrough(x):
 	return x
 
-if 1 == 2:
+while x:
 	print("foo")
+	x = 0
 
 s = "hello" + passthrough(" ") + "world"
 print(repr(s), len(s))

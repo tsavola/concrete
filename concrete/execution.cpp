@@ -101,8 +101,19 @@ T ExecutionFrame::load_bytecode()
 	return *reinterpret_cast<const T *> (ptr);
 }
 
-void ExecutionFrame::jump_to_bytecode(unsigned int target)
+void ExecutionFrame::jump_absolute(unsigned int target)
 {
+	BytesObject bytecode = data()->code->bytecode();
+
+	if (target > bytecode.size())
+		throw RuntimeError("Jump target outside execution frame bytecode");
+
+	data()->bytecode_position = target;
+}
+
+void ExecutionFrame::jump_forward(unsigned int delta)
+{
+	unsigned int target = *data()->bytecode_position + delta;
 	BytesObject bytecode = data()->code->bytecode();
 
 	if (target > bytecode.size())
@@ -121,6 +132,15 @@ void ExecutionFrame::push(const Object &object)
 	data()->stack_pointer = ++i;
 }
 
+Object ExecutionFrame::peek() const
+{
+	unsigned int i = data()->stack_pointer;
+	if (i == 0)
+		throw RuntimeError("empty stack");
+
+	return data()->stack_objects[--i];
+}
+
 Object ExecutionFrame::pop()
 {
 	unsigned int i = data()->stack_pointer;
@@ -132,6 +152,38 @@ Object ExecutionFrame::pop()
 	data()->stack_objects[i].~Portable<Object>();
 
 	return object;
+}
+
+void ExecutionFrame::setup_block(unsigned int delta)
+{
+	unsigned int i = data()->block_pointer;
+	if (i >= MaxBlocks)
+		throw RuntimeError("too many nested blocks");
+
+	Block &block = data()->blocks[i];
+
+	block.position = data()->bytecode_position;
+	block.delta = delta;
+
+	data()->block_pointer = ++i;
+}
+
+const ExecutionFrame::Block &ExecutionFrame::peek_block() const
+{
+	unsigned int i = data()->block_pointer;
+	if (i == 0)
+		throw RuntimeError("no active block");
+
+	return data()->blocks[--i];
+}
+
+void ExecutionFrame::pop_block()
+{
+	unsigned int i = data()->block_pointer;
+	if (i == 0)
+		throw RuntimeError("no block to pop");
+
+	data()->block_pointer = --i;
 }
 
 ExecutionFrame::Data *ExecutionFrame::data() const
@@ -300,6 +352,7 @@ void Execution::execute_op()
 	case OpPopTop:              op_pop_top(); return;
 	case OpNop:                 return;
 	case OpBinaryAdd:           op_binary_add(); return;
+	case OpPopBlock:            op_pop_block(); return;
 	case OpReturnValue:         op_return_value(); return;
 	}
 
@@ -313,8 +366,13 @@ void Execution::execute_op()
 	case OpCompareOp:           op_compare_op(arg); return;
 	case OpImportName:          op_import_name(arg); return;
 	case OpImportFrom:          op_import_from(arg); return;
+	case OpJumpForward:         op_jump_forward(arg); return;
+	case OpJumpIfFalseOrPop:    op_jump_if_false_or_pop(arg); return;
+	case OpJumpIfTrueOrPop:     op_jump_if_true_or_pop(arg); return;
+	case OpJumpAbsolute:        op_jump_absolute(arg); return;
 	case OpPopJumpIfFalse:      op_pop_jump_if_false(arg); return;
 	case OpPopJumpIfTrue:       op_pop_jump_if_true(arg); return;
+	case OpSetupLoop:           op_setup_loop(arg); return;
 	case OpLoadFast:            op_load_fast(arg); return;
 	case OpStoreFast:           op_store_fast(arg); return;
 	case OpCallFunction:        op_call_function(arg); return;
@@ -334,6 +392,11 @@ void Execution::op_binary_add()
 	auto b = pop();
 	auto a = pop();
 	initiate_call(a.protocol()->add, TupleObject::New(a, b));
+}
+
+void Execution::op_pop_block()
+{
+	frame().pop_block();
 }
 
 void Execution::op_return_value()
@@ -430,16 +493,47 @@ void Execution::op_import_from(unsigned int namei)
 	push(module.dict().get_item(name));
 }
 
+void Execution::op_jump_forward(unsigned int delta)
+{
+	frame().jump_forward(delta);
+}
+
+void Execution::op_jump_if_false_or_pop(unsigned int target)
+{
+	if (nonzero(frame().peek()))
+		pop();
+	else
+		frame().jump_absolute(target);
+}
+
+void Execution::op_jump_if_true_or_pop(unsigned int target)
+{
+	if (nonzero(frame().peek()))
+		frame().jump_absolute(target);
+	else
+		pop();
+}
+
+void Execution::op_jump_absolute(unsigned int target)
+{
+	frame().jump_absolute(target);
+}
+
 void Execution::op_pop_jump_if_false(unsigned int target)
 {
 	if (!nonzero(pop()))
-		frame().jump_to_bytecode(target);
+		frame().jump_absolute(target);
 }
 
 void Execution::op_pop_jump_if_true(unsigned int target)
 {
 	if (nonzero(pop()))
-		frame().jump_to_bytecode(target);
+		frame().jump_absolute(target);
+}
+
+void Execution::op_setup_loop(unsigned int delta)
+{
+	frame().setup_block(delta);
 }
 
 void Execution::op_load_fast(unsigned int var_num)
