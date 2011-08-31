@@ -83,7 +83,7 @@ private:
 	Object peek() const;
 	Object pop();
 
-	void setup_block(unsigned int delta);
+	void push_block(unsigned int delta);
 	const Block &peek_block() const;
 	void pop_block();
 

@@ -154,7 +154,7 @@ Object ExecutionFrame::pop()
 	return object;
 }
 
-void ExecutionFrame::setup_block(unsigned int delta)
+void ExecutionFrame::push_block(unsigned int delta)
 {
 	unsigned int i = data()->block_pointer;
 	if (i >= MaxBlocks)
@@ -533,7 +533,7 @@ void Execution::op_pop_jump_if_true(unsigned int target)
 
 void Execution::op_setup_loop(unsigned int delta)
 {
-	frame().setup_block(delta);
+	frame().push_block(delta);
 }
 
 void Execution::op_load_fast(unsigned int var_num)
