@@ -82,6 +82,39 @@ private:
 
 } // namespace
 
+#define CONCRETE_POINTER_DECL_COMMON(Class, ParentClass)                      \
+	protected: friend class concrete::Pointer;                            \
+	           explicit Class(unsigned int address) throw ():             \
+	                   ParentClass(address) {}                            \
+	public:    Class(const Class &other) throw (): ParentClass(other) {}
+
+#define CONCRETE_POINTER_DECL_CONSTRUCT(Class)                                \
+	public:    Class() throw () {}
+
+#define CONCRETE_POINTER_DECL_DESTROY(Class)                                  \
+	public:    void destroy() throw ();
+
+#define CONCRETE_POINTER_DECL_DATA(Class)                                     \
+	protected: struct Data;                                               \
+	private:   Data *data() const;                                        \
+	public:
+
+#define CONCRETE_POINTER_IMPL_DATA(Class)                                     \
+	Class::Data *Class::data() const { return data_cast<Data>(); }
+
+#define CONCRETE_POINTER_IMPL_DESTROY(Class)                                  \
+	void Class::destroy() throw () { DestroyPointer(*this); }
+
+#define CONCRETE_POINTER_DEFAULT_DECL(Class, ParentClass)                     \
+	CONCRETE_POINTER_DECL_COMMON(Class, ParentClass)                      \
+	CONCRETE_POINTER_DECL_CONSTRUCT(Class)                                \
+	CONCRETE_POINTER_DECL_DESTROY(Class)                                  \
+	CONCRETE_POINTER_DECL_DATA(Class)
+
+#define CONCRETE_POINTER_DEFAULT_IMPL(Class)                                  \
+	CONCRETE_POINTER_IMPL_DESTROY(Class)                                  \
+	CONCRETE_POINTER_IMPL_DATA(Class)
+
 #include "pointer-inline.hpp"
 
 #endif

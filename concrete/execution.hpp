@@ -27,10 +27,12 @@
 namespace concrete {
 
 class ExecutionFrame: public Pointer {
-	friend class Pointer;
+	CONCRETE_POINTER_DEFAULT_DECL(ExecutionFrame, Pointer)
 	friend class Execution;
 
-private:
+	Object result();
+
+protected:
 	enum { MaxBlocks = 20 };
 
 	struct Block {
@@ -59,20 +61,9 @@ private:
 		Portable<Object>               stack_objects[0]; // must be last
 	} CONCRETE_PACKED;
 
-public:
-	ExecutionFrame() throw () {}
-	ExecutionFrame(const ExecutionFrame &other) throw (): Pointer(other) {}
-
-	Object result();
-	void destroy() throw ();
-
-private:
 	static ExecutionFrame New(const ExecutionFrame &parent,
 	                          const CodeObject &code,
 	                          const DictObject &dict);
-
-	explicit ExecutionFrame(unsigned int address) throw ():
-		Pointer(address) {}
 
 	template <typename T> T load_bytecode();
 
@@ -86,26 +77,17 @@ private:
 	void push_block(unsigned int delta);
 	const Block &peek_block() const;
 	void pop_block();
-
-	Data *data() const;
 };
 
 class Execution: public ListNode<Execution> {
-	friend class Pointer;
+	CONCRETE_POINTER_DEFAULT_DECL(Execution, ListNode<Execution>)
 
-public:
 	static Execution New(const CodeObject &code);
-
-	Execution() throw () {}
-
-	Execution(const Execution &other) throw ():
-		ListNode<Execution>(other) {}
 
 	bool execute();
 	ExecutionFrame new_frame(const CodeObject &code, const DictObject &dict);
-	void destroy() throw ();
 
-private:
+protected:
 	struct Data: ListNode<Execution>::Data {
 		Data(const ExecutionFrame &frame) throw ();
 		~Data() throw ();
@@ -114,10 +96,6 @@ private:
 		Portable<ExecutionFrame> current;
 	} CONCRETE_PACKED;
 
-	explicit Execution(unsigned int address) throw ():
-		ListNode<Execution>(address) {}
-
-	Data *data() const;
 	ExecutionFrame frame() const;
 	CodeObject code() const;
 	DictObject dict() const;

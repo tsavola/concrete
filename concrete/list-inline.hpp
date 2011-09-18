@@ -72,6 +72,7 @@ void PortableList<T>::remove(const T &node) throw ()
 	}
 }
 
+// CONCRETE_POINTER_IMPL_DATA
 template <typename T>
 typename ListNode<T>::Data *ListNode<T>::data() const
 {

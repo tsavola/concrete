@@ -64,6 +64,8 @@ unsigned int ExecutionFrame::Data::stack_size() const throw ()
  * Frame
  */
 
+CONCRETE_POINTER_DEFAULT_IMPL(ExecutionFrame)
+
 ExecutionFrame ExecutionFrame::New(const ExecutionFrame &parent,
                                    const CodeObject &code,
                                    const DictObject &dict)
@@ -78,11 +80,6 @@ Object ExecutionFrame::result()
 	Trace("frame result %u", address());
 
 	return pop();
-}
-
-void ExecutionFrame::destroy() throw ()
-{
-	DestroyPointer(*this);
 }
 
 template <typename T>
@@ -186,11 +183,6 @@ void ExecutionFrame::pop_block()
 	data()->block_pointer = --i;
 }
 
-ExecutionFrame::Data *ExecutionFrame::data() const
-{
-	return data_cast<Data>();
-}
-
 /*
  * Execution Data
  */
@@ -213,14 +205,11 @@ Execution::Data::~Data() throw ()
  * Execution
  */
 
+CONCRETE_POINTER_DEFAULT_IMPL(Execution)
+
 Execution Execution::New(const CodeObject &code)
 {
 	return NewPointer<Execution>(ExecutionFrame::New(ExecutionFrame(), code, DictObject::New()));
-}
-
-void Execution::destroy() throw ()
-{
-	DestroyPointer(*this);
 }
 
 bool Execution::execute()
@@ -240,11 +229,6 @@ ExecutionFrame Execution::new_frame(const CodeObject &code, const DictObject &di
 	data()->current = current;
 
 	return current;
-}
-
-Execution::Data *Execution::data() const
-{
-	return data_cast<Data>();
 }
 
 ExecutionFrame Execution::frame() const

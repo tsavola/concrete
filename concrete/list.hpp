@@ -38,7 +38,10 @@ private:
 
 template <typename ImplType>
 class ListNode: public Pointer {
-	friend class Pointer;
+	CONCRETE_POINTER_DECL_COMMON(ListNode, Pointer)
+	CONCRETE_POINTER_DECL_CONSTRUCT(ListNode)
+	CONCRETE_POINTER_DECL_DATA(ListNode)
+
 	friend class PortableList<ImplType>;
 
 protected:
@@ -46,14 +49,7 @@ protected:
 		Portable<ImplType> prev;
 		Portable<ImplType> next;
 	} CONCRETE_PACKED;
-
-	ListNode() throw () {}
-	ListNode(const ListNode &other) throw (): Pointer(other) {}
-	explicit ListNode(unsigned int address) throw (): Pointer(address) {}
-
-private:
-	Data *data() const;
-} CONCRETE_PACKED;
+};
 
 } // namespace
 

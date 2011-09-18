@@ -18,9 +18,9 @@
 namespace concrete {
 
 class Continuation: public Pointer {
-	friend class Pointer;
+	CONCRETE_POINTER_DECL_COMMON(Continuation, Pointer)
+	CONCRETE_POINTER_DECL_CONSTRUCT(Continuation)
 
-public:
 	enum Stage {
 		Initiate,
 		Resume,
@@ -33,12 +33,6 @@ public:
 	                   const TupleObject *args,
 	                   const DictObject *kwargs,
 	                   ImplParams... impl_params);
-
-	Continuation() throw () {}
-	Continuation(const Continuation &other) throw (): Pointer(other) {}
-
-protected:
-	explicit Continuation(unsigned int address) throw (): Pointer(address) {}
 };
 
 } // namespace
