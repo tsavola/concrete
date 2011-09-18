@@ -11,6 +11,8 @@
 
 namespace concrete {
 
+CONCRETE_POINTER_IMPL_DATA(NestedContinuation)
+
 NestedContinuation::Data::~Data() throw ()
 {
 	if (*nested)
@@ -45,11 +47,6 @@ bool NestedContinuation::resume_nested(Object &result) const
 	data()->nested = nested;
 
 	return !nested;
-}
-
-NestedContinuation::Data *NestedContinuation::data() const
-{
-	return data_cast<Data>();
 }
 
 NestedCall::NestedCall(const Object &callable):
