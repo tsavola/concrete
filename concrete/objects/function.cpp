@@ -18,6 +18,8 @@
 
 namespace concrete {
 
+CONCRETE_CONTINUATION_DEFAULT_IMPL(FunctionContinuation)
+
 FunctionContinuation::Data::~Data() throw ()
 {
 	frame->destroy();
@@ -46,11 +48,6 @@ bool FunctionContinuation::resume(Object &result, const CodeObject &code) const
 	result = data()->frame->result();
 
 	return true;
-}
-
-FunctionContinuation::Data *FunctionContinuation::data() const
-{
-	return data_cast<Data>();
 }
 
 CONCRETE_OBJECT_DEFAULT_IMPL(FunctionObject, function_type)

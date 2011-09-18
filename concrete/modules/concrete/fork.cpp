@@ -28,13 +28,12 @@
 namespace concrete {
 
 class Fork: public Continuation {
-	friend class Pointer;
+	CONCRETE_CONTINUATION_DEFAULT_DECL(Fork, Continuation)
 
-private:
+protected:
 	enum State { Open, Opening, ReceivingContent, Done };
 	enum { ResponseBufferSize = 4096 };
 
-protected:
 	struct Data: Noncopyable {
 		~Data() throw ()
 		{
@@ -60,8 +59,6 @@ protected:
 		PortableResource<HTTPTransaction> http;
 		Portable<bool>                    forked;
 	} CONCRETE_PACKED;
-
-	explicit Fork(unsigned int address) throw (): Continuation(address) {}
 
 public:
 	bool initiate(Object &result, const TupleObject &args, const DictObject &kwargs) const
@@ -188,12 +185,9 @@ private:
 
 		return Done;
 	}
-
-	Data *data() const
-	{
-		return data_cast<Data>();
-	}
 };
+
+CONCRETE_CONTINUATION_DEFAULT_IMPL(Fork)
 
 } // namespace
 

@@ -29,10 +29,7 @@ class FunctionObject: public CallableObject {
 };
 
 class FunctionContinuation: public Continuation {
-	friend class Pointer;
-
-public:
-	FunctionContinuation(const FunctionContinuation &other) throw (): Continuation(other) {}
+	CONCRETE_CONTINUATION_DEFAULT_DECL(FunctionContinuation, Continuation)
 
 	bool initiate(Object &result,
 	              const TupleObject &args,
@@ -40,13 +37,6 @@ public:
 	              const CodeObject &code) const;
 
 	bool resume(Object &result, const CodeObject &code) const;
-
-private:
-	struct Data;
-
-	explicit FunctionContinuation(unsigned int address) throw (): Continuation(address) {}
-
-	Data *data() const;
 };
 
 void FunctionObjectTypeInit(const TypeObject &type, const char *name = "function");

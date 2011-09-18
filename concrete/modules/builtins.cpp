@@ -46,17 +46,14 @@ static Object Id(const TupleObject &args, const DictObject &kwargs)
 }
 
 class Print: public NestedContinuation {
-	friend class Pointer;
-	friend class Continuation;
+	CONCRETE_CONTINUATION_DEFAULT_DECL(Print, NestedContinuation)
 
-private:
+protected:
 	struct Data: NestedContinuation::Data {
 		Portable<uint32_t> index;
 		Portable<Object>   args;
 		Portable<Object>   deferred_value;
 	} CONCRETE_PACKED;
-
-	explicit Print(unsigned int address) throw (): NestedContinuation(address) {}
 
 public:
 	bool initiate(Object &result, const TupleObject &args, const DictObject &kwargs) const
@@ -119,12 +116,9 @@ private:
 
 		return true;
 	}
-
-	Data *data() const
-	{
-		return data_cast<Data>();
-	}
 };
+
+CONCRETE_CONTINUATION_DEFAULT_IMPL(Print)
 
 static Object Repr(const TupleObject &args, const DictObject &kwargs)
 {

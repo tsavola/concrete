@@ -35,6 +35,13 @@ class Continuation: public Pointer {
 	                   ImplParams... impl_params);
 };
 
+#define CONCRETE_CONTINUATION_DEFAULT_DECL(Class, ParentClass)                \
+	CONCRETE_POINTER_DECL_COMMON(Class, ParentClass)                      \
+	CONCRETE_POINTER_DECL_DATA(Class)
+
+#define CONCRETE_CONTINUATION_DEFAULT_IMPL(Class)                             \
+	CONCRETE_POINTER_IMPL_DATA(Class)
+
 } // namespace
 
 #include "continuation-inline.hpp"

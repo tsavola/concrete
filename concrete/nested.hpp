@@ -21,16 +21,9 @@
 namespace concrete {
 
 class NestedContinuation: public Continuation {
-	friend class Pointer;
-
-public:
-	NestedContinuation() throw () {}
-	NestedContinuation(const NestedContinuation &other) throw (): Continuation(other) {}
-
-protected:
-	struct Data;
-
-	explicit NestedContinuation(unsigned int address) throw (): Continuation(address) {}
+	CONCRETE_POINTER_DECL_COMMON(NestedContinuation, Continuation)
+	CONCRETE_POINTER_DECL_CONSTRUCT(NestedContinuation)
+	CONCRETE_POINTER_DECL_DATA(NestedContinuation)
 
 	bool call_nested(const CallableObject &callable,
 	                 Object &result,
@@ -40,9 +33,6 @@ protected:
 	bool in_nested_call() const;
 
 	bool resume_nested(Object &result) const;
-
-private:
-	Data *data() const;
 };
 
 class NestedCall: Noncopyable {
@@ -59,9 +49,8 @@ public:
 };
 
 class NestedCallContinuation: public NestedContinuation {
-	friend class Pointer;
+	CONCRETE_POINTER_DECL_COMMON(NestedCallContinuation, NestedContinuation)
 
-public:
 	typedef NestedCall (*DeclaratorFunction)(const TupleObject &args, const DictObject &kwargs);
 
 	bool initiate(Object &result,
@@ -70,9 +59,6 @@ public:
 	              DeclaratorFunction declare) const;
 
 	bool resume(Object &result, DeclaratorFunction declare) const;
-
-protected:
-	explicit NestedCallContinuation(unsigned int address) throw (): NestedContinuation(address) {}
 };
 
 } // namespace
