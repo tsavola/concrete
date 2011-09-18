@@ -16,23 +16,11 @@
 namespace concrete {
 
 class ModuleObject: public Object {
-	friend class Pointer;
+	CONCRETE_OBJECT_DEFAULT_DECL(ModuleObject, Object)
 
-public:
-	static TypeObject Type();
 	static ModuleObject New(const DictObject &dict);
 
-	ModuleObject(const ModuleObject &other) throw (): Object(other) {}
-
 	DictObject dict() const;
-
-public:
-	struct Data;
-
-	explicit ModuleObject(unsigned int address) throw (): Object(address) {}
-
-private:
-	Data *data() const;
 };
 
 void ModuleObjectTypeInit(const TypeObject &type, const char *name = "module");

@@ -17,14 +17,11 @@
 
 namespace concrete {
 
+CONCRETE_OBJECT_DEFAULT_IMPL(NoneObject, none_type)
+
 NoneObject::Data::Data(const Pointer &type_placeholder) throw ():
 	Object::Data(type_placeholder)
 {
-}
-
-TypeObject NoneObject::Type()
-{
-	return Context::Active().data()->none_type;
 }
 
 NoneObject NoneObject::NewBuiltin()
@@ -37,11 +34,6 @@ NoneObject NoneObject::NewBuiltin()
 void NoneObject::init_builtin(const Portable<TypeObject> &type)
 {
 	data()->init_none_type(type);
-}
-
-NoneObject::Data *NoneObject::data() const
-{
-	return data_cast<Data>();
 }
 
 void NoneObjectTypeInit(const TypeObject &type, const char *name)

@@ -17,6 +17,8 @@
 
 namespace concrete {
 
+CONCRETE_OBJECT_DEFAULT_IMPL(TupleObject, tuple_type)
+
 TupleObject::Data::Data(const TypeObject &type):
 	Object::Data(type)
 {
@@ -33,11 +35,6 @@ TupleObject::Data::~Data() throw ()
 unsigned int TupleObject::Data::size() const throw ()
 {
 	return (Arena::AllocationSize(this) - sizeof (Data)) / sizeof (Portable<Object>);
-}
-
-TypeObject TupleObject::Type()
-{
-	return Context::Active().data()->tuple_type;
 }
 
 TupleObject TupleObject::New()
@@ -66,11 +63,6 @@ Object TupleObject::get_item(unsigned int index) const
 	if (index >= data()->size())
 		throw RuntimeError("tuple index out of bounds");
 	return data()->items[index];
-}
-
-TupleObject::Data *TupleObject::data() const
-{
-	return data_cast<Data>();
 }
 
 void TupleObjectTypeInit(const TypeObject &type, const char *name)

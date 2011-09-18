@@ -18,25 +18,12 @@
 namespace concrete {
 
 class BytesObject: public Object {
-	friend class Pointer;
-	friend class Object;
+	CONCRETE_OBJECT_DEFAULT_DECL(BytesObject, Object)
 
-public:
-	static TypeObject Type();
 	static BytesObject New(const uint8_t *data, size_t size);
-
-	BytesObject(const BytesObject &other) throw (): Object(other) {}
 
 	size_t size() const;
 	const uint8_t *c_data() const;
-
-protected:
-	struct Data;
-
-	explicit BytesObject(unsigned int address) throw (): Object(address) {}
-
-private:
-	Data *data() const;
 };
 
 void BytesObjectTypeInit(const TypeObject &type, const char *name = "bytes");

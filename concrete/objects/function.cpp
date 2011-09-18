@@ -53,6 +53,8 @@ FunctionContinuation::Data *FunctionContinuation::data() const
 	return data_cast<Data>();
 }
 
+CONCRETE_OBJECT_DEFAULT_IMPL(FunctionObject, function_type)
+
 FunctionObject::Data::Data(const TypeObject &type, const CodeObject &code) throw ():
 	CallableObject::Data(type),
 	code(code)
@@ -68,19 +70,9 @@ Object FunctionObject::continuable_call(Continuation &cont,
 	return Continuation::Call<FunctionContinuation>(cont, stage, args, kwargs, code);
 }
 
-TypeObject FunctionObject::Type()
-{
-	return Context::Active().data()->function_type;
-}
-
 FunctionObject FunctionObject::New(const CodeObject &code)
 {
 	return NewObject<FunctionObject>(code);
-}
-
-FunctionObject::Data *FunctionObject::data() const
-{
-	return data_cast<Data>();
 }
 
 void FunctionObjectTypeInit(const TypeObject &type, const char *name)

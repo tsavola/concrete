@@ -15,20 +15,12 @@
 namespace concrete {
 
 class BoolObject: public LongObject {
-	friend class Pointer;
-	friend class Object;
+	CONCRETE_OBJECT_DATALESS_DECL(BoolObject, LongObject)
 
-public:
-	static TypeObject Type();
 	static BoolObject True();
 	static BoolObject False();
 	static BoolObject FromBool(bool value);
 	static BoolObject NewBuiltin(bool value);
-
-	BoolObject(const BoolObject &other) throw (): LongObject(other) {}
-
-protected:
-	explicit BoolObject(unsigned int address) throw (): LongObject(address) {}
 };
 
 void BoolObjectTypeInit(const TypeObject &type, const char *name = "bool");

@@ -17,26 +17,13 @@
 namespace concrete {
 
 class LongObject: public Object {
-	friend class Pointer;
-	friend class Object;
+	CONCRETE_OBJECT_DEFAULT_DECL(LongObject, Object)
 
-public:
 	typedef int64_t Value;
 
-	static TypeObject Type();
 	static LongObject New(Value value);
 
-	LongObject(const LongObject &other) throw (): Object(other) {}
-
 	Value value() const;
-
-protected:
-	struct Data;
-
-	explicit LongObject(unsigned int address) throw (): Object(address) {}
-
-private:
-	Data *data() const;
 };
 
 template <> struct TypeCheck<LongObject> {

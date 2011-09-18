@@ -184,6 +184,8 @@ private:
 	}
 };
 
+CONCRETE_OBJECT_DEFAULT_IMPL(CodeObject, code_type)
+
 CodeObject::Data::Data(const TypeObject &type,
                              unsigned int stacksize,
                              const BytesObject &bytecode,
@@ -197,11 +199,6 @@ CodeObject::Data::Data(const TypeObject &type,
 	names(names),
 	varnames(varnames)
 {
-}
-
-TypeObject CodeObject::Type()
-{
-	return Context::Active().data()->code_type;
 }
 
 CodeObject CodeObject::New(unsigned int stacksize,
@@ -246,11 +243,6 @@ TupleObject CodeObject::names() const
 TupleObject CodeObject::varnames() const
 {
 	return data()->varnames;
-}
-
-CodeObject::Data *CodeObject::data() const
-{
-	return data_cast<Data>();
 }
 
 void CodeObjectTypeInit(const TypeObject &type, const char *name)

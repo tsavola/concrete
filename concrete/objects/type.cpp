@@ -19,6 +19,8 @@
 
 namespace concrete {
 
+CONCRETE_OBJECT_DEFAULT_IMPL(TypeObject, type_type)
+
 TypeObject::Data::Data(const Pointer &type) throw ():
 	Object::Data(type)
 {
@@ -33,11 +35,6 @@ TypeObject::Data::Data(const TypeObject &type, const StringObject &name) throw (
 	Object::Data(type),
 	name(name)
 {
-}
-
-TypeObject TypeObject::Type()
-{
-	return Context::Active().data()->type_type;
 }
 
 TypeObject TypeObject::NewBuiltin()
@@ -70,11 +67,6 @@ StringObject TypeObject::name() const
 PortableObjectProtocol *TypeObject::protocol() const
 {
 	return &data()->protocol;
-}
-
-TypeObject::Data *TypeObject::data() const
-{
-	return data_cast<Data>();
 }
 
 void TypeObjectTypeInit(const TypeObject &type, const char *name)

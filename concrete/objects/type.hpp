@@ -18,17 +18,11 @@ class NoneObject;
 class StringObject;
 
 class TypeObject: public Object {
-	friend class Pointer;
-	friend class Object;
-
-public:
-	static TypeObject Type();
+	CONCRETE_OBJECT_DEFAULT_DECL(TypeObject, Object)
 
 	static TypeObject NewBuiltin();
 	static TypeObject NewBuiltin(const TypeObject &type);
 	static TypeObject New(const StringObject &name);
-
-	TypeObject(const TypeObject &other) throw (): Object(other) {}
 
 	void init_builtin(const StringObject &name) const;
 
@@ -36,14 +30,6 @@ public:
 
 	StringObject name() const;
 	PortableObjectProtocol *protocol() const;
-
-protected:
-	struct Data;
-
-private:
-	explicit TypeObject(unsigned int address) throw (): Object(address) {}
-
-	Data *data() const;
 };
 
 template <typename ObjectType>

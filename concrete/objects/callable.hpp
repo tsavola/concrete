@@ -20,10 +20,7 @@
 namespace concrete {
 
 class CallableObject: public Object {
-	friend class Pointer;
-
-public:
-	CallableObject(const CallableObject &other) throw (): Object(other) {}
+	CONCRETE_OBJECT_MINIMAL_DECL(CallableObject, Object)
 
 	Object initiate(Continuation &cont, const TupleObject &args, const DictObject &kwargs) const;
 	Object resume(Continuation &cont) const;
@@ -33,9 +30,6 @@ public:
 	                        Continuation::Stage stage,
 	                        const TupleObject *args = NULL,
 	                        const DictObject *kwargs = NULL) const;
-
-protected:
-	explicit CallableObject(unsigned int address) throw (): Object(address) {}
 };
 
 template <> struct TypeCheck<CallableObject> {

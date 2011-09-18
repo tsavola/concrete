@@ -21,15 +21,12 @@
 
 namespace concrete {
 
+CONCRETE_OBJECT_DEFAULT_IMPL(LongObject, long_type)
+
 LongObject::Data::Data(const TypeObject &type, Value value):
 	Object::Data(type),
 	value(value)
 {
-}
-
-TypeObject LongObject::Type()
-{
-	return Context::Active().data()->long_type;
 }
 
 LongObject LongObject::New(Value value)
@@ -40,11 +37,6 @@ LongObject LongObject::New(Value value)
 LongObject::Value LongObject::value() const
 {
 	return data()->value;
-}
-
-LongObject::Data *LongObject::data() const
-{
-	return data_cast<Data>();
 }
 
 bool TypeCheck<LongObject>::operator()(const TypeObject &type)

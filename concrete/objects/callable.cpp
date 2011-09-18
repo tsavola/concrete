@@ -16,6 +16,8 @@
 
 namespace concrete {
 
+CONCRETE_OBJECT_MINIMAL_IMPL(CallableObject)
+
 Object CallableObject::initiate(Continuation &cont,
                                 const TupleObject &args,
                                 const DictObject &kwargs) const

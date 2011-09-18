@@ -22,6 +22,8 @@
 
 namespace concrete {
 
+CONCRETE_OBJECT_DATALESS_IMPL(DictObject, dict_type)
+
 DictObject::Data::Item::Item(const Object &key, const Object &value):
 	key(key),
 	value(value)
@@ -53,11 +55,6 @@ unsigned int DictObject::Data::find_item(const Object &key) const
 			break;
 
 	return i;
-}
-
-TypeObject DictObject::Type()
-{
-	return Context::Active().data()->dict_type;
 }
 
 DictObject DictObject::NewEmpty()

@@ -15,17 +15,11 @@
 namespace concrete {
 
 class TupleObject: public Object {
-	friend class Pointer;
-	friend class Object;
-
-public:
-	static TypeObject Type();
+	CONCRETE_OBJECT_DEFAULT_DECL(TupleObject, Object)
 
 	static TupleObject New();
 	template <typename Item, typename... Tail> static TupleObject New(Item, Tail...);
 	static TupleObject NewWithSize(unsigned int size);
-
-	TupleObject(const TupleObject &other) throw (): Object(other) {}
 
 	void init_item(unsigned int index, const Object &item);
 
@@ -34,14 +28,6 @@ public:
 
 	unsigned int size() const;
 	Object get_item(unsigned int index) const;
-
-protected:
-	struct Data;
-
-	explicit TupleObject(unsigned int address) throw (): Object(address) {}
-
-private:
-	Data *data() const;
 };
 
 void TupleObjectTypeInit(const TypeObject &type, const char *name = "tuple");

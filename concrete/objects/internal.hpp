@@ -26,19 +26,14 @@ namespace internal {
 }
 
 class InternalObject: public CallableObject {
-	friend class Pointer;
-	friend class Object;
+	CONCRETE_OBJECT_DEFAULT_DECL(InternalObject, CallableObject)
 
-public:
 	typedef Object Function(Continuation &cont,
                                 Continuation::Stage stage,
                                 const TupleObject *args,
                                 const DictObject *kwargs);
 
-	static TypeObject Type();
 	static InternalObject New(internal::SymbolId symbol_id);
-
-	InternalObject(const InternalObject &other) throw (): CallableObject(other) {}
 
 	template <typename... Args> Object immediate_call(Args... args) const;
 
@@ -47,15 +42,8 @@ public:
 	                        const TupleObject *args = NULL,
 	                        const DictObject *kwargs = NULL) const;
 
-protected:
-	struct Data;
-
-	explicit InternalObject(unsigned int address) throw (): CallableObject(address) {}
-
 private:
 	Object immediate_call_args(const TupleObject &args) const;
-
-	Data *data() const;
 };
 
 void InternalObjectTypeInit(const TypeObject &type, const char *name = "internal");

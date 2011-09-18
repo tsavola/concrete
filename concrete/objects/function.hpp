@@ -18,27 +18,14 @@
 namespace concrete {
 
 class FunctionObject: public CallableObject {
-	friend class Pointer;
-	friend class Object;
+	CONCRETE_OBJECT_DEFAULT_DECL(FunctionObject, CallableObject)
 
-public:
-	static TypeObject Type();
 	static FunctionObject New(const CodeObject &code);
-
-	FunctionObject(const FunctionObject &other) throw (): CallableObject(other) {}
 
 	Object continuable_call(Continuation &cont,
 	                        Continuation::Stage stage,
 	                        const TupleObject *args = NULL,
 	                        const DictObject *kwargs = NULL) const;
-
-protected:
-	struct Data;
-
-	explicit FunctionObject(unsigned int address) throw (): CallableObject(address) {}
-
-private:
-	Data *data() const;
 };
 
 class FunctionContinuation: public Continuation {

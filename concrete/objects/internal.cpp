@@ -23,6 +23,8 @@ static InternalObject::Function *internal_functions[] = {
 #	undef CONCRETE_INTERNAL_SYMBOL
 };
 
+CONCRETE_OBJECT_DEFAULT_IMPL(InternalObject, internal_type)
+
 InternalObject::Data::Data(const TypeObject &type, internal::SymbolId symbol_id):
 	CallableObject::Data(type),
 	symbol_id(symbol_id)
@@ -43,11 +45,6 @@ Object InternalObject::continuable_call(Continuation &cont,
 	return internal_functions[index](cont, stage, args, kwargs);
 }
 
-TypeObject InternalObject::Type()
-{
-	return Context::Active().data()->internal_type;
-}
-
 InternalObject InternalObject::New(internal::SymbolId symbol_id)
 {
 	return NewObject<InternalObject>(symbol_id);
@@ -66,11 +63,6 @@ Object InternalObject::immediate_call_args(const TupleObject &args) const
 	}
 
 	return result;
-}
-
-InternalObject::Data *InternalObject::data() const
-{
-	return data_cast<Data>();
 }
 
 void InternalObjectTypeInit(const TypeObject &type, const char *name)

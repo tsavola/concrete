@@ -18,6 +18,8 @@
 
 namespace concrete {
 
+CONCRETE_OBJECT_DEFAULT_IMPL(BytesObject, bytes_type)
+
 BytesObject::Data::Data(const TypeObject &type, const uint8_t *data_):
 	Object::Data(type)
 {
@@ -27,11 +29,6 @@ BytesObject::Data::Data(const TypeObject &type, const uint8_t *data_):
 size_t BytesObject::Data::size() const throw ()
 {
 	return Arena::AllocationSize(this) - sizeof (Data);
-}
-
-TypeObject BytesObject::Type()
-{
-	return Context::Active().data()->bytes_type;
 }
 
 BytesObject BytesObject::New(const uint8_t *data, size_t size)
@@ -47,11 +44,6 @@ size_t BytesObject::size() const
 const uint8_t *BytesObject::c_data() const
 {
 	return data()->data;
-}
-
-BytesObject::Data *BytesObject::data() const
-{
-	return data_cast<Data>();
 }
 
 void BytesObjectTypeInit(const TypeObject &type, const char *name)

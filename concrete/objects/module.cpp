@@ -15,15 +15,12 @@
 
 namespace concrete {
 
+CONCRETE_OBJECT_DEFAULT_IMPL(ModuleObject, module_type)
+
 ModuleObject::Data::Data(const TypeObject &type, const DictObject &dict):
 	Object::Data(type),
 	dict(dict)
 {
-}
-
-TypeObject ModuleObject::Type()
-{
-	return Context::Active().data()->module_type;
 }
 
 ModuleObject ModuleObject::New(const DictObject &dict)
@@ -34,11 +31,6 @@ ModuleObject ModuleObject::New(const DictObject &dict)
 DictObject ModuleObject::dict() const
 {
 	return data()->dict;
-}
-
-ModuleObject::Data *ModuleObject::data() const
-{
-	return data_cast<Data>();
 }
 
 void ModuleObjectTypeInit(const TypeObject &type, const char *name)

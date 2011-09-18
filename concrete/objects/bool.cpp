@@ -17,10 +17,7 @@
 
 namespace concrete {
 
-TypeObject BoolObject::Type()
-{
-	return Context::Active().data()->bool_type;
-}
+CONCRETE_OBJECT_DATALESS_IMPL(BoolObject, bool_type)
 
 BoolObject BoolObject::True()
 {

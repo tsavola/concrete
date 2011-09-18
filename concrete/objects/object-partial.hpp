@@ -81,4 +81,38 @@ private:
 
 } // namespace
 
+#define CONCRETE_OBJECT_DECL_COMMON(Class)                                    \
+	public: friend class concrete::Object;
+
+#define CONCRETE_OBJECT_DECL_TYPE(Class)                                      \
+	public: static concrete::TypeObject Type();
+
+#define CONCRETE_OBJECT_IMPL_TYPE(Class, TypeMember)                          \
+	concrete::TypeObject Class::Type()                                    \
+		{ return concrete::Context::Active().data()->TypeMember; }
+
+#define CONCRETE_OBJECT_DEFAULT_DECL(Class, ParentClass)                      \
+	CONCRETE_POINTER_DECL_COMMON(Class, ParentClass)                      \
+	CONCRETE_POINTER_DECL_DATA(Class)                                     \
+	CONCRETE_OBJECT_DECL_COMMON(Class)                                    \
+	CONCRETE_OBJECT_DECL_TYPE(Class)
+
+#define CONCRETE_OBJECT_DATALESS_DECL(Class, ParentClass)                     \
+	CONCRETE_POINTER_DECL_COMMON(Class, ParentClass)                      \
+	CONCRETE_OBJECT_DECL_COMMON(Class)                                    \
+	CONCRETE_OBJECT_DECL_TYPE(Class)
+
+#define CONCRETE_OBJECT_MINIMAL_DECL(Class, ParentClass)                      \
+	CONCRETE_POINTER_DECL_COMMON(Class, ParentClass)                      \
+	CONCRETE_OBJECT_DECL_COMMON(Class)
+
+#define CONCRETE_OBJECT_DEFAULT_IMPL(Class, TypeMember)                       \
+	CONCRETE_POINTER_IMPL_DATA(Class)                                     \
+	CONCRETE_OBJECT_IMPL_TYPE(Class, TypeMember)
+
+#define CONCRETE_OBJECT_DATALESS_IMPL(Class, TypeMember)                      \
+	CONCRETE_OBJECT_IMPL_TYPE(Class, TypeMember)
+
+#define CONCRETE_OBJECT_MINIMAL_IMPL(Class)
+
 #endif

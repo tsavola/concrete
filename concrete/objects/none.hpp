@@ -16,23 +16,11 @@
 namespace concrete {
 
 class NoneObject: public Object {
-	friend class Pointer;
+	CONCRETE_OBJECT_DEFAULT_DECL(NoneObject, Object)
 
-public:
-	static TypeObject Type();
 	static NoneObject NewBuiltin();
 
-	NoneObject(const NoneObject &other) throw (): Object(other) {}
-
 	void init_builtin(const Portable<TypeObject> &type);
-
-protected:
-	struct Data;
-
-	explicit NoneObject(unsigned int address) throw (): Object(address) {}
-
-private:
-	Data *data() const;
 };
 
 void NoneObjectTypeInit(const TypeObject &type, const char *name = "none");

@@ -22,6 +22,8 @@
 
 namespace concrete {
 
+CONCRETE_OBJECT_DEFAULT_IMPL(StringObject, string_type)
+
 StringObject::Data::Data(const TypeObject &type, const char *data_):
 	Object::Data(type)
 {
@@ -76,11 +78,6 @@ void StringObject::Data::init()
 size_t StringObject::Data::size() const throw ()
 {
 	return Arena::AllocationSize(this) - sizeof (Data) - 1;
-}
-
-TypeObject StringObject::Type()
-{
-	return Context::Active().data()->string_type;
 }
 
 StringObject StringObject::New(const char *data, size_t size)
@@ -138,11 +135,6 @@ char *StringObject::c_str() const
 std::string StringObject::string() const
 {
 	return std::string(data()->data, data()->size());
-}
-
-StringObject::Data *StringObject::data() const
-{
-	return data_cast<Data>();
 }
 
 void StringObjectTypeInit(const TypeObject &type, const char *name)
