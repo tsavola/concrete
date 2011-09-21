@@ -66,9 +66,6 @@ private:
 
 	static void Destroy(unsigned int address, Data *data) throw ();
 
-	template <typename ObjectType>
-	static void TypedDestroy(unsigned int address, Data *data) throw ();
-
 	struct NoRefInit {};
 	Object(const Pointer &pointer, NoRefInit) throw (): Pointer(pointer) {}
 

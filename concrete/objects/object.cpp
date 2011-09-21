@@ -111,46 +111,6 @@ const Pointer &Object::Referenced(const Pointer &object) throw ()
 	return object;
 }
 
-void Object::Destroy(unsigned int address, Data *data) throw ()
-{
-	auto context = Context::Active().nonthrowing_data();
-	if (context == NULL)
-		return;
-
-	auto type = data->type();
-
-	if (type == context->object_type)
-		TypedDestroy<Object>(address, data);
-	else if (type == context->type_type)
-		TypedDestroy<TypeObject>(address, data);
-	else if (type == context->long_type)
-		TypedDestroy<LongObject>(address, data);
-	else if (type == context->bytes_type)
-		TypedDestroy<BytesObject>(address, data);
-	else if (type == context->string_type)
-		TypedDestroy<StringObject>(address, data);
-	else if (type == context->tuple_type)
-		TypedDestroy<TupleObject>(address, data);
-	else if (type == context->dict_type)
-		TypedDestroy<DictObject>(address, data);
-	else if (type == context->code_type)
-		TypedDestroy<CodeObject>(address, data);
-	else if (type == context->function_type)
-		TypedDestroy<FunctionObject>(address, data);
-	else if (type == context->internal_type)
-		TypedDestroy<InternalObject>(address, data);
-	else if (type == context->module_type)
-		TypedDestroy<ModuleObject>(address, data);
-	else
-		assert(false);
-}
-
-template <typename ObjectType>
-void Object::TypedDestroy(unsigned int address, Data *data) throw ()
-{
-	DestroyData(address, static_cast<typename ObjectType::Data *> (data));
-}
-
 Object::Object() throw ():
 	Pointer(Referenced(Context::Active().none_pointer()))
 {

@@ -56,11 +56,6 @@ Object CallableObject::continuable_call(Continuation &cont,
 	return value;
 }
 
-bool TypeCheck<CallableObject>::operator()(const TypeObject &type)
-{
-	return type == FunctionObject::Type() || type == InternalObject::Type();
-}
-
 void CallableObjectTypeInit(const TypeObject &type, const char *name)
 {
 	ObjectTypeInit(type, name);

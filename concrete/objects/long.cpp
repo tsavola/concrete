@@ -39,11 +39,6 @@ LongObject::Value LongObject::value() const
 	return data()->value;
 }
 
-bool TypeCheck<LongObject>::operator()(const TypeObject &type)
-{
-	return type == LongObject::Type() || type == BoolObject::Type();
-}
-
 void LongObjectTypeInit(const TypeObject &type, const char *name)
 {
 	ObjectTypeInit(type, name);
