@@ -39,13 +39,15 @@ def generate(inputname, inputfile, outputfile):
 				i = text.find("}}}")
 				if i >= 0:
 					block = False
-					code += text[:i]
+					if text[:i].strip():
+						code += text[:i]
 					evaluate(inputname, code, indent, outputfile)
 					indent = None
 					code = ""
 					text = text[i+3:]
 				else:
-					code += text
+					if text.strip():
+						code += text
 					text = ""
 			else:
 				i = text.find("{{{")
@@ -53,9 +55,10 @@ def generate(inputname, inputfile, outputfile):
 					block = True
 					print(text[:i], end="", file=outputfile)
 					indent = re.sub(r"[^\t]", " ", text[:i])
-					text = text[i+3:].lstrip()
-					if not text:
-						text = "if True:\n"
+					text = indent + "   " + text[i+3:]
+					if not text.strip():
+						text = ""
+					text = "if True:\n" + text
 				else:
 					print(text, end="", file=outputfile)
 					text = ""
