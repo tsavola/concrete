@@ -7,12 +7,13 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#include "callable.hpp"
+#include "concrete/objects/callable.hpp"
 
-#include <concrete/objects/function-data.hpp>
-#include <concrete/objects/internal-data.hpp>
 #include <concrete/objects/type.hpp>
 #include <concrete/util/assert.hpp>
+
+{{{ for o in ObjectsByName["CallableObject"].children:
+        echo("#include <concrete/objects/{o.short}.hpp>") }}}
 
 namespace concrete {
 
@@ -47,11 +48,10 @@ Object CallableObject::continuable_call(Continuation &cont,
 	TypeObject derived_type = type();
 	Object value;
 
-	if (derived_type == FunctionObject::Type())
-		value = cast<FunctionObject>().continuable_call(cont, stage, args, kwargs);
-
-	else if (derived_type == InternalObject::Type())
-		value = cast<InternalObject>().continuable_call(cont, stage, args, kwargs);
+	{{{ for o in ObjectsByName["CallableObject"].children:
+	        echo("if (derived_type == {o.name}::Type())")
+	        echo("  value = cast<{o.name}>().continuable_call(cont, stage, args, kwargs);")
+	        echo("else") }}} ;
 
 	return value;
 }

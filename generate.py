@@ -109,7 +109,7 @@ class Object:
 	def __init__(self, filename, name, parent_name):
 		self.name = name
 		self.parent_name = parent_name
-		self.children = set()
+		self.__children = None
 
 		Objects.append(self)
 		ObjectsByName[name] = self
@@ -122,10 +122,6 @@ class Object:
 			return self.name.replace("Object", "").lower()
 
 	@property
-	def parent(self):
-		return ObjectsByName.get(self.parent_name)
-
-	@property
 	def typed(self):
 		return self.name in TypedObjectNames
 
@@ -133,8 +129,16 @@ class Object:
 	def data(self):
 		return self.name in DataObjectNames
 
-	def add_child(self, child):
-		self.children.add(child)
+	@property
+	def children(self):
+		if self.__children is None:
+			self.__children = set()
+
+			for o in Objects:
+				if o.parent_name == self.name:
+					self.__children.add(o)
+
+		return self.__children
 
 @parse(r"\s*CONCRETE_OBJECT_((DEFAULT|DATALESS)_DECL|DECL_TYPE)\(\s*(\S+)\s*,\s*\S+\s*\)")
 def TypedObject(filename, _1, _2, name):

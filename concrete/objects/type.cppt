@@ -75,10 +75,6 @@ void TypeObjectTypeInit(const TypeObject &type, const char *name)
 
 {{{
     for o in Objects:
-        if o.parent:
-            o.parent.add_child(o)
-
-    for o in Objects:
         if o.name == "Object" or not o.children:
             continue
 
