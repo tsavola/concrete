@@ -7,24 +7,17 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#include "object-data.hpp"
+#include "concrete/objects/object-data.hpp"
 
 #include <boost/format.hpp>
 
 #include <concrete/context-data.hpp>
 #include <concrete/nested-data.hpp>
-#include <concrete/objects/bytes-data.hpp>
-#include <concrete/objects/code-data.hpp>
-#include <concrete/objects/dict-data.hpp>
-#include <concrete/objects/function-data.hpp>
-#include <concrete/objects/internal-data.hpp>
-#include <concrete/objects/long-data.hpp>
-#include <concrete/objects/module-data.hpp>
-#include <concrete/objects/none-data.hpp>
-#include <concrete/objects/string-data.hpp>
-#include <concrete/objects/tuple-data.hpp>
-#include <concrete/objects/type-data.hpp>
 #include <concrete/util/assert.hpp>
+
+{{{ for o in Objects:
+        if o.data:
+            echo("#include <concrete/objects/{o.short}-data.hpp>") }}}
 
 namespace concrete {
 
@@ -109,6 +102,22 @@ const Pointer &Object::Referenced(const Pointer &object) throw ()
 		data->ref();
 
 	return object;
+}
+
+void Object::Destroy(unsigned int address, Data *data) throw ()
+{
+	auto context = Context::Active().nonthrowing_data();
+	if (context == NULL)
+		return;
+
+	auto type = data->type();
+
+	{{{ for o in Objects:
+	        if o.typed and o.name != "NoneObject":
+	            echo("if (type == context->{o.short}_type)")
+	            echo("  DestroyData(address, static_cast<{o.name}::Data *> (data));")
+	            echo("else") }}}
+		assert(false);
 }
 
 Object::Object() throw ():

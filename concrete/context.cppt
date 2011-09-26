@@ -16,20 +16,11 @@
 #include <concrete/execution.hpp>
 #include <concrete/modules/builtins.hpp>
 #include <concrete/modules/concrete.hpp>
-#include <concrete/objects/bool.hpp>
-#include <concrete/objects/bytes.hpp>
-#include <concrete/objects/code.hpp>
-#include <concrete/objects/dict.hpp>
-#include <concrete/objects/function.hpp>
-#include <concrete/objects/internal.hpp>
-#include <concrete/objects/long.hpp>
-#include <concrete/objects/module.hpp>
-#include <concrete/objects/object.hpp>
-#include <concrete/objects/string.hpp>
-#include <concrete/objects/tuple.hpp>
 #include <concrete/util/assert.hpp>
 #include <concrete/util/packed.hpp>
 #include <concrete/util/thread.hpp>
+
+{{{ for o in Objects: echo("#include <concrete/objects/{o.short}.hpp>") }}}
 
 namespace concrete {
 
@@ -47,34 +38,9 @@ private:
 static CONCRETE_THREAD_LOCAL Context *active_context;
 
 Context::Data::Data(const NoneObject &none,
-                    const TypeObject &type_type,
-                    const TypeObject &object_type,
-                    const TypeObject &none_type,
-                    const TypeObject &string_type,
-                    const TypeObject &long_type,
-                    const TypeObject &bool_type,
-                    const TypeObject &bytes_type,
-                    const TypeObject &tuple_type,
-                    const TypeObject &dict_type,
-                    const TypeObject &code_type,
-                    const TypeObject &function_type,
-                    const TypeObject &internal_type,
-                    const TypeObject &module_type) throw ():
-	none          (none),
-	type_type     (type_type),
-	object_type   (object_type),
-	none_type     (none_type),
-	string_type   (string_type),
-	long_type     (long_type),
-	bool_type     (bool_type),
-	bytes_type    (bytes_type),
-	tuple_type    (tuple_type),
-	tuple_empty   (none),
-	dict_type     (dict_type),
-	code_type     (code_type),
-	function_type (function_type),
-	internal_type (internal_type),
-	module_type   (module_type)
+                    {{{ for o in Objects: echo("const TypeObject &{o.short}_type", ",") }}}) throw ():
+	none(none),
+	{{{ for o in Objects: echo("{o.short}_type({o.short}_type)", ",") }}}
 {
 }
 
@@ -95,50 +61,20 @@ Context::Context(EventLoop &loop):
 	auto none = NoneObject::NewBuiltin();
 	m_none_pointer = none;
 
-	auto type_type     = TypeObject::NewBuiltin();
-	auto object_type   = TypeObject::NewBuiltin(type_type);
-	auto none_type     = TypeObject::NewBuiltin(type_type);
-	auto string_type   = TypeObject::NewBuiltin(type_type);
-	auto long_type     = TypeObject::NewBuiltin(type_type);
-	auto bool_type     = TypeObject::NewBuiltin(type_type);
-	auto bytes_type    = TypeObject::NewBuiltin(type_type);
-	auto tuple_type    = TypeObject::NewBuiltin(type_type);
-	auto dict_type     = TypeObject::NewBuiltin(type_type);
-	auto code_type     = TypeObject::NewBuiltin(type_type);
-	auto function_type = TypeObject::NewBuiltin(type_type);
-	auto internal_type = TypeObject::NewBuiltin(type_type);
-	auto module_type   = TypeObject::NewBuiltin(type_type);
+	auto type_type = TypeObject::NewBuiltin();
+
+	{{{ for o in Objects:
+	        if o.short != "type":
+	            echo("auto {o.short}_type = TypeObject::NewBuiltin(type_type);") }}}
 
 	new (data()) Data(none,
-	                  type_type,
-	                  object_type,
-	                  none_type,
-	                  string_type,
-	                  long_type,
-	                  bool_type,
-	                  bytes_type,
-	                  tuple_type,
-	                  dict_type,
-	                  code_type,
-	                  function_type,
-	                  internal_type,
-	                  module_type);
+	                  {{{ for o in Objects: echo("{o.short}_type", ",") }}});
 
-	none.init_builtin      (data()->none_type);
+	none.init_builtin(data()->none_type);
 
-	TypeObjectTypeInit     (data()->type_type);
-	ObjectTypeInit         (data()->object_type);
-	NoneObjectTypeInit     (data()->none_type);
-	StringObjectTypeInit   (data()->string_type);
-	LongObjectTypeInit     (data()->long_type);
-	BoolObjectTypeInit     (data()->bool_type);
-	BytesObjectTypeInit    (data()->bytes_type);
-	TupleObjectTypeInit    (data()->tuple_type);
-	DictObjectTypeInit     (data()->dict_type);
-	CodeObjectTypeInit     (data()->code_type);
-	FunctionObjectTypeInit (data()->function_type);
-	InternalObjectTypeInit (data()->internal_type);
-	ModuleObjectTypeInit   (data()->module_type);
+	{{{ for o in Objects:
+	        if o.typed:
+	            echo("{o.name}TypeInit(data()->{o.short}_type);") }}}
 
 	auto modules = DictObject::New();
 

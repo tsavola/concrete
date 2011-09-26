@@ -7,15 +7,14 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#include "type-data.hpp"
+#include "concrete/objects/type-data.hpp"
 
-#include <concrete/pointer.hpp>
 #include <concrete/context-data.hpp>
-#include <concrete/objects/none.hpp>
-#include <concrete/objects/string.hpp>
-#include <concrete/objects/type.hpp>
+#include <concrete/pointer.hpp>
 #include <concrete/portable.hpp>
 #include <concrete/util/packed.hpp>
+
+{{{ for o in Objects: echo("#include <concrete/objects/{o.short}.hpp>") }}}
 
 namespace concrete {
 
@@ -73,5 +72,25 @@ void TypeObjectTypeInit(const TypeObject &type, const char *name)
 {
 	ObjectTypeInit(type, name);
 }
+
+{{{
+    for o in Objects:
+        if o.parent:
+            o.parent.add_child(o)
+
+    for o in Objects:
+        if o.name == "Object" or not o.children:
+            continue
+
+        names = [child.name for child in o.children]
+
+        if o.typed:
+            names.append(o.name)
+
+        echo("bool TypeCheck<{o.name}>::operator()(const TypeObject &type)")
+        echo("{{")
+        echo("  return %s;" % " || ".join("type == %s::Type()" % n for n in sorted(names)))
+        echo("}}")
+}}}
 
 } // namespace

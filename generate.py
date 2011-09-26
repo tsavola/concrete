@@ -3,33 +3,83 @@ import re
 import sys
 
 Parsers = []
-Generators = []
 
-def main(output_filename, *input_filenames):
-	for filename in sorted(input_filenames):
-		with open(filename) as inputfile:
+def main(*inputs):
+	templates = []
+
+	for inputname in sorted(inputs):
+		with open(inputname) as inputfile:
 			for line in inputfile:
 				for pattern, parser in Parsers:
 					match = pattern.match(line)
 					if match:
-						parser(filename, *match.groups())
+						parser(inputname, *match.groups())
 
-	indent = re.compile(r"  ")
-	error = True
+		if inputname.endswith("t"):
+			templates.append(inputname)
 
-	try:
-		with open(output_filename, "w") as output:
-			for generator in Generators:
-				for fragment in generator():
-					print(indent.sub("\t", str(fragment)), file=output)
+	for inputname in templates:
+		outputname = os.path.join("generated", inputname[:-1])
+		tempname = outputname + ".tmp"
 
-				print(file=output)
+		with open(inputname) as inputfile:
+			with open(tempname, "w") as tempfile:
+				generate(inputname, inputfile, tempfile)
 
-		error = False
+		os.rename(tempname, outputname)
 
-	finally:
-		if error and os.path.exists(output_filename):
-			os.remove(output_filename)
+def generate(inputname, inputfile, outputfile):
+	block = False
+	indent = None
+	code = ""
+
+	for text in inputfile:
+		while text:
+			if block:
+				i = text.find("}}}")
+				if i >= 0:
+					block = False
+					code += text[:i]
+					evaluate(inputname, code, indent, outputfile)
+					indent = None
+					code = ""
+					text = text[i+3:]
+				else:
+					code += text
+					text = ""
+			else:
+				i = text.find("{{{")
+				if i >= 0:
+					block = True
+					print(text[:i], end="", file=outputfile)
+					indent = re.sub(r"[^\t]", " ", text[:i])
+					text = text[i+3:].lstrip()
+					if not text:
+						text = "if True:\n"
+				else:
+					print(text, end="", file=outputfile)
+					text = ""
+
+def evaluate(inputname, code, indent, outputfile):
+	def echo(line, delim=None, newline=True):
+		lines.append((line.format(**codelocals), delim, newline))
+
+	codelocals = dict(echo=echo)
+	lines = []
+
+	exec(compile(code, inputname, "exec"), globals(), codelocals)
+
+	for i, (line, delim, newline) in enumerate(lines):
+		if i > 0:
+			line = indent + line
+
+		if delim and i < len(lines) - 1:
+			line += delim
+
+		if newline and i < len(lines) - 1:
+			print(line, file=outputfile)
+		else:
+			print(line, end="", file=outputfile)
 
 def parse(pattern):
 	def wrapper(func):
@@ -38,30 +88,20 @@ def parse(pattern):
 
 	return wrapper
 
-def generate(func):
-	Generators.append(func)
-	return func
-
 Headers = set()
+Objects = []
+ObjectsByName = {}
+TypedObjectNames = set()
+DataObjectNames = set()
 
 @parse(r".")
 def Header(filename):
+	filename = filename.replace(".hppt", ".hpp")
+
 	if (filename.endswith(".hpp") and
 	    not filename.endswith("-inline.hpp") and
 	    filename != "concrete/internals.hpp"):
 		Headers.add(filename)
-
-@generate
-def Includes():
-	for filename in sorted(Headers):
-		yield "#include <%s>" % filename
-
-@generate
-def NamespaceBegin():
-	yield "namespace concrete {"
-
-ObjectsByName = {}
-TypedObjectNames = set()
 
 @parse(r"\s*CONCRETE_OBJECT_.*DECL.*\(\s*(\S+)\s*,\s*(\S+)\s*\)")
 class Object:
@@ -71,7 +111,15 @@ class Object:
 		self.parent_name = parent_name
 		self.children = set()
 
+		Objects.append(self)
 		ObjectsByName[name] = self
+
+	@property
+	def short(self):
+		if self.name == "Object":
+			return "object"
+		else:
+			return self.name.replace("Object", "").lower()
 
 	@property
 	def parent(self):
@@ -81,6 +129,10 @@ class Object:
 	def typed(self):
 		return self.name in TypedObjectNames
 
+	@property
+	def data(self):
+		return self.name in DataObjectNames
+
 	def add_child(self, child):
 		self.children.add(child)
 
@@ -88,51 +140,12 @@ class Object:
 def TypedObject(filename, _1, _2, name):
 	TypedObjectNames.add(name)
 
-@generate
-def TypeChecks():
-	for o in ObjectsByName.values():
-		if o.parent:
-			o.parent.add_child(o)
+@parse(r"\s*CONCRETE_OBJECT_(DEFAULT_DECL|DECL_DATA)\(\s*(\S+)\s*,\s*\S+\s*\)")
+def DataObject(filename, _1, name):
+	DataObjectNames.add(name)
 
-	for o in ObjectsByName.values():
-		if not o.children:
-			continue
-
-		names = [child.name for child in o.children]
-
-		if o.typed:
-			names.append(o.name)
-
-		yield "bool TypeCheck<%s>::operator()(const TypeObject &type)" % o.name
-		yield "{"
-		yield "  return %s;" % " || ".join("type == %s::Type()" % n for n in sorted(names))
-		yield "}"
-
-@generate
-def ObjectDestroy():
-	yield "void Object::Destroy(unsigned int address, Data *data) throw ()"
-	yield "{"
-	yield "  auto context = Context::Active().nonthrowing_data();"
-	yield "  if (!context)"
-	yield "    return;"
-	yield "  auto type = data->type();"
-	yield "  if (type == context->object_type)"
-	yield "    DestroyData(address, data);"
-
-	for name, o in ObjectsByName.items():
-		if o.typed and name not in ("Object", "NoneObject"):
-			type_member = name.replace("Object", "_type").lower()
-
-			yield "  else if (type == context->%s)" % type_member
-			yield "    DestroyData(address, static_cast<%s::Data *> (data));" % name
-
-	yield "  else"
-	yield "    assert(false);"
-	yield "}"
-
-@generate
-def NamespaceEnd():
-	yield "} // namespace"
+Object("synthetic", "Object", None)
+TypedObjectNames.add("Object")
 
 if __name__ == "__main__":
 	main(*sys.argv[1:])
