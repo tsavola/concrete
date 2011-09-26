@@ -15,9 +15,7 @@
 #include <concrete/nested-data.hpp>
 #include <concrete/util/assert.hpp>
 
-{{{ for o in Objects:
-        if o.data:
-            echo("#include <concrete/objects/{o.short}-data.hpp>") }}}
+{{{ for o in Objects if o.data: echo("#include <concrete/objects/{o.short}-data.hpp>") }}}
 
 namespace concrete {
 
@@ -112,12 +110,14 @@ void Object::Destroy(unsigned int address, Data *data) throw ()
 
 	auto type = data->type();
 
-	{{{ for o in Objects:
-	        if o.typed and o.name != "NoneObject":
-	            echo("if (type == context->{o.short}_type)")
-	            echo("  DestroyData(address, static_cast<{o.name}::Data *> (data));")
-	            echo("else") }}}
+	{{{
+	    for o in Objects if o.typed and o.name != "NoneObject":
+	        echo("if (type == context->{o.short}_type)")
+	        echo("  DestroyData(address, static_cast<{o.name}::Data *> (data));")
+	        echo("else")
+	}}} {
 		assert(false);
+	}
 }
 
 Object::Object() throw ():

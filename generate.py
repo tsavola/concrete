@@ -63,10 +63,13 @@ def generate(inputname, inputfile, outputfile):
 					print(text, end="", file=outputfile)
 					text = ""
 
+for_syntax = re.compile(r"^(\s*)for\s+([^\s:]+)\s+in\s+([^:]+)\s+if\s+([^:]+):", re.MULTILINE)
+
 def evaluate(inputname, code, indent, outputfile):
 	def echo(line, delim=None, newline=True):
 		lines.append((line.format(**codelocals), delim, newline))
 
+	code = for_syntax.sub(r"\1for \2 in (\2 for \2 in \3 if \4):", code)
 	codelocals = dict(echo=echo)
 	lines = []
 

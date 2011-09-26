@@ -74,12 +74,8 @@ void TypeObjectTypeInit(const TypeObject &type, const char *name)
 }
 
 {{{
-    for o in Objects:
-        if o.name == "Object" or not o.children:
-            continue
-
+    for o in Objects if o.name != "Object" and o.children:
         names = [child.name for child in o.children]
-
         if o.typed:
             names.append(o.name)
 

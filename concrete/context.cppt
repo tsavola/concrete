@@ -63,18 +63,14 @@ Context::Context(EventLoop &loop):
 
 	auto type_type = TypeObject::NewBuiltin();
 
-	{{{ for o in Objects:
-	        if o.short != "type":
-	            echo("auto {o.short}_type = TypeObject::NewBuiltin(type_type);") }}}
+	{{{ for o in Objects if o.name != "TypeObject":
+	        echo("auto {o.short}_type = TypeObject::NewBuiltin(type_type);") }}}
 
-	new (data()) Data(none,
-	                  {{{ for o in Objects: echo("{o.short}_type", ",") }}});
+	new (data()) Data(none, {{{ for o in Objects: echo("{o.short}_type", ",") }}});
 
 	none.init_builtin(data()->none_type);
 
-	{{{ for o in Objects:
-	        if o.typed:
-	            echo("{o.name}TypeInit(data()->{o.short}_type);") }}}
+	{{{ for o in Objects if o.typed: echo("{o.name}TypeInit(data()->{o.short}_type);") }}}
 
 	auto modules = DictObject::New();
 
