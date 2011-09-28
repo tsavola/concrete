@@ -2,7 +2,7 @@ PYTHON		?= python3.1
 
 -include config.mk
 
-CPPFLAGS	+= -I. -Igenerated
+CPPFLAGS	+= -I. -Igenerated -Iboost
 CFLAGS		+= -g -Wall
 CXXFLAGS	+= -std=gnu++0x
 
