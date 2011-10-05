@@ -16,7 +16,7 @@
 namespace concrete {
 
 class NoneObject: public Object {
-	CONCRETE_OBJECT_DEFAULT_DECL(NoneObject, Object)
+	{{{ DeclareObject("NoneObject") }}}
 
 	static NoneObject NewBuiltin();
 

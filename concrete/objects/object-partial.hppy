@@ -14,12 +14,83 @@
 
 namespace concrete {
 
+{{{
+	objects_by_name = {}
+
+	class Object:
+
+		def __init__(self, name, parent_name=None, has_type=True, has_data=True):
+			self.name = name
+			self.parent_name = parent_name
+			self.has_type = has_type
+			self.has_data = has_data
+
+		@property
+		def short(self):
+			if self.name == "Object":
+				return "object"
+			else:
+				return self.name.replace("Object", "").lower()
+
+		@property
+		def parent(self):
+			return self.parent_name and objects_by_name[self.parent_name]
+
+		@property
+		def children(self):
+			return [o for o in GetObjects() if o.parent == self]
+
+	@producer
+	def RegisterObject(name, parent_name=None, **kwargs):
+		global objects_by_name
+		objects_by_name[name] = o = Object(name, parent_name, **kwargs)
+		return o
+
+	@producer
+	def DeclareObject(name, parent_name="Object", **kwargs):
+		o = RegisterObject(name, parent_name, **kwargs)
+
+		echo("  CONCRETE_POINTER_DECL_COMMON({o.name}, {o.parent_name})")
+
+		if o.has_data:
+			echo("  CONCRETE_POINTER_DECL_DATA({o.name})")
+
+		echo("  friend class concrete::Object;")
+		echo("public:")
+
+		if o.has_type:
+			echo("  static concrete::TypeObject Type();")
+
+	@consumer
+	def ImplementObject(name, type_method=True, data_method=True):
+		o = objects_by_name[name]
+
+		if o.has_data and data_method:
+			echo("CONCRETE_POINTER_IMPL_DATA({o.name})")
+
+		if o.has_type and type_method:
+			echo("concrete::TypeObject {o.name}::Type()")
+			echo("{{")
+			echo("  return concrete::Context::Active().data()->{o.short}_type;")
+			echo("}}")
+
+	@consumer
+	def GetObject(name):
+		return objects_by_name[name]
+
+	@consumer
+	def GetObjects():
+		return objects_by_name.values()
+}}}
+
 class NoneObject;
 class StringObject;
 class TypeObject;
 struct PortableObjectProtocol;
 
 class Object: public Pointer {
+	{{{ RegisterObject("Object") }}}
+
 	friend class NoneObject;
 	friend class Pointer;
 	friend class TypeObject;
@@ -77,39 +148,5 @@ private:
 };
 
 } // namespace
-
-#define CONCRETE_OBJECT_DECL_COMMON(Class)                                    \
-	public: friend class concrete::Object;
-
-#define CONCRETE_OBJECT_DECL_TYPE(Class)                                      \
-	public: static concrete::TypeObject Type();
-
-#define CONCRETE_OBJECT_IMPL_TYPE(Class, TypeMember)                          \
-	concrete::TypeObject Class::Type()                                    \
-		{ return concrete::Context::Active().data()->TypeMember; }
-
-#define CONCRETE_OBJECT_DEFAULT_DECL(Class, ParentClass)                      \
-	CONCRETE_POINTER_DECL_COMMON(Class, ParentClass)                      \
-	CONCRETE_POINTER_DECL_DATA(Class)                                     \
-	CONCRETE_OBJECT_DECL_COMMON(Class)                                    \
-	CONCRETE_OBJECT_DECL_TYPE(Class)
-
-#define CONCRETE_OBJECT_DATALESS_DECL(Class, ParentClass)                     \
-	CONCRETE_POINTER_DECL_COMMON(Class, ParentClass)                      \
-	CONCRETE_OBJECT_DECL_COMMON(Class)                                    \
-	CONCRETE_OBJECT_DECL_TYPE(Class)
-
-#define CONCRETE_OBJECT_MINIMAL_DECL(Class, ParentClass)                      \
-	CONCRETE_POINTER_DECL_COMMON(Class, ParentClass)                      \
-	CONCRETE_OBJECT_DECL_COMMON(Class)
-
-#define CONCRETE_OBJECT_DEFAULT_IMPL(Class, TypeMember)                       \
-	CONCRETE_POINTER_IMPL_DATA(Class)                                     \
-	CONCRETE_OBJECT_IMPL_TYPE(Class, TypeMember)
-
-#define CONCRETE_OBJECT_DATALESS_IMPL(Class, TypeMember)                      \
-	CONCRETE_OBJECT_IMPL_TYPE(Class, TypeMember)
-
-#define CONCRETE_OBJECT_MINIMAL_IMPL(Class)
 
 #endif

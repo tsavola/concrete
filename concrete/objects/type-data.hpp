@@ -10,7 +10,7 @@
 #ifndef CONCRETE_OBJECTS_TYPE_DATA_HPP
 #define CONCRETE_OBJECTS_TYPE_DATA_HPP
 
-#include "type.hpp"
+#include "concrete/objects/type.hpp"
 
 #include <concrete/objects/object-data.hpp>
 

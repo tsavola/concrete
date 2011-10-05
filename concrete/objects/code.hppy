@@ -20,7 +20,7 @@
 namespace concrete {
 
 class CodeObject: public Object {
-	CONCRETE_OBJECT_DEFAULT_DECL(CodeObject, Object)
+	{{{ DeclareObject("CodeObject") }}}
 
 	static CodeObject New(unsigned int stacksize,
 	                      const BytesObject &bytecode,

@@ -26,7 +26,7 @@ namespace internal {
 }
 
 class InternalObject: public CallableObject {
-	CONCRETE_OBJECT_DEFAULT_DECL(InternalObject, CallableObject)
+	{{{ DeclareObject("InternalObject", "CallableObject") }}}
 
 	typedef Object Function(Continuation &cont,
                                 Continuation::Stage stage,
@@ -88,6 +88,6 @@ namespace internal_symbol {
 			cont, stage, args, kwargs, ImplParams);               \
 	}
 
-#include "internal-inline.hpp"
+#include "concrete/objects/internal-inline.hpp"
 
 #endif

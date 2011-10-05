@@ -10,7 +10,7 @@
 #ifndef CONCRETE_OBJECTS_NONE_DATA_HPP
 #define CONCRETE_OBJECTS_NONE_DATA_HPP
 
-#include "none.hpp"
+#include "concrete/objects/none.hpp"
 
 #include <concrete/objects/object-data.hpp>
 

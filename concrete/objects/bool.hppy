@@ -15,7 +15,7 @@
 namespace concrete {
 
 class BoolObject: public LongObject {
-	CONCRETE_OBJECT_DATALESS_DECL(BoolObject, LongObject)
+	{{{ DeclareObject("BoolObject", "LongObject", has_data=False) }}}
 
 	static BoolObject True();
 	static BoolObject False();

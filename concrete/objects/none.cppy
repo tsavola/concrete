@@ -7,7 +7,7 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#include "none-data.hpp"
+#include "concrete/objects/none-data.hpp"
 
 #include <concrete/arena.hpp>
 #include <concrete/context-data.hpp>
@@ -17,7 +17,7 @@
 
 namespace concrete {
 
-CONCRETE_OBJECT_DEFAULT_IMPL(NoneObject, none_type)
+{{{ ImplementObject("NoneObject") }}}
 
 NoneObject::Data::Data(const Pointer &type_placeholder) throw ():
 	Object::Data(type_placeholder)

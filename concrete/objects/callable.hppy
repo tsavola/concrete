@@ -20,7 +20,7 @@
 namespace concrete {
 
 class CallableObject: public Object {
-	CONCRETE_OBJECT_MINIMAL_DECL(CallableObject, Object)
+	{{{ DeclareObject("CallableObject", has_type=False, has_data=False) }}}
 
 	Object initiate(Continuation &cont, const TupleObject &args, const DictObject &kwargs) const;
 	Object resume(Continuation &cont) const;

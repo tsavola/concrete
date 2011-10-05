@@ -7,30 +7,26 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#ifndef CONCRETE_OBJECTS_LONG_HPP
-#define CONCRETE_OBJECTS_LONG_HPP
+#ifndef CONCRETE_OBJECTS_BYTES_HPP
+#define CONCRETE_OBJECTS_BYTES_HPP
 
+#include <cstddef>
 #include <cstdint>
 
 #include <concrete/objects/object.hpp>
 
 namespace concrete {
 
-class LongObject: public Object {
-	CONCRETE_OBJECT_DEFAULT_DECL(LongObject, Object)
+class BytesObject: public Object {
+	{{{ DeclareObject("BytesObject") }}}
 
-	typedef int64_t Value;
+	static BytesObject New(const uint8_t *data, size_t size);
 
-	static LongObject New(Value value);
-
-	Value value() const;
+	size_t size() const;
+	const uint8_t *c_data() const;
 };
 
-template <> struct TypeCheck<LongObject> {
-	bool operator()(const TypeObject &type);
-};
-
-void LongObjectTypeInit(const TypeObject &type, const char *name = "long");
+void BytesObjectTypeInit(const TypeObject &type, const char *name = "bytes");
 
 } // namespace
 

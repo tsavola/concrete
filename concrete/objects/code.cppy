@@ -7,7 +7,7 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#include "code-data.hpp"
+#include "concrete/objects/code-data.hpp"
 
 #include <cstdint>
 
@@ -184,7 +184,7 @@ private:
 	}
 };
 
-CONCRETE_OBJECT_DEFAULT_IMPL(CodeObject, code_type)
+{{{ ImplementObject("CodeObject") }}}
 
 CodeObject::Data::Data(const TypeObject &type,
                              unsigned int stacksize,

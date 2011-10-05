@@ -7,7 +7,7 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#include "module-data.hpp"
+#include "concrete/objects/module-data.hpp"
 
 #include <concrete/context-data.hpp>
 #include <concrete/objects/string.hpp>
@@ -15,7 +15,7 @@
 
 namespace concrete {
 
-CONCRETE_OBJECT_DEFAULT_IMPL(ModuleObject, module_type)
+{{{ ImplementObject("ModuleObject") }}}
 
 ModuleObject::Data::Data(const TypeObject &type, const DictObject &dict):
 	Object::Data(type),

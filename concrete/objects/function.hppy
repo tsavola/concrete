@@ -18,7 +18,7 @@
 namespace concrete {
 
 class FunctionObject: public CallableObject {
-	CONCRETE_OBJECT_DEFAULT_DECL(FunctionObject, CallableObject)
+	{{{ DeclareObject("FunctionObject", "CallableObject") }}}
 
 	static FunctionObject New(const CodeObject &code);
 

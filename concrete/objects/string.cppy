@@ -7,7 +7,7 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#include "string-data.hpp"
+#include "concrete/objects/string-data.hpp"
 
 #include <cstdint>
 #include <cstdint>
@@ -22,7 +22,7 @@
 
 namespace concrete {
 
-CONCRETE_OBJECT_DEFAULT_IMPL(StringObject, string_type)
+{{{ ImplementObject("StringObject") }}}
 
 StringObject::Data::Data(const TypeObject &type, const char *data_):
 	Object::Data(type)

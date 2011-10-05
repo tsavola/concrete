@@ -10,7 +10,7 @@
 #ifndef CONCRETE_OBJECTS_FUNCTION_DATA_HPP
 #define CONCRETE_OBJECTS_FUNCTION_DATA_HPP
 
-#include "function.hpp"
+#include "concrete/objects/function.hpp"
 
 #include <concrete/continuation.hpp>
 #include <concrete/execution.hpp>

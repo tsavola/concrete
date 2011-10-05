@@ -15,7 +15,7 @@
 namespace concrete {
 
 class TupleObject: public Object {
-	CONCRETE_OBJECT_DEFAULT_DECL(TupleObject, Object)
+	{{{ DeclareObject("TupleObject") }}}
 
 	static TupleObject New();
 	template <typename Item, typename... Tail> static TupleObject New(Item, Tail...);
@@ -34,6 +34,6 @@ void TupleObjectTypeInit(const TypeObject &type, const char *name = "tuple");
 
 } // namespace
 
-#include "tuple-inline.hpp"
+#include "concrete/objects/tuple-inline.hpp"
 
 #endif

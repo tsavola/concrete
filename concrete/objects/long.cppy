@@ -7,7 +7,7 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#include "long-data.hpp"
+#include "concrete/objects/long-data.hpp"
 
 #include <functional>
 
@@ -21,7 +21,7 @@
 
 namespace concrete {
 
-CONCRETE_OBJECT_DEFAULT_IMPL(LongObject, long_type)
+{{{ ImplementObject("LongObject") }}}
 
 LongObject::Data::Data(const TypeObject &type, Value value):
 	Object::Data(type),

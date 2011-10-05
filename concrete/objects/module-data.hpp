@@ -10,7 +10,7 @@
 #ifndef CONCRETE_OBJECTS_MODULE_DATA_HPP
 #define CONCRETE_OBJECTS_MODULE_DATA_HPP
 
-#include "module.hpp"
+#include "concrete/objects/module.hpp"
 
 #include <concrete/objects/object-data.hpp>
 #include <concrete/portable.hpp>

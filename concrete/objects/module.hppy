@@ -16,7 +16,7 @@
 namespace concrete {
 
 class ModuleObject: public Object {
-	CONCRETE_OBJECT_DEFAULT_DECL(ModuleObject, Object)
+	{{{ DeclareObject("ModuleObject") }}}
 
 	static ModuleObject New(const DictObject &dict);
 

@@ -15,7 +15,7 @@
 namespace concrete {
 
 class DictObject: public Object {
-	CONCRETE_OBJECT_DEFAULT_DECL(DictObject, Object)
+	{{{ DeclareObject("DictObject") }}}
 
 	static DictObject NewEmpty();
 	static DictObject New();

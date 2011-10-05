@@ -10,7 +10,7 @@
 #ifndef CONCRETE_OBJECTS_BYTES_DATA_HPP
 #define CONCRETE_OBJECTS_BYTES_DATA_HPP
 
-#include "bytes.hpp"
+#include "concrete/objects/bytes.hpp"
 
 #include <concrete/objects/object-data.hpp>
 

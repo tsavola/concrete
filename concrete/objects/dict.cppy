@@ -7,7 +7,7 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#include "dict-data.hpp"
+#include "concrete/objects/dict-data.hpp"
 
 #include <algorithm>
 
@@ -22,7 +22,7 @@
 
 namespace concrete {
 
-CONCRETE_OBJECT_DATALESS_IMPL(DictObject, dict_type)
+{{{ ImplementObject("DictObject", data_method=False) }}}
 
 DictObject::Data::Item::Item(const Object &key, const Object &value):
 	key(key),

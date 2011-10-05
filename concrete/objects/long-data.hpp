@@ -10,7 +10,7 @@
 #ifndef CONCRETE_OBJECTS_LONG_DATA_HPP
 #define CONCRETE_OBJECTS_LONG_DATA_HPP
 
-#include "long.hpp"
+#include "concrete/objects/long.hpp"
 
 #include <concrete/objects/object-data.hpp>
 #include <concrete/portable.hpp>

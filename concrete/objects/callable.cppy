@@ -7,17 +7,17 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#include "concrete/objects/callable.hpp"
+#include "callable.hpp"
 
 #include <concrete/objects/type.hpp>
 #include <concrete/util/assert.hpp>
 
-{{{ for o in ObjectsByName["CallableObject"].children:
+{{{ for o in GetObject("CallableObject").children:
         echo("#include <concrete/objects/{o.short}.hpp>") }}}
 
 namespace concrete {
 
-CONCRETE_OBJECT_MINIMAL_IMPL(CallableObject)
+{{{ ImplementObject("CallableObject") }}}
 
 Object CallableObject::initiate(Continuation &cont,
                                 const TupleObject &args,
@@ -48,7 +48,7 @@ Object CallableObject::continuable_call(Continuation &cont,
 	TypeObject derived_type = type();
 	Object value;
 
-	{{{ for o in ObjectsByName["CallableObject"].children:
+	{{{ for o in GetObject("CallableObject").children:
 	        echo("if (derived_type == {o.name}::Type())")
 	        echo("  value = cast<{o.name}>().continuable_call(cont, stage, args, kwargs);")
 	        echo("else") }}} ;

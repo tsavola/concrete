@@ -18,7 +18,7 @@ class NoneObject;
 class StringObject;
 
 class TypeObject: public Object {
-	CONCRETE_OBJECT_DEFAULT_DECL(TypeObject, Object)
+	{{{ DeclareObject("TypeObject") }}}
 
 	static TypeObject NewBuiltin();
 	static TypeObject NewBuiltin(const TypeObject &type);
@@ -41,6 +41,6 @@ void TypeObjectTypeInit(const TypeObject &type, const char *name = "type");
 
 } // namespace
 
-#include "type-inline.hpp"
+#include "concrete/objects/type-inline.hpp"
 
 #endif

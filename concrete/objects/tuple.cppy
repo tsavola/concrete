@@ -7,7 +7,7 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#include "tuple-data.hpp"
+#include "concrete/objects/tuple-data.hpp"
 
 #include <concrete/context-data.hpp>
 #include <concrete/exception.hpp>
@@ -17,7 +17,7 @@
 
 namespace concrete {
 
-CONCRETE_OBJECT_DEFAULT_IMPL(TupleObject, tuple_type)
+{{{ ImplementObject("TupleObject") }}}
 
 TupleObject::Data::Data(const TypeObject &type):
 	Object::Data(type)

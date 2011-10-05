@@ -17,7 +17,7 @@
 
 namespace concrete {
 
-CONCRETE_OBJECT_DATALESS_IMPL(BoolObject, bool_type)
+{{{ ImplementObject("BoolObject") }}}
 
 BoolObject BoolObject::True()
 {

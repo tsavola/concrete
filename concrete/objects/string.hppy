@@ -18,7 +18,7 @@
 namespace concrete {
 
 class StringObject: public Object {
-	CONCRETE_OBJECT_DEFAULT_DECL(StringObject, Object)
+	{{{ DeclareObject("StringObject") }}}
 
 	static StringObject New(const char *data, size_t size);
 	static StringObject New(const char *string);

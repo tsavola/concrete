@@ -10,7 +10,7 @@
 #ifndef CONCRETE_OBJECTS_OBJECT_HPP
 #define CONCRETE_OBJECTS_OBJECT_HPP
 
-#include "object-partial.hpp"
+#include "concrete/objects/object-partial.hpp"
 
 #include <concrete/pointer.hpp>
 #include <concrete/portable.hpp>
@@ -45,6 +45,6 @@ void ObjectTypeInit(const TypeObject &type, const char *name = "object");
 
 } // namespace
 
-#include "object-inline.hpp"
+#include "concrete/objects/object-inline.hpp"
 
 #endif

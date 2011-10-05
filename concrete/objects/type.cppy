@@ -14,11 +14,11 @@
 #include <concrete/portable.hpp>
 #include <concrete/util/packed.hpp>
 
-{{{ for o in Objects: echo("#include <concrete/objects/{o.short}.hpp>") }}}
+{{{ for o in GetObjects(): echo("#include <concrete/objects/{o.short}.hpp>") }}}
 
 namespace concrete {
 
-CONCRETE_OBJECT_DEFAULT_IMPL(TypeObject, type_type)
+{{{ ImplementObject("TypeObject") }}}
 
 TypeObject::Data::Data(const Pointer &type) throw ():
 	Object::Data(type)
@@ -74,9 +74,9 @@ void TypeObjectTypeInit(const TypeObject &type, const char *name)
 }
 
 {{{
-    for o in Objects if o.name != "Object" and o.children:
+    for o in GetObjects() if o.name != "Object" and o.children:
         names = [child.name for child in o.children]
-        if o.typed:
+        if o.has_type:
             names.append(o.name)
 
         echo("bool TypeCheck<{o.name}>::operator()(const TypeObject &type)")

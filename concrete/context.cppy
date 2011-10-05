@@ -20,7 +20,7 @@
 #include <concrete/util/packed.hpp>
 #include <concrete/util/thread.hpp>
 
-{{{ for o in Objects: echo("#include <concrete/objects/{o.short}.hpp>") }}}
+{{{ for o in GetObjects(): echo("#include <concrete/objects/{o.short}.hpp>") }}}
 
 namespace concrete {
 
@@ -38,9 +38,9 @@ private:
 static CONCRETE_THREAD_LOCAL Context *active_context;
 
 Context::Data::Data(const NoneObject &none,
-                    {{{ for o in Objects: echo("const TypeObject &{o.short}_type", ",") }}}) throw ():
+                    {{{ for o in GetObjects(): echo("const TypeObject &{o.short}_type", ",") }}}) throw ():
 	none(none),
-	{{{ for o in Objects: echo("{o.short}_type({o.short}_type)", ",") }}}
+	{{{ for o in GetObjects(): echo("{o.short}_type({o.short}_type)", ",") }}}
 {
 }
 
@@ -63,14 +63,14 @@ Context::Context(EventLoop &loop):
 
 	auto type_type = TypeObject::NewBuiltin();
 
-	{{{ for o in Objects if o.name != "TypeObject":
+	{{{ for o in GetObjects() if o.name != "TypeObject":
 	        echo("auto {o.short}_type = TypeObject::NewBuiltin(type_type);") }}}
 
-	new (data()) Data(none, {{{ for o in Objects: echo("{o.short}_type", ",") }}});
+	new (data()) Data(none, {{{ for o in GetObjects(): echo("{o.short}_type", ",") }}});
 
 	none.init_builtin(data()->none_type);
 
-	{{{ for o in Objects if o.typed: echo("{o.name}TypeInit(data()->{o.short}_type);") }}}
+	{{{ for o in GetObjects() if o.has_type: echo("{o.name}TypeInit(data()->{o.short}_type);") }}}
 
 	auto modules = DictObject::New();
 

@@ -7,7 +7,7 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#include "internal-data.hpp"
+#include "concrete/objects/internal-data.hpp"
 
 #include <concrete/context-data.hpp>
 #include <concrete/context.hpp>
@@ -23,7 +23,7 @@ static InternalObject::Function *internal_functions[] = {
 #	undef CONCRETE_INTERNAL_SYMBOL
 };
 
-CONCRETE_OBJECT_DEFAULT_IMPL(InternalObject, internal_type)
+{{{ ImplementObject("InternalObject") }}}
 
 InternalObject::Data::Data(const TypeObject &type, internal::SymbolId symbol_id):
 	CallableObject::Data(type),

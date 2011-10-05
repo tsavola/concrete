@@ -4,3 +4,6 @@
 [submodule "boost"]
 	path = boost
 	url = git://github.com/ryppl/boost-svn.git
+[submodule "prepare"]
+	path = prepare
+	url = git://github.com/tsavola/prepare.git

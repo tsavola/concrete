@@ -20,17 +20,17 @@
 #include <concrete/util/noncopyable.hpp>
 #include <concrete/util/packed.hpp>
 
-{{{ for o in Objects: echo("#include <concrete/objects/{o.short}.hpp>") }}}
+{{{ for o in GetObjects(): echo("#include <concrete/objects/{o.short}.hpp>") }}}
 
 namespace concrete {
 
 struct Context::Data: Noncopyable {
 	Data(const NoneObject &none,
-	     {{{ for o in Objects: echo("const TypeObject &{o.short}_type", ",") }}}) throw ();
+	     {{{ for o in GetObjects(): echo("const TypeObject &{o.short}_type", ",") }}}) throw ();
 
 	const Portable<NoneObject> none;
 
-	{{{ for o in Objects: echo("const Portable<TypeObject> {o.short}_type;") }}}
+	{{{ for o in GetObjects(): echo("const Portable<TypeObject> {o.short}_type;") }}}
 
 	Portable<Object>           bool_false;
 	Portable<Object>           bool_true;
