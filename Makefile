@@ -7,12 +7,14 @@ CFLAGS		+= -g -Wall
 CXXFLAGS	+= -std=gnu++0x
 
 LIBRARIES	:= concrete library
+OTHERS		:= concrete/prepare
 TESTS		:= example python
 
 .DEFAULT_GOAL	:= build
 
 build: library-shared
 
+concrete-reloc: concrete/prepare
 library-shared: concrete-reloc
 example: library-shared
 
