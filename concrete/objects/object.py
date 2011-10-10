@@ -17,6 +17,12 @@ class Object:
 		self.has_type = has_type
 		self.has_data = has_data
 
+	def __lt__(self, other):
+		return self.name < other.name
+
+	def __eq__(self, other):
+		return self.name == other.name
+
 	@property
 	def short(self):
 		if self.name == "Object":
@@ -30,7 +36,7 @@ class Object:
 
 	@property
 	def children(self):
-		return [o for o in GetObjects() if o.parent == self]
+		return [o for o in GetObjects() if o.parent is self]
 
 @producer
 def RegisterObject(name, parent_name=None, **kwargs):
@@ -72,4 +78,4 @@ def GetObject(name):
 
 @consumer
 def GetObjects():
-	return objects_by_name.values()
+	return sorted(objects_by_name.values())
