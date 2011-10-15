@@ -64,7 +64,7 @@ unsigned int ExecutionFrame::Data::stack_size() const throw ()
  * Frame
  */
 
-CONCRETE_POINTER_DEFAULT_IMPL(ExecutionFrame)
+{{{ ImplementPointer("ExecutionFrame") }}}
 
 ExecutionFrame ExecutionFrame::New(const ExecutionFrame &parent,
                                    const CodeObject &code,
@@ -205,7 +205,7 @@ Execution::Data::~Data() throw ()
  * Execution
  */
 
-CONCRETE_POINTER_DEFAULT_IMPL(Execution)
+{{{ ImplementPointer("Execution") }}}
 
 Execution Execution::New(const CodeObject &code)
 {

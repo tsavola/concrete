@@ -10,7 +10,7 @@
 #ifndef CONCRETE_NESTED_DATA_HPP
 #define CONCRETE_NESTED_DATA_HPP
 
-#include "nested.hpp"
+#include "concrete/nested.hpp"
 
 #include <concrete/portable.hpp>
 #include <concrete/util/noncopyable.hpp>

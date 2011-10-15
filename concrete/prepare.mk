@@ -1,4 +1,6 @@
-TEMPLATES	:= $(wildcard concrete/*.*py concrete/*/*.*py)
+TEMPLATES	:= $(wildcard concrete/*.*py \
+		              concrete/*/*.*py \
+		              concrete/*/*/*.*py)
 
 include build/common.mk
 

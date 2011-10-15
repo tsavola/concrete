@@ -18,7 +18,7 @@
 
 namespace concrete {
 
-CONCRETE_CONTINUATION_DEFAULT_IMPL(FunctionContinuation)
+{{{ ImplementPointer("FunctionContinuation") }}}
 
 FunctionContinuation::Data::~Data() throw ()
 {

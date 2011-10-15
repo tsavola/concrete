@@ -27,7 +27,8 @@
 namespace concrete {
 
 class ExecutionFrame: public Pointer {
-	CONCRETE_POINTER_DEFAULT_DECL(ExecutionFrame, Pointer)
+	{{{ DeclarePointer("ExecutionFrame") }}}
+
 	friend class Execution;
 
 	Object result();
@@ -80,7 +81,7 @@ protected:
 };
 
 class Execution: public ListNode<Execution> {
-	CONCRETE_POINTER_DEFAULT_DECL(Execution, ListNode<Execution>)
+	{{{ DeclarePointer("Execution", "ListNode<Execution>") }}}
 
 	static Execution New(const CodeObject &code);
 

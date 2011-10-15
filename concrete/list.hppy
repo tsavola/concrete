@@ -38,9 +38,7 @@ private:
 
 template <typename ImplType>
 class ListNode: public Pointer {
-	CONCRETE_POINTER_DECL_COMMON(ListNode, Pointer)
-	CONCRETE_POINTER_DECL_CONSTRUCT(ListNode)
-	CONCRETE_POINTER_DECL_DATA(ListNode)
+	{{{ DeclarePointer("ListNode", has_destroy=False) }}}
 
 	friend class PortableList<ImplType>;
 

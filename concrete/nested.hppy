@@ -21,9 +21,7 @@
 namespace concrete {
 
 class NestedContinuation: public Continuation {
-	CONCRETE_POINTER_DECL_COMMON(NestedContinuation, Continuation)
-	CONCRETE_POINTER_DECL_CONSTRUCT(NestedContinuation)
-	CONCRETE_POINTER_DECL_DATA(NestedContinuation)
+	{{{ DeclarePointer("NestedContinuation", "Continuation", has_destroy=False) }}}
 
 	bool call_nested(const CallableObject &callable,
 	                 Object &result,
@@ -49,7 +47,7 @@ public:
 };
 
 class NestedCallContinuation: public NestedContinuation {
-	CONCRETE_POINTER_DECL_COMMON(NestedCallContinuation, NestedContinuation)
+	{{{ DeclarePointer("NestedCallContinuation", "NestedContinuation", has_construct=False, has_destroy=False, has_data=False) }}}
 
 	typedef NestedCall (*DeclaratorFunction)(const TupleObject &args, const DictObject &kwargs);
 

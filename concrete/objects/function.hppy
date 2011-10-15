@@ -29,7 +29,7 @@ class FunctionObject: public CallableObject {
 };
 
 class FunctionContinuation: public Continuation {
-	CONCRETE_CONTINUATION_DEFAULT_DECL(FunctionContinuation, Continuation)
+	{{{ DeclarePointer("FunctionContinuation", "Continuation") }}}
 
 	bool initiate(Object &result,
 	              const TupleObject &args,
