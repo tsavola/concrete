@@ -39,7 +39,7 @@ int main(int argc, char **argv)
 	if (data == NULL)
 		return 1;
 
-	if (fread(data, 1, size, file) != size)
+	if (fread(data, 1, size, file) != (size_t) size)
 		return 1;
 
 	fclose(file);

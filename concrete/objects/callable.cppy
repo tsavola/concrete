@@ -51,7 +51,8 @@ Object CallableObject::continuable_call(Continuation &cont,
 	{{{ for o in GetObject("CallableObject").children:
 	        echo("if (derived_type == {o.name}::Type())")
 	        echo("  value = cast<{o.name}>().continuable_call(cont, stage, args, kwargs);")
-	        echo("else") }}} ;
+	        echo("else") }}} {
+	}
 
 	return value;
 }
