@@ -42,9 +42,7 @@ GIT_BRANCH	= $(shell git rev-parse --symbolic-full-name --abbrev-ref HEAD)
 GIT_REMOTE	= $(shell git config branch.$(GIT_BRANCH).remote)
 GIT_URL		= $(shell git config remote.$(GIT_REMOTE).url)
 
-doc:: doc/html/index.html
-
-doc/html/index.html: doc/Doxyfile doc/main.txt $(shell find concrete -name '*.hpp')
+doc:: concrete/prepare
 	$(call echo,Doxygen,doc/html)
 	$(QUIET) sed < doc/Doxyfile > doc/Doxyfile.version \
 		-r "s/^(PROJECT_NUMBER[[:space:]]*=[[:space:]]*)$$/\1git-$(GIT_VERSION)/"
