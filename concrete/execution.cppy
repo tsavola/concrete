@@ -251,6 +251,11 @@ void Execution::push(const Object &object)
 	frame().push(object);
 }
 
+Object Execution::peek() const
+{
+	return frame().peek();
+}
+
 Object Execution::pop()
 {
 	return frame().pop();
@@ -369,6 +374,50 @@ void Execution::execute_op()
 void Execution::op_pop_top()
 {
 	pop();
+}
+
+void Execution::op_rot_two()
+{
+	// TODO: optimize
+
+	auto top0 = pop();
+	auto top1 = pop();
+
+	push(top0);
+	push(top1);
+}
+
+void Execution::op_rot_three()
+{
+	// TODO: optimize
+
+	auto top0 = pop();
+	auto top1 = pop();
+	auto top2 = pop();
+
+	push(top0);
+	push(top2);
+	push(top1);
+}
+
+void Execution::op_rot_four()
+{
+	// TODO: optimize
+
+	auto top0 = pop();
+	auto top1 = pop();
+	auto top2 = pop();
+	auto top3 = pop();
+
+	push(top0);
+	push(top3);
+	push(top2);
+	push(top1);
+}
+
+void Execution::op_dup_top()
+{
+	push(peek());
 }
 
 void Execution::op_binary_add()

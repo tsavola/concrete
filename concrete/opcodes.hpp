@@ -14,6 +14,10 @@ namespace concrete {
 
 enum Opcode {
 	OpPopTop              = 1,
+	OpRotTwo              = 2,
+	OpRotThree            = 3,
+	OpRotFour             = 4,
+	OpDupTop              = 5,
 	OpNop                 = 9,
 
 	OpBinaryAdd           = 23,

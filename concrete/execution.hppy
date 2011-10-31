@@ -110,11 +110,16 @@ protected:
 	bool resume_call();
 
 	void push(const Object &object);
+	Object peek() const;
 	Object pop();
 
 	void execute_op();
 
 	void op_pop_top();
+	void op_rot_two();
+	void op_rot_three();
+	void op_rot_four();
+	void op_dup_top();
 	void op_binary_add();
 	void op_pop_block();
 	void op_return_value();
