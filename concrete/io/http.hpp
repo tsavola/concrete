@@ -36,24 +36,18 @@ public:
 	                            const StringObject &url,
 	                            Buffer *request_content = NULL);
 
-	void reset_response_buffer(Buffer *buffer);
+	virtual void reset_response_buffer(Buffer *buffer) = 0;
 
-	HTTP::Status response_status() const;
-	long response_length() const;
+	virtual HTTP::Status response_status() const = 0;
+	virtual long response_length() const = 0;
 
-	bool headers_received();
-	bool content_consumable();
-	bool content_received();
+	virtual bool headers_received() = 0;
+	virtual bool content_consumable() = 0;
+	virtual bool content_received() = 0;
 
-	void suspend_until_headers_received();
-	void suspend_until_content_consumable();
-	void suspend_until_content_received();
-};
-
-template <> struct ResourceCreate<HTTPTransaction> {
-	static HTTPTransaction *New(HTTP::Method method,
-	                            const StringObject &url,
-	                            Buffer *request_content = NULL);
+	virtual void suspend_until_headers_received() = 0;
+	virtual void suspend_until_content_consumable() = 0;
+	virtual void suspend_until_content_received() = 0;
 };
 
 } // namespace

@@ -24,13 +24,6 @@ struct addrinfo;
 namespace concrete {
 
 class SysHTTPTransaction: public HTTPTransaction {
-	friend class HTTPTransaction;
-
-public:
-	SysHTTPTransaction(HTTP::Method method, const StringObject &url, Buffer *request_content);
-	virtual ~SysHTTPTransaction() throw () {}
-
-private:
 	enum State {
 		Resolve,
 		Resolving,
@@ -47,6 +40,24 @@ private:
 		ReceivedContent,
 	};
 
+public:
+	SysHTTPTransaction(HTTP::Method method, const StringObject &url, Buffer *request_content);
+	virtual ~SysHTTPTransaction() throw () {}
+
+	virtual void reset_response_buffer(Buffer *buffer);
+
+	virtual HTTP::Status response_status() const;
+	virtual long response_length() const;
+
+	virtual bool headers_received();
+	virtual bool content_consumable();
+	virtual bool content_received();
+
+	virtual void suspend_until_headers_received();
+	virtual void suspend_until_content_consumable();
+	virtual void suspend_until_content_received();
+
+private:
 	void suspend_until(State objective);
 
 	State resolve();

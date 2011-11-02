@@ -47,6 +47,63 @@ SysHTTPTransaction::SysHTTPTransaction(HTTP::Method method,
 {
 }
 
+void SysHTTPTransaction::reset_response_buffer(Buffer *buffer)
+{
+	m_response_buffer = buffer;
+}
+
+HTTP::Status SysHTTPTransaction::response_status() const
+{
+	assert(m_state >= ReceivedHeaders);
+
+	auto status = m_response_status;
+	assert(status > 0);
+
+	return HTTP::Status(status);
+}
+
+long SysHTTPTransaction::response_length() const
+{
+	assert(m_state >= ReceivedHeaders);
+
+	return m_response_length;
+}
+
+bool SysHTTPTransaction::headers_received()
+{
+	return m_state >= ReceivedHeaders;
+}
+
+bool SysHTTPTransaction::content_consumable()
+{
+	if (m_state != ReceivingContent)
+		return false;
+
+	assert(m_response_buffer);
+
+	return m_response_buffer->consumable_size() > 0;
+}
+
+bool SysHTTPTransaction::content_received()
+{
+	return m_state >= ReceivedContent;
+}
+
+void SysHTTPTransaction::suspend_until_headers_received()
+{
+	suspend_until(ReceivedHeaders);
+}
+
+void SysHTTPTransaction::suspend_until_content_consumable()
+{
+	suspend_until_content_received();
+}
+
+void SysHTTPTransaction::suspend_until_content_received()
+{
+	suspend_until(ReceivedContent);
+}
+
 void SysHTTPTransaction::suspend_until(State objective)
 {
 	if (objective <= m_state) {
@@ -354,69 +411,6 @@ void SysHTTPTransaction::parse_header(const char *line, size_t length)
 		m_response_length = value;
 		return;
 	}
-}
-
-void HTTPTransaction::reset_response_buffer(Buffer *buffer)
-{
-	static_cast<SysHTTPTransaction *> (this)->m_response_buffer = buffer;
-}
-
-HTTP::Status HTTPTransaction::response_status() const
-{
-	auto impl = static_cast<const SysHTTPTransaction *> (this);
-
-	assert(impl->m_state >= SysHTTPTransaction::ReceivedHeaders);
-
-	auto status = impl->m_response_status;
-	assert(status > 0);
-
-	return HTTP::Status(status);
-}
-
-long HTTPTransaction::response_length() const
-{
-	auto impl = static_cast<const SysHTTPTransaction *> (this);
-
-	assert(impl->m_state >= SysHTTPTransaction::ReceivedHeaders);
-
-	return impl->m_response_length;
-}
-
-bool HTTPTransaction::headers_received()
-{
-	return static_cast<SysHTTPTransaction *> (this)->m_state >= SysHTTPTransaction::ReceivedHeaders;
-}
-
-bool HTTPTransaction::content_consumable()
-{
-	auto impl = static_cast<SysHTTPTransaction *> (this);
-
-	if (impl->m_state != SysHTTPTransaction::ReceivingContent)
-		return false;
-
-	assert(impl->m_response_buffer);
-
-	return impl->m_response_buffer->consumable_size() > 0;
-}
-
-bool HTTPTransaction::content_received()
-{
-	return static_cast<SysHTTPTransaction *> (this)->m_state >= SysHTTPTransaction::ReceivedContent;
-}
-
-void HTTPTransaction::suspend_until_headers_received()
-{
-	static_cast<SysHTTPTransaction *> (this)->suspend_until(SysHTTPTransaction::ReceivedHeaders);
-}
-
-void HTTPTransaction::suspend_until_content_consumable()
-{
-	suspend_until_content_received();
-}
-
-void HTTPTransaction::suspend_until_content_received()
-{
-	static_cast<SysHTTPTransaction *> (this)->suspend_until(SysHTTPTransaction::ReceivedContent);
 }
 
 } // namespace
