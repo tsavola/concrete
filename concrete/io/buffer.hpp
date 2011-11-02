@@ -18,6 +18,8 @@ namespace concrete {
 
 class Buffer: public Resource {
 public:
+	template <typename... Args> static Buffer *New(Args... args) { return new Buffer(args...); }
+
 	Buffer();
 	explicit Buffer(size_t size);
 	virtual ~Buffer() throw ();

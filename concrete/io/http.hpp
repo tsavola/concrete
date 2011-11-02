@@ -32,6 +32,10 @@ namespace HTTP {
 
 class HTTPTransaction: public Resource {
 public:
+	static HTTPTransaction *New(HTTP::Method method,
+	                            const StringObject &url,
+	                            Buffer *request_content = NULL);
+
 	void reset_response_buffer(Buffer *buffer);
 
 	HTTP::Status response_status() const;

@@ -24,6 +24,13 @@
 
 namespace concrete {
 
+HTTPTransaction *HTTPTransaction::New(HTTP::Method method,
+                                      const StringObject &url,
+                                      Buffer *request_content)
+{
+	return new SysHTTPTransaction(method, url, request_content);
+}
+
 SysHTTPTransaction::SysHTTPTransaction(HTTP::Method method,
                                        const StringObject &url,
                                        Buffer *request_content):
@@ -410,13 +417,6 @@ void HTTPTransaction::suspend_until_content_consumable()
 void HTTPTransaction::suspend_until_content_received()
 {
 	static_cast<SysHTTPTransaction *> (this)->suspend_until(SysHTTPTransaction::ReceivedContent);
-}
-
-HTTPTransaction *ResourceCreate<HTTPTransaction>::New(HTTP::Method method,
-                                                      const StringObject &url,
-                                                      Buffer *request_content)
-{
-	return new SysHTTPTransaction(method, url, request_content);
 }
 
 } // namespace

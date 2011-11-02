@@ -17,7 +17,7 @@ namespace concrete {
 template <typename T, typename... Args>
 ResourceSlot ResourceManager::new_resource(Args... args)
 {
-	std::unique_ptr<T> resource(ResourceCreate<T>::New(args...));
+	std::unique_ptr<T> resource(T::New(args...));
 	auto slot = add_resource(resource.get());
 	resource.release();
 
