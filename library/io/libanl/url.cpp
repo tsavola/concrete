@@ -7,23 +7,17 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#ifndef LIBRARY_IO_ADDRINFO_HPP
-#define LIBRARY_IO_ADDRINFO_HPP
+#include <library/io/url.hpp>
 
-#include <concrete/util/noncopyable.hpp>
-
-struct addrinfo;
+#include <library/io/libanl/addrinfo.hpp>
 
 namespace concrete {
 
-class AddrInfo: Noncopyable {
-public:
-	virtual ~AddrInfo() throw () {}
+LibraryURLOpener::State LibraryURLOpener::resolve()
+{
+	m_addrinfo.reset(new AsyncAddrInfo(m_url.host(), m_url.port()));
 
-	virtual struct addrinfo *resolved() = 0;
-	virtual void suspend_until_resolved() = 0;
-};
+	return resolving();
+}
 
 } // namespace
-
-#endif

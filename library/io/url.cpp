@@ -119,12 +119,7 @@ void LibraryURLOpener::suspend_until(State objective)
 	}
 }
 
-LibraryURLOpener::State LibraryURLOpener::resolve()
-{
-	m_addrinfo.reset(new AddrInfo(m_url.host(), m_url.port()));
-
-	return resolving();
-}
+// LibraryURLOpener::resolve() is implemented elsewhere
 
 LibraryURLOpener::State LibraryURLOpener::resolving()
 {

@@ -15,11 +15,9 @@
 
 #include <unistd.h>
 
-#include <concrete/context.hpp>
-
 namespace concrete {
 
-AddrInfo::Pipe::Pipe(int ret):
+AsyncAddrInfo::Pipe::Pipe(int ret):
 	read(ret >= 0 ? fd[0] : -1),
 	write(ret >= 0 ? fd[1] : -1)
 {
@@ -34,7 +32,7 @@ static void notify(sigval_t sigval) throw ()
 		;
 }
 
-AddrInfo::AddrInfo(const std::string &node, const std::string &service):
+AsyncAddrInfo::AsyncAddrInfo(const std::string &node, const std::string &service):
 	m_pipe(pipe(m_pipe.fd))
 {
 	std::memset(&m_callback, 0, sizeof (m_callback));
@@ -55,7 +53,7 @@ AddrInfo::AddrInfo(const std::string &node, const std::string &service):
 		throw ResourceError();
 }
 
-AddrInfo::~AddrInfo() throw ()
+AsyncAddrInfo::~AsyncAddrInfo() throw ()
 {
 	gai_cancel(&m_callback);
 
@@ -63,7 +61,7 @@ AddrInfo::~AddrInfo() throw ()
 		freeaddrinfo(m_callback.ar_result);
 }
 
-struct addrinfo *AddrInfo::resolved()
+struct addrinfo *AsyncAddrInfo::resolved()
 {
 	char buf;
 
@@ -76,7 +74,7 @@ struct addrinfo *AddrInfo::resolved()
 	return m_callback.ar_result;
 }
 
-void AddrInfo::suspend_until_resolved()
+void AsyncAddrInfo::suspend_until_resolved()
 {
 	m_pipe.read.suspend_until_readable();
 }

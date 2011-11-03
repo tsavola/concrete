@@ -17,7 +17,6 @@
 
 #include <library/io/addrinfo.hpp>
 #include <library/io/socket.hpp>
-#include <library/io/url.hpp>
 
 struct addrinfo;
 
@@ -40,6 +39,7 @@ private:
 };
 
 class LibraryURLOpener: public URLOpener {
+protected:
 	enum State {
 		Resolve,
 		Resolving,
@@ -57,7 +57,7 @@ class LibraryURLOpener: public URLOpener {
 	};
 
 public:
-	LibraryURLOpener(const StringObject &url, Buffer *response, Buffer *request = NULL);
+	LibraryURLOpener(const StringObject &url, Buffer *response, Buffer *request);
 	virtual ~LibraryURLOpener() throw () {}
 
 	virtual bool headers_received() { return m_state >= ReceivedHeaders; }
@@ -71,7 +71,7 @@ public:
 	virtual int  response_status() const { return m_response_status; }
 	virtual long response_length() const { return m_response_length; }
 
-private:
+protected:
 	void suspend_until(State objective);
 
 	State resolve();
