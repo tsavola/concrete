@@ -16,7 +16,7 @@
 #include <concrete/continuation.hpp>
 #include <concrete/execution.hpp>
 #include <concrete/io/buffer.hpp>
-#include <concrete/io/http.hpp>
+#include <concrete/io/url.hpp>
 #include <concrete/objects/bool.hpp>
 #include <concrete/objects/dict.hpp>
 #include <concrete/objects/module.hpp>
@@ -46,20 +46,20 @@ protected:
 		{
 			request.destroy();
 			response.destroy();
-			http.destroy();
+			opener.destroy();
 		}
 
 		bool is_lost() const throw ()
 		{
-			return request.is_lost() || response.is_lost() || http.is_lost();
+			return request.is_lost() || response.is_lost() || opener.is_lost();
 		}
 
-		Portable<Object>                  url;
-		Portable<uint8_t>                 state;
-		PortableResource<Buffer>          request;
-		PortableResource<Buffer>          response;
-		PortableResource<HTTPTransaction> http;
-		Portable<bool>                    forked;
+		Portable<Object>            url;
+		Portable<uint8_t>           state;
+		PortableResource<Buffer>    request;
+		PortableResource<Buffer>    response;
+		PortableResource<URLOpener> opener;
+		Portable<bool>              forked;
 	} CONCRETE_PACKED;
 
 public:
@@ -129,10 +129,8 @@ private:
 		auto response = PortableResource<Buffer>::New(size_t(ResponseBufferSize));
 		data()->response = response;
 
-		auto http = PortableResource<HTTPTransaction>::New(HTTP::POST, url, *request);
-		data()->http = http;
-
-		http->reset_response_buffer(*response);
+		auto opener = PortableResource<URLOpener>::New(url, *response, *request);
+		data()->opener = opener;
 
 		return opening(result);
 	}
@@ -141,10 +139,10 @@ private:
 	{
 		Trace("fork opening");
 
-		if (data()->http->headers_received())
+		if (data()->opener->headers_received())
 			return receive_content(result);
 
-		data()->http->suspend_until_headers_received();
+		data()->opener->suspend_until_headers_received();
 
 		return Opening;
 	}
@@ -153,10 +151,10 @@ private:
 	{
 		Trace("fork receive content");
 
-		if (data()->http->response_status() != HTTP::OK)
+		if (data()->opener->response_status() != 200)
 			throw RuntimeError("HTTP response error");
 
-		auto length = data()->http->response_length();
+		auto length = data()->opener->response_length();
 
 		if (length < 0)
 			throw RuntimeError("HTTP response length not specified");
@@ -171,10 +169,10 @@ private:
 	{
 		Trace("fork receiving content");
 
-		if (data()->http->content_received())
+		if (data()->opener->content_received())
 			return done(result);
 
-		data()->http->suspend_until_content_received();
+		data()->opener->suspend_until_content_received();
 
 		return ReceivingContent;
 	}

@@ -7,11 +7,10 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#ifndef CONCRETE_IO_HTTP_HPP
-#define CONCRETE_IO_HTTP_HPP
+#ifndef CONCRETE_IO_URL_HPP
+#define CONCRETE_IO_URL_HPP
 
 #include <cstddef>
-#include <string>
 
 #include <concrete/io/buffer.hpp>
 #include <concrete/objects/string.hpp>
@@ -19,27 +18,9 @@
 
 namespace concrete {
 
-namespace HTTP {
-	enum Method {
-		GET  = 1,
-		POST = 3,
-	};
-
-	enum Status {
-		OK = 200,
-	};
-}
-
-class HTTPTransaction: public Resource {
+class URLOpener: public Resource {
 public:
-	static HTTPTransaction *New(HTTP::Method method,
-	                            const StringObject &url,
-	                            Buffer *request_content = NULL);
-
-	virtual void reset_response_buffer(Buffer *buffer) = 0;
-
-	virtual HTTP::Status response_status() const = 0;
-	virtual long response_length() const = 0;
+	static URLOpener *New(const StringObject &url, Buffer *response, Buffer *request = NULL);
 
 	virtual bool headers_received() = 0;
 	virtual bool content_consumable() = 0;
@@ -48,6 +29,9 @@ public:
 	virtual void suspend_until_headers_received() = 0;
 	virtual void suspend_until_content_consumable() = 0;
 	virtual void suspend_until_content_received() = 0;
+
+	virtual int  response_status() const = 0;
+	virtual long response_length() const = 0;
 };
 
 } // namespace
