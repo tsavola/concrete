@@ -42,6 +42,7 @@ public:
 
 	bool is_active() const throw () { return m_active; }
 
+	EventLoop &event_loop() throw () { return m_event_loop; }
 	Arena &arena() throw () { return m_arena; }
 	ResourceManager &resource_manager() throw () { return m_resource_manager; }
 
