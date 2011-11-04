@@ -17,12 +17,6 @@
 
 namespace concrete {
 
-AsyncAddrInfo::Pipe::Pipe(int ret):
-	read(ret >= 0 ? fd[0] : -1),
-	write(ret >= 0 ? fd[1] : -1)
-{
-}
-
 static void notify(sigval_t sigval) throw ()
 {
 	int fd = sigval.sival_int;
@@ -32,8 +26,7 @@ static void notify(sigval_t sigval) throw ()
 		;
 }
 
-AsyncAddrInfo::AsyncAddrInfo(const std::string &node, const std::string &service):
-	m_pipe(pipe(m_pipe.fd))
+AsyncAddrInfo::AsyncAddrInfo(const std::string &node, const std::string &service)
 {
 	std::memset(&m_callback, 0, sizeof (m_callback));
 

@@ -22,42 +22,56 @@
 
 namespace concrete {
 
-File::File(int fd):
-	m_fd(fd)
+File::File(int fd): m_fd(-1)
 {
-	if (m_fd < 0)
-		throw IOResourceError();
-
-	int flags = fcntl(m_fd, F_GETFL);
-	if (flags < 0) {
-		int error = errno;
-		close(m_fd);
-		throw IOResourceError(error);
-	}
-	if (fcntl(m_fd, F_SETFL, flags | O_NONBLOCK) < 0) {
-		int error = errno;
-		close(m_fd);
-		throw IOResourceError(error);
-	}
+	init(fd);
 }
 
 File::~File() throw ()
 {
-	close(m_fd);
+	if (m_fd >= 0)
+		close(m_fd);
+}
+
+void File::init(int fd)
+{
+	assert(m_fd < 0);
+
+	if (fd < 0)
+		throw IOResourceError();
+
+	int flags = fcntl(fd, F_GETFL);
+	if (flags < 0) {
+		int error = errno;
+		close(fd);
+		throw IOResourceError(error);
+	}
+	if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0) {
+		int error = errno;
+		close(fd);
+		throw IOResourceError(error);
+	}
+
+	m_fd = fd;
 }
 
 int File::fd() const throw ()
 {
+	assert(m_fd >= 0);
+
 	return m_fd;
 }
 
 bool File::read(Buffer &buffer)
 {
+	assert(m_fd >= 0);
+
 	return read(buffer, buffer.production_space());
 }
 
 bool File::read(Buffer &buffer, size_t size)
 {
+	assert(m_fd >= 0);
 	assert(size <= buffer.production_space());
 
 	if (size == 0)
@@ -72,6 +86,8 @@ bool File::read(Buffer &buffer, size_t size)
 
 ssize_t File::read(char *data, size_t size)
 {
+	assert(m_fd >= 0);
+
 	auto len = ::read(fd(), data, size);
 
 	if (len < 0 && errno != EINTR && errno != EAGAIN && errno != EWOULDBLOCK)
@@ -82,11 +98,14 @@ ssize_t File::read(char *data, size_t size)
 
 bool File::write(Buffer &buffer)
 {
+	assert(m_fd >= 0);
+
 	return write(buffer, buffer.consumable_size());
 }
 
 bool File::write(Buffer &buffer, size_t size)
 {
+	assert(m_fd >= 0);
 	assert(size <= buffer.consumable_size());
 
 	if (size == 0)
@@ -101,6 +120,8 @@ bool File::write(Buffer &buffer, size_t size)
 
 ssize_t File::write(const char *data, size_t size)
 {
+	assert(m_fd >= 0);
+
 	auto len = ::write(fd(), data, size);
 
 	if (len < 0 && errno != EINTR && errno != EAGAIN && errno != EWOULDBLOCK)
@@ -111,6 +132,8 @@ ssize_t File::write(const char *data, size_t size)
 
 void File::suspend_until(unsigned int conditions)
 {
+	assert(m_fd >= 0);
+
 	Context::Active().suspend_until(EventTrigger(fd(), conditions));
 }
 
@@ -122,6 +145,23 @@ void File::suspend_until_readable()
 void File::suspend_until_writable()
 {
 	suspend_until(EventFileWritable);
+}
+
+Pipe::Pipe()
+{
+	int fd[2];
+
+	if (pipe(fd) < 0)
+		throw IOResourceError();
+
+	read.init(fd[0]);
+	write.init(fd[1]);
+}
+
+void Pipe::write_byte_blocking(uint8_t value)
+{
+	while (::write(write.fd(), &value, 1) < 0 && (errno == EINTR || errno == EAGAIN))
+		;
 }
 
 } // namespace

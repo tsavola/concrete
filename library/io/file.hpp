@@ -11,6 +11,7 @@
 #define LIBRARY_IO_FILE_HPP
 
 #include <cstddef>
+#include <cstdint>
 
 #include <concrete/io/buffer.hpp>
 #include <concrete/util/noncopyable.hpp>
@@ -19,8 +20,11 @@ namespace concrete {
 
 class File: Noncopyable {
 public:
+	File() throw (): m_fd(-1) {}
 	explicit File(int fd);
 	~File() throw ();
+
+	void init(int fd);
 
 	int fd() const throw ();
 
@@ -37,7 +41,17 @@ public:
 	void suspend_until_writable();
 
 private:
-	const int m_fd;
+	int m_fd;
+};
+
+class Pipe: Noncopyable {
+public:
+	Pipe();
+
+	void write_byte_blocking(uint8_t value = 0);
+
+	File read;
+	File write;
 };
 
 } // namespace

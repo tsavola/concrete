@@ -28,14 +28,6 @@ public:
 	virtual void suspend_until_resolved();
 
 private:
-	struct Pipe {
-		Pipe(int ret);
-
-		File read;
-		File write;
-		int  fd[2];
-	};
-
 	Pipe         m_pipe;
 	struct gaicb m_callback;
 };
