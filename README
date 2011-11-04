@@ -1,14 +1,16 @@
 Dependencies:
 
-  g++ 4.4
-  libevent 1.4
+  g++ 4.4+
+  libevent 1.4+
   python 3.1
   gdb           (for printing backtraces)
 
 Build instructions:
 
   ./bootstrap.sh
-  make
+  ./autogen.sh
+  ./configure
+  make all
 
 Mac OS X prerequisites:
 
