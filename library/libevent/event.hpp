@@ -7,12 +7,14 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#ifndef LIBRARY_LIBEVENT_HPP
-#define LIBRARY_LIBEVENT_HPP
+#ifndef LIBRARY_LIBEVENT_EVENT_HPP
+#define LIBRARY_LIBEVENT_EVENT_HPP
 
 #include <event.h>
 
 #include <concrete/event.hpp>
+
+struct evdns_base;
 
 namespace concrete {
 
