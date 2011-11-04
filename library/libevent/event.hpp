@@ -26,6 +26,8 @@ public:
 	virtual void wait(const EventTrigger &trigger, EventCallback *callback);
 	void poll();
 
+	struct evdns_base *new_evdns_base();
+
 private:
 	static void callback(int fd, short events, void *arg) throw ();
 

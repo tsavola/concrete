@@ -16,13 +16,24 @@ AC_SUBST(TARGET)
 AC_PROG_CXX
 
 AC_CHECK_LIB(event_core, event_base_new)
-AC_CHECK_LIB(anl, getaddrinfo_a)
+
+AC_ARG_WITH([libanl], AC_HELP_STRING([--without-libanl], [don't use getaddrinfo_a]))
+
+if test x$with_libanl != xno; then
+	AC_CHECK_LIB(anl, getaddrinfo_a)
+fi
 
 if test x$ac_cv_lib_anl_getaddrinfo_a = xyes; then
 	LIBRARY_RESOLVER=libanl
 else
-	echo "libanl not found"
-	exit -1
+	AC_CHECK_LIB(event_extra, evdns_base_new)
+
+	if test x$ac_cv_lib_event_extra_evdns_base_new = xyes; then
+		LIBRARY_RESOLVER=libevent
+	else
+		echo "libanl nor libevent_extra 2 found"
+		exit -1
+	fi
 fi
 
 AC_SUBST(LIBRARY_RESOLVER)
