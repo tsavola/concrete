@@ -1,7 +1,13 @@
+*.py[co]
+TAGS
+auto.mk
+auto/
+autom4te.cache/
+config.log
+config.mk
+config.status
+configure
 debug/
-optimize/
 doc/Doxyfile.version
 doc/html/
-TAGS
-config.mk
-*.py[co]
+optimize/

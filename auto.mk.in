@@ -1,0 +1,6 @@
+LIBS			+= @LIBS@
+LDFLAGS			+= @LDFLAGS@
+
+export LIBRARY_RESOLVER	:= @LIBRARY_RESOLVER@
+
+include @TARGET@.mk
