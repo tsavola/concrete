@@ -22,14 +22,14 @@ export PYTHON
 
 include build/project.mk
 
-HEADERS		:= $(shell find $(LIBRARIES) -name "*.hpp")
+HEADERS		:= $(shell find $(LIBRARIES) -name "*.hpp" -or -name "*.hppy")
 
 TAGS: $(HEADERS)
 	$(call echo,Generate,$@)
-	$(QUIET) etags $(HEADERS)
+	$(QUIET) etags --language-force=c++ $(HEADERS)
 
 SOURCEDIRS	:= $(LIBRARIES) $(TESTS)
-SOURCES		:= $(shell find $(SOURCEDIRS) -name "*.[ch]pp" -or -name "*.[ch]")
+SOURCES		:= $(shell find $(SOURCEDIRS) -name "*.[ch]pp" -or -name "*.[ch]ppy" -or -name "*.[ch]")
 
 todo::
 	$(QUIET) grep -niE "(todo|xxx)" $(SOURCES) | sed -r \
