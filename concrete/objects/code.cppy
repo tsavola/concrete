@@ -123,6 +123,7 @@ public:
 		switch (type) {
 		case 'N': break;
 		case 'i': object = load_int(); break;
+		case 'g': object = load_binary_float(); break;
 		case 's': object = load_string(); break;
 		case '(': object = load_tuple(); break;
 		case 'c': object = load_code(); break;
@@ -137,6 +138,11 @@ private:
 	LongObject load_int()
 	{
 		return LongObject::New(load<int32_t>());
+	}
+
+	FloatObject load_binary_float()
+	{
+		return FloatObject::FromRaw(*load_raw<uint64_t>(1));
 	}
 
 	BytesObject load_string()

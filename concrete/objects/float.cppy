@@ -1,0 +1,141 @@
+/*
+ * Copyright (c) 2011  Timo Savola
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ */
+
+#include "concrete/objects/float-data.hpp"
+
+#include <functional>
+
+#include <boost/format.hpp>
+
+#include <concrete/byteorder.hpp>
+#include <concrete/context-data.hpp>
+#include <concrete/objects/bool.hpp>
+#include <concrete/objects/internal.hpp>
+#include <concrete/objects/string.hpp>
+#include <concrete/objects/type.hpp>
+
+namespace concrete {
+
+{{{ ImplementObject("FloatObject") }}}
+
+// TODO: verify that double representation is IEEE-754
+
+union FloatPun {
+	FloatObject::Value value;
+	uint64_t           raw;
+};
+
+FloatObject::Data::Data(const TypeObject &type, Value value):
+	Object::Data(type)
+{
+	FloatPun pun;
+
+	pun.value = value;
+	m_raw = PortByteorder(pun.raw);
+}
+
+FloatObject::Data::Data(const TypeObject &type, uint64_t raw):
+	Object::Data(type),
+	m_raw(raw)
+{
+}
+
+FloatObject::Value FloatObject::Data::value() const throw ()
+{
+	FloatPun pun;
+
+	pun.raw = PortByteorder(m_raw);
+	return pun.value;
+}
+
+FloatObject FloatObject::New(Value value)
+{
+	return NewObject<FloatObject>(value);
+}
+
+FloatObject FloatObject::FromRaw(uint64_t raw)
+{
+	return NewObject<FloatObject>(raw);
+}
+
+FloatObject::Value FloatObject::value() const
+{
+	return data()->value();
+}
+
+void FloatObjectTypeInit(const TypeObject &type, const char *name)
+{
+	ObjectTypeInit(type, name);
+
+	auto repr    = InternalObject::New(internal::FloatType_Repr);
+	auto str     = InternalObject::New(internal::FloatType_Str);
+	auto lt      = InternalObject::New(internal::FloatType_LT);
+	auto le      = InternalObject::New(internal::FloatType_LE);
+	auto eq      = InternalObject::New(internal::FloatType_EQ);
+	auto ne      = InternalObject::New(internal::FloatType_NE);
+	auto gt      = InternalObject::New(internal::FloatType_GT);
+	auto ge      = InternalObject::New(internal::FloatType_GE);
+	auto nonzero = InternalObject::New(internal::FloatType_Nonzero);
+
+	auto add     = InternalObject::New(internal::FloatType_Add);
+
+	type.set(&PortableObjectProtocol::repr,    repr);
+	type.set(&PortableObjectProtocol::str,     str);
+	type.set(&PortableObjectProtocol::lt,      lt);
+	type.set(&PortableObjectProtocol::le,      le);
+	type.set(&PortableObjectProtocol::eq,      eq);
+	type.set(&PortableObjectProtocol::ne,      ne);
+	type.set(&PortableObjectProtocol::gt,      gt);
+	type.set(&PortableObjectProtocol::ge,      ge);
+	type.set(&PortableObjectProtocol::nonzero, nonzero);
+
+	type.set(&PortableObjectProtocol::add,     add);
+}
+
+static Object FloatStr(const TupleObject &args, const DictObject &kwargs)
+{
+	return StringObject::New(
+		(boost::format("%f") % args.get_item(0).require<FloatObject>().value()).str());
+}
+
+template <typename Predicate>
+static Object FloatCompare(const TupleObject &args, const DictObject &kwargs)
+{
+	return BoolObject::FromBool(Predicate()(
+		args.get_item(0).require<FloatObject>().value(),
+		args.get_item(1).require<FloatObject>().value()));
+}
+
+static Object FloatNonzero(const TupleObject &args, const DictObject &kwargs)
+{
+	return BoolObject::FromBool(args.get_item(0).require<FloatObject>().value() != 0);
+}
+
+static Object FloatAdd(const TupleObject &args, const DictObject &kwargs)
+{
+	FloatObject::Value value = 0;
+
+	for (unsigned int i = args.size(); i-- > 0; )
+		value += args.get_item(i).require<FloatObject>().value();
+
+	return FloatObject::New(value);
+}
+
+} // namespace
+
+CONCRETE_INTERNAL_FUNCTION(FloatType_Repr,    FloatStr)
+CONCRETE_INTERNAL_FUNCTION(FloatType_Str,     FloatStr)
+CONCRETE_INTERNAL_FUNCTION(FloatType_LT,      FloatCompare<std::less<FloatObject::Value>>)
+CONCRETE_INTERNAL_FUNCTION(FloatType_LE,      FloatCompare<std::less_equal<FloatObject::Value>>)
+CONCRETE_INTERNAL_FUNCTION(FloatType_EQ,      FloatCompare<std::equal_to<FloatObject::Value>>)
+CONCRETE_INTERNAL_FUNCTION(FloatType_NE,      FloatCompare<std::not_equal_to<FloatObject::Value>>)
+CONCRETE_INTERNAL_FUNCTION(FloatType_GT,      FloatCompare<std::greater<FloatObject::Value>>)
+CONCRETE_INTERNAL_FUNCTION(FloatType_GE,      FloatCompare<std::greater_equal<FloatObject::Value>>)
+CONCRETE_INTERNAL_FUNCTION(FloatType_Nonzero, FloatNonzero)
+CONCRETE_INTERNAL_FUNCTION(FloatType_Add,     FloatAdd)

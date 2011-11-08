@@ -21,4 +21,4 @@ while x:
 s = "hello" + passthrough(" ") + "world"
 print(repr(s), len(s))
 print("id(None) =", id(None))
-print(None, 1234, None)
+print(None, 1234.5 + passthrough(6.78), None)
