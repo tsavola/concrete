@@ -7,20 +7,20 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#ifndef CONCRETE_OBJECTS_LONG_DATA_HPP
-#define CONCRETE_OBJECTS_LONG_DATA_HPP
+#ifndef CONCRETE_OBJECTS_MODULE_DATA_HPP
+#define CONCRETE_OBJECTS_MODULE_DATA_HPP
 
-#include "concrete/objects/long.hpp"
+#include "module.hpp"
 
 #include <concrete/objects/object-data.hpp>
 #include <concrete/portable.hpp>
 
 namespace concrete {
 
-struct LongObject::Data: Object::Data {
-	Portable<Value> value;
+struct ModuleObject::Data: Object::Data {
+	const Portable<DictObject> dict;
 
-	Data(const TypeObject &type, Value value);
+	Data(const TypeObject &type, const DictObject &dict);
 
 } CONCRETE_PACKED;
 

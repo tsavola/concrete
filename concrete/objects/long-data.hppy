@@ -7,23 +7,20 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#ifndef CONCRETE_OBJECTS_TUPLE_DATA_HPP
-#define CONCRETE_OBJECTS_TUPLE_DATA_HPP
+#ifndef CONCRETE_OBJECTS_LONG_DATA_HPP
+#define CONCRETE_OBJECTS_LONG_DATA_HPP
 
-#include "concrete/objects/tuple.hpp"
+#include "long.hpp"
 
 #include <concrete/objects/object-data.hpp>
 #include <concrete/portable.hpp>
 
 namespace concrete {
 
-struct TupleObject::Data: Object::Data {
-	Portable<Object> items[0];
+struct LongObject::Data: Object::Data {
+	Portable<Value> value;
 
-	explicit Data(const TypeObject &type);
-	~Data() throw ();
-
-	unsigned int size() const throw ();
+	Data(const TypeObject &type, Value value);
 
 } CONCRETE_PACKED;
 

@@ -7,17 +7,23 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#ifndef CONCRETE_OBJECTS_NONE_DATA_HPP
-#define CONCRETE_OBJECTS_NONE_DATA_HPP
+#ifndef CONCRETE_OBJECTS_TUPLE_DATA_HPP
+#define CONCRETE_OBJECTS_TUPLE_DATA_HPP
 
-#include "concrete/objects/none.hpp"
+#include "tuple.hpp"
 
 #include <concrete/objects/object-data.hpp>
+#include <concrete/portable.hpp>
 
 namespace concrete {
 
-struct NoneObject::Data: Object::Data {
-	explicit Data(const Pointer &type_placeholder) throw ();
+struct TupleObject::Data: Object::Data {
+	Portable<Object> items[0];
+
+	explicit Data(const TypeObject &type);
+	~Data() throw ();
+
+	unsigned int size() const throw ();
 
 } CONCRETE_PACKED;
 

@@ -7,7 +7,7 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#include "concrete/objects/module-data.hpp"
+#include "module-data.hpp"
 
 #include <concrete/context-data.hpp>
 #include <concrete/objects/string.hpp>

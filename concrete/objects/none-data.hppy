@@ -7,21 +7,17 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#ifndef CONCRETE_OBJECTS_BYTES_DATA_HPP
-#define CONCRETE_OBJECTS_BYTES_DATA_HPP
+#ifndef CONCRETE_OBJECTS_NONE_DATA_HPP
+#define CONCRETE_OBJECTS_NONE_DATA_HPP
 
-#include "concrete/objects/bytes.hpp"
+#include "none.hpp"
 
 #include <concrete/objects/object-data.hpp>
 
 namespace concrete {
 
-struct BytesObject::Data: Object::Data {
-	uint8_t data[0];
-
-	Data(const TypeObject &type, const uint8_t *data);
-
-	size_t size() const throw ();
+struct NoneObject::Data: Object::Data {
+	explicit Data(const Pointer &type_placeholder) throw ();
 
 } CONCRETE_PACKED;
 

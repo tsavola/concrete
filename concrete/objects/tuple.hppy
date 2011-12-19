@@ -34,6 +34,6 @@ void TupleObjectTypeInit(const TypeObject &type, const char *name = "tuple");
 
 } // namespace
 
-#include "concrete/objects/tuple-inline.hpp"
+#include "tuple-inline.hpp"
 
 #endif

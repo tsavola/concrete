@@ -10,7 +10,7 @@
 #ifndef CONCRETE_OBJECTS_STRING_DATA_HPP
 #define CONCRETE_OBJECTS_STRING_DATA_HPP
 
-#include "concrete/objects/string.hpp"
+#include "string.hpp"
 
 #include <cstdint>
 

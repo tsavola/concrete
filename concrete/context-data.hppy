@@ -10,7 +10,7 @@
 #ifndef CONCRETE_CONTEXT_DATA_HPP
 #define CONCRETE_CONTEXT_DATA_HPP
 
-#include "concrete/context.hpp"
+#include "context.hpp"
 
 #include <concrete/arena.hpp>
 #include <concrete/execution.hpp>

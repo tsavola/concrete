@@ -7,8 +7,8 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#include "concrete/modules/builtins.hpp"
-#include "concrete/modules/builtins/print.hpp"
+#include "builtins.hpp"
+#include "builtins/print.hpp"
 
 #include <concrete/nested-data.hpp>
 #include <concrete/objects/bool.hpp>

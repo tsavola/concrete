@@ -10,7 +10,7 @@
 #ifndef CONCRETE_OBJECTS_DICT_DATA_HPP
 #define CONCRETE_OBJECTS_DICT_DATA_HPP
 
-#include "concrete/objects/dict.hpp"
+#include "dict.hpp"
 
 #include <concrete/objects/object-data.hpp>
 #include <concrete/util/noncopyable.hpp>

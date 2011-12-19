@@ -7,23 +7,29 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#ifndef CONCRETE_OBJECTS_INTERNAL_DATA_HPP
-#define CONCRETE_OBJECTS_INTERNAL_DATA_HPP
+#ifndef CONCRETE_OBJECTS_FUNCTION_DATA_HPP
+#define CONCRETE_OBJECTS_FUNCTION_DATA_HPP
 
-#include "concrete/objects/internal.hpp"
-
-#include <cstdint>
+#include "function.hpp"
 
 #include <concrete/continuation.hpp>
+#include <concrete/execution.hpp>
 #include <concrete/objects/object-data.hpp>
 #include <concrete/portable.hpp>
+#include <concrete/util/noncopyable.hpp>
 
 namespace concrete {
 
-struct InternalObject::Data: CallableObject::Data {
-	Data(const TypeObject &type, internal::SymbolId symbol_id);
+struct FunctionObject::Data: CallableObject::Data {
+	Data(const TypeObject &type, const CodeObject &code) throw ();
 
-	const Portable<uint16_t> symbol_id;
+	const Portable<CodeObject> code;
+} CONCRETE_PACKED;
+
+struct FunctionContinuation::Data: Noncopyable {
+	~Data() throw ();
+
+	Portable<ExecutionFrame> frame;
 } CONCRETE_PACKED;
 
 } // namespace

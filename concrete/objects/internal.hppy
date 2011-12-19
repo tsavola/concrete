@@ -88,6 +88,6 @@ namespace internal_symbol {
 			cont, stage, args, kwargs, ImplParams);               \
 	}
 
-#include "concrete/objects/internal-inline.hpp"
+#include "internal-inline.hpp"
 
 #endif

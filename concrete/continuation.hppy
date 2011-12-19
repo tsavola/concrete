@@ -36,6 +36,6 @@ class Continuation: public Pointer {
 
 } // namespace
 
-#include "concrete/continuation-inline.hpp"
+#include "continuation-inline.hpp"
 
 #endif

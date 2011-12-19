@@ -82,6 +82,6 @@ private:
 
 } // namespace
 
-#include "concrete/pointer-inline.hpp"
+#include "pointer-inline.hpp"
 
 #endif
