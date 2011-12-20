@@ -1,0 +1,174 @@
+/*
+ * Copyright (c) 2011  Timo Savola
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ */
+
+#ifndef CONCRETE_MODULES_CONCRETE_URLOPEN_HPP
+#define CONCRETE_MODULES_CONCRETE_URLOPEN_HPP
+
+#include <cstring>
+
+#include <concrete/context.hpp>
+#include <concrete/continuation.hpp>
+#include <concrete/execution.hpp>
+#include <concrete/io/buffer.hpp>
+#include <concrete/io/url.hpp>
+#include <concrete/objects/dict.hpp>
+#include <concrete/objects/long.hpp>
+#include <concrete/objects/module.hpp>
+#include <concrete/objects/string.hpp>
+#include <concrete/objects/tuple.hpp>
+#include <concrete/portable.hpp>
+#include <concrete/resource.hpp>
+#include <concrete/util/assert.hpp>
+#include <concrete/util/noncopyable.hpp>
+#include <concrete/util/trace.hpp>
+
+namespace concrete {
+
+class ConcreteModule_URLOpen: public Continuation {
+	{{{ DeclarePointer("ConcreteModule_URLOpen", "Continuation", has_construct=False, has_destroy=False) }}}
+
+protected:
+	enum State { Open, Opening, ReceivingContent, Done };
+	enum { ResponseBufferSize = 16 * 1024 * 1024 };
+
+	struct Data: Noncopyable {
+		~Data() throw ()
+		{
+			reset();
+		}
+
+		void reset() throw ()
+		{
+			response.destroy();
+			opener.destroy();
+		}
+
+		bool is_lost() const throw ()
+		{
+			return response.is_lost() || opener.is_lost();
+		}
+
+		Portable<Object>            url;
+		Portable<uint8_t>           state;
+		PortableResource<Buffer>    response;
+		PortableResource<URLOpener> opener;
+	} CONCRETE_PACKED;
+
+public:
+	bool initiate(Object &result, const TupleObject &args, const DictObject &kwargs) const
+	{
+		data()->url = args.get_item(0).require<StringObject>();
+
+		// postpone actual work to resume() so that everything is set
+		// up by Execution::initiate_call
+		return leave_state(Open);
+	}
+
+	bool resume(Object &result) const
+	{
+		if (data()->is_lost()) {
+			Trace("urlopen resources lost");
+
+			data()->reset();
+			return leave_state(open(result));
+		}
+
+		State state = State(*data()->state);
+
+		switch (state) {
+		case Open:             state = open(result);              break;
+		case Opening:          state = opening(result);           break;
+		case ReceivingContent: state = receiving_content(result); break;
+		case Done:             assert(false);
+		default:               throw IntegrityError(address());
+		}
+
+		return leave_state(state);
+	}
+
+private:
+	bool leave_state(State state) const
+	{
+		data()->state = state;
+		return state == Done;
+	}
+
+	State open(Object &result) const
+	{
+		Trace("urlopen open");
+
+		auto url = data()->url->require<StringObject>();
+
+		auto response = PortableResource<Buffer>::New(size_t(ResponseBufferSize));
+		data()->response = response;
+
+		auto opener = PortableResource<URLOpener>::New(url, *response);
+		data()->opener = opener;
+
+		return opening(result);
+	}
+
+	State opening(Object &result) const
+	{
+		Trace("urlopen opening");
+
+		if (data()->opener->headers_received())
+			return receive_content(result);
+
+		data()->opener->suspend_until_headers_received();
+
+		return Opening;
+	}
+
+	State receive_content(Object &result) const
+	{
+		Trace("urlopen receive content");
+
+		auto length = data()->opener->response_length();
+
+		Trace("urlopen content length: %d", length);
+
+		if (length > ResponseBufferSize)
+			throw RuntimeError("HTTP response too long");
+
+		return receiving_content(result);
+	}
+
+	State receiving_content(Object &result) const
+	{
+		Trace("urlopen receiving content");
+
+		if (data()->opener->content_received())
+			return done(result);
+
+		data()->opener->suspend_until_content_received();
+
+		return ReceivingContent;
+	}
+
+	State done(Object &result) const
+	{
+		Trace("urlopen done");
+
+		auto response = *data()->response;
+		auto size = response->consumable_size();
+
+		auto length = data()->opener->response_length();
+		if (length >= 0 && size_t(length) < size)
+			size = size_t(length);
+
+		result = StringObject::New(response->consumable_data(), size);
+
+		return Done;
+	}
+};
+
+} // namespace
+
+#endif

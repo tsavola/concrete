@@ -8,6 +8,8 @@
  */
 
 #include "concrete.hpp"
+#include "concrete/fork.hpp"
+#include "concrete/urlopen.hpp"
 
 #include <concrete/objects/dict.hpp>
 #include <concrete/objects/internal.hpp>
@@ -20,12 +22,15 @@ void ConcreteModuleInit(const DictObject &modules)
 {
 	auto dict = DictObject::New();
 
-	dict.set_item(StringObject::New("fork"), InternalObject::New(internal::ConcreteModule_Fork));
-	dict.set_item(StringObject::New("test"), InternalObject::New(internal::ConcreteModule_Test));
+	dict.set_item(StringObject::New("fork"),    InternalObject::New(internal::ConcreteModule_Fork));
+	dict.set_item(StringObject::New("urlopen"), InternalObject::New(internal::ConcreteModule_URLOpen));
+	dict.set_item(StringObject::New("test"),    InternalObject::New(internal::ConcreteModule_Test));
 
 	modules.set_item(StringObject::New("concrete"), ModuleObject::New(dict));
 }
 
+{{{ ImplementInternalContinuation("ConcreteModule_Fork") }}}
+{{{ ImplementInternalContinuation("ConcreteModule_URLOpen") }}}
 {{{ InternalFunction("ConcreteModule_Test") }}}
 
 } // namespace
