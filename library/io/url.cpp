@@ -398,6 +398,9 @@ void LibraryURLOpener::parse_header(const char *line, size_t length)
 		m_response_length = value;
 		return;
 	}
+
+	if (match_header(line, length, "transfer-encoding: chunked"))
+		throw RuntimeError("Chunked transfer-encoding not supported");
 }
 
 } // namespace
