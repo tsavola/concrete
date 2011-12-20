@@ -18,7 +18,7 @@
 
 namespace concrete {
 
-static Object Test(const TupleObject &args, const DictObject &kwargs)
+Object ConcreteModule_Test(const TupleObject &args, const DictObject &kwargs)
 {
 	std::cout << boost::format("concrete.test: args=%d kwargs=%d")
 		% args.size() % kwargs.size() << std::endl;
@@ -27,5 +27,3 @@ static Object Test(const TupleObject &args, const DictObject &kwargs)
 }
 
 } // namespace
-
-CONCRETE_INTERNAL_FUNCTION(ConcreteModule_Test, Test)

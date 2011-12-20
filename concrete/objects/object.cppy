@@ -207,7 +207,7 @@ void ObjectTypeInit(const TypeObject &type, const char *name)
 	type.set(&PortableObjectProtocol::str,  str);
 }
 
-static Object ObjectRepr(const TupleObject &args, const DictObject &kwargs)
+{{{ ImplementInternalFunction("ObjectType_Repr") }}}
 {
 	auto self = args.get_item(0);
 
@@ -217,12 +217,9 @@ static Object ObjectRepr(const TupleObject &args, const DictObject &kwargs)
 		 % self.address()).str());
 }
 
-static struct NestedCall ObjectStr(const TupleObject &args, const DictObject &kwargs)
+{{{ ImplementInternalNestedCall("ObjectType_Str") }}}
 {
 	return NestedCall(args.get_item(0).protocol()->repr, args, kwargs);
 }
 
 } // namespace
-
-CONCRETE_INTERNAL_FUNCTION   (ObjectType_Repr, ObjectRepr)
-CONCRETE_INTERNAL_NESTED_CALL(ObjectType_Str,  ObjectStr)

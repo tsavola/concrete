@@ -13,8 +13,6 @@
 
 namespace concrete {
 
-{{{ ImplementPointer("Fork") }}}
+{{{ ImplementInternalContinuation("ConcreteModule_Fork") }}}
 
 } // namespace
-
-CONCRETE_INTERNAL_CONTINUATION(ConcreteModule_Fork, Fork)

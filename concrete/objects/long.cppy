@@ -68,26 +68,31 @@ void LongObjectTypeInit(const TypeObject &type, const char *name)
 	type.set(&PortableObjectProtocol::add,     add);
 }
 
-static Object LongStr(const TupleObject &args, const DictObject &kwargs)
+{{{ ImplementInternalFunctions(["LongType_Repr", "LongType_Str"]) }}}
 {
 	return StringObject::New(
 		(boost::format("%ld") % args.get_item(0).require<LongObject>().value()).str());
 }
 
-template <typename Predicate>
-static Object LongCompare(const TupleObject &args, const DictObject &kwargs)
+{{{ ImplementInternalTemplateFunctions("typename Predicate", {
+      "LongType_LT": "std::less         <LongObject::Value>",
+      "LongType_LE": "std::less_equal   <LongObject::Value>",
+      "LongType_EQ": "std::equal_to     <LongObject::Value>",
+      "LongType_NE": "std::not_equal_to <LongObject::Value>",
+      "LongType_GT": "std::greater      <LongObject::Value>",
+      "LongType_GE": "std::greater_equal<LongObject::Value>" }) }}}
 {
 	return BoolObject::FromBool(Predicate()(
 		args.get_item(0).require<LongObject>().value(),
 		args.get_item(1).require<LongObject>().value()));
 }
 
-static Object LongNonzero(const TupleObject &args, const DictObject &kwargs)
+{{{ ImplementInternalFunction("LongType_Nonzero") }}}
 {
 	return BoolObject::FromBool(args.get_item(0).require<LongObject>().value() != 0);
 }
 
-static Object LongAdd(const TupleObject &args, const DictObject &kwargs)
+{{{ ImplementInternalFunction("LongType_Add") }}}
 {
 	LongObject::Value value = 0;
 
@@ -98,14 +103,3 @@ static Object LongAdd(const TupleObject &args, const DictObject &kwargs)
 }
 
 } // namespace
-
-CONCRETE_INTERNAL_FUNCTION(LongType_Repr,    LongStr)
-CONCRETE_INTERNAL_FUNCTION(LongType_Str,     LongStr)
-CONCRETE_INTERNAL_FUNCTION(LongType_LT,      LongCompare<std::less<LongObject::Value>>)
-CONCRETE_INTERNAL_FUNCTION(LongType_LE,      LongCompare<std::less_equal<LongObject::Value>>)
-CONCRETE_INTERNAL_FUNCTION(LongType_EQ,      LongCompare<std::equal_to<LongObject::Value>>)
-CONCRETE_INTERNAL_FUNCTION(LongType_NE,      LongCompare<std::not_equal_to<LongObject::Value>>)
-CONCRETE_INTERNAL_FUNCTION(LongType_GT,      LongCompare<std::greater<LongObject::Value>>)
-CONCRETE_INTERNAL_FUNCTION(LongType_GE,      LongCompare<std::greater_equal<LongObject::Value>>)
-CONCRETE_INTERNAL_FUNCTION(LongType_Nonzero, LongNonzero)
-CONCRETE_INTERNAL_FUNCTION(LongType_Add,     LongAdd)

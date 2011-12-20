@@ -11,10 +11,13 @@
 #define CONCRETE_MODULES_CONCRETE_HPP
 
 #include <concrete/objects/dict.hpp>
+#include <concrete/objects/tuple.hpp>
 
 namespace concrete {
 
 void ConcreteModuleInit(const DictObject &modules);
+
+Object ConcreteModule_Test(const TupleObject &args, const DictObject &kwargs);
 
 } // namespace
 

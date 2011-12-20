@@ -56,38 +56,6 @@ namespace internal_symbol {
 
 } // namespace
 
-#define CONCRETE_INTERNAL_FUNCTION(Symbol, Function)                          \
-	concrete::Object concrete::internal_symbol::Symbol(                   \
-		Continuation &,                                               \
-		Continuation::Stage stage,                                    \
-		const TupleObject *args,                                      \
-		const DictObject *kwargs)                                     \
-	{                                                                     \
-		return Function(*args, *kwargs);                              \
-	}
-
-#define CONCRETE_INTERNAL_CONTINUATION(Symbol, ImplType)                      \
-	concrete::Object concrete::internal_symbol::Symbol(                   \
-		Continuation &cont,                                           \
-		Continuation::Stage stage,                                    \
-		const TupleObject *args,                                      \
-		const DictObject *kwargs)                                     \
-	{                                                                     \
-		return Continuation::Call<ImplType>(                          \
-			cont, stage, args, kwargs);                           \
-	}
-
-#define CONCRETE_INTERNAL_CONTINUATION_PARAMS(Symbol, ImplType, ImplParams...)\
-	concrete::Object concrete::internal_symbol::Symbol(                   \
-		Continuation &cont,                                           \
-		Continuation::Stage stage,                                    \
-		const TupleObject *args,                                      \
-		const DictObject *kwargs)                                     \
-	{                                                                     \
-		return Continuation::Call<ImplType>(                          \
-			cont, stage, args, kwargs, ImplParams);               \
-	}
-
 #include "internal-inline.hpp"
 
 #endif

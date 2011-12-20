@@ -98,26 +98,31 @@ void FloatObjectTypeInit(const TypeObject &type, const char *name)
 	type.set(&PortableObjectProtocol::add,     add);
 }
 
-static Object FloatStr(const TupleObject &args, const DictObject &kwargs)
+{{{ ImplementInternalFunctions(["FloatType_Repr", "FloatType_Str"]) }}}
 {
 	return StringObject::New(
 		(boost::format("%f") % args.get_item(0).require<FloatObject>().value()).str());
 }
 
-template <typename Predicate>
-static Object FloatCompare(const TupleObject &args, const DictObject &kwargs)
+{{{ ImplementInternalTemplateFunctions("typename Predicate", {
+      "FloatType_LT": "std::less         <FloatObject::Value>",
+      "FloatType_LE": "std::less_equal   <FloatObject::Value>",
+      "FloatType_EQ": "std::equal_to     <FloatObject::Value>",
+      "FloatType_NE": "std::not_equal_to <FloatObject::Value>",
+      "FloatType_GT": "std::greater      <FloatObject::Value>",
+      "FloatType_GE": "std::greater_equal<FloatObject::Value>" }) }}}
 {
 	return BoolObject::FromBool(Predicate()(
 		args.get_item(0).require<FloatObject>().value(),
 		args.get_item(1).require<FloatObject>().value()));
 }
 
-static Object FloatNonzero(const TupleObject &args, const DictObject &kwargs)
+{{{ ImplementInternalFunction("FloatType_Nonzero") }}}
 {
 	return BoolObject::FromBool(args.get_item(0).require<FloatObject>().value() != 0);
 }
 
-static Object FloatAdd(const TupleObject &args, const DictObject &kwargs)
+{{{ ImplementInternalFunction("FloatType_Add") }}}
 {
 	FloatObject::Value value = 0;
 
@@ -128,14 +133,3 @@ static Object FloatAdd(const TupleObject &args, const DictObject &kwargs)
 }
 
 } // namespace
-
-CONCRETE_INTERNAL_FUNCTION(FloatType_Repr,    FloatStr)
-CONCRETE_INTERNAL_FUNCTION(FloatType_Str,     FloatStr)
-CONCRETE_INTERNAL_FUNCTION(FloatType_LT,      FloatCompare<std::less<FloatObject::Value>>)
-CONCRETE_INTERNAL_FUNCTION(FloatType_LE,      FloatCompare<std::less_equal<FloatObject::Value>>)
-CONCRETE_INTERNAL_FUNCTION(FloatType_EQ,      FloatCompare<std::equal_to<FloatObject::Value>>)
-CONCRETE_INTERNAL_FUNCTION(FloatType_NE,      FloatCompare<std::not_equal_to<FloatObject::Value>>)
-CONCRETE_INTERNAL_FUNCTION(FloatType_GT,      FloatCompare<std::greater<FloatObject::Value>>)
-CONCRETE_INTERNAL_FUNCTION(FloatType_GE,      FloatCompare<std::greater_equal<FloatObject::Value>>)
-CONCRETE_INTERNAL_FUNCTION(FloatType_Nonzero, FloatNonzero)
-CONCRETE_INTERNAL_FUNCTION(FloatType_Add,     FloatAdd)

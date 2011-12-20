@@ -39,32 +39,26 @@ DictObject BuiltinsModuleInit(const DictObject &modules)
 	return dict;
 }
 
-static Object Id(const TupleObject &args, const DictObject &kwargs)
+{{{ ImplementInternalFunction("BuiltinsModule_Id") }}}
 {
 	return LongObject::New(args.get_item(0).address());
 }
 
-{{{ ImplementPointer("Print") }}}
+{{{ ImplementInternalContinuation("BuiltinsModule_Print") }}}
 
-static Object Repr(const TupleObject &args, const DictObject &kwargs)
+{{{ ImplementInternalFunction("BuiltinsModule_Repr") }}}
 {
 	return args.get_item(0).repr();
 }
 
-static NestedCall Str(const TupleObject &args, const DictObject &kwargs)
+{{{ ImplementInternalNestedCall("BuiltinsModule_Str") }}}
 {
 	return NestedCall(args.get_item(0).protocol()->repr, args, kwargs);
 }
 
-static NestedCall Len(const TupleObject &args, const DictObject &kwargs)
+{{{ ImplementInternalNestedCall("BuiltinsModule_Len") }}}
 {
 	return NestedCall(args.get_item(0).protocol()->len, args, kwargs);
 }
 
 } // namespace
-
-CONCRETE_INTERNAL_FUNCTION    (BuiltinsModule_Id,    Id)
-CONCRETE_INTERNAL_CONTINUATION(BuiltinsModule_Print, Print)
-CONCRETE_INTERNAL_FUNCTION    (BuiltinsModule_Repr,  Repr)
-CONCRETE_INTERNAL_NESTED_CALL (BuiltinsModule_Str,   Str)
-CONCRETE_INTERNAL_NESTED_CALL (BuiltinsModule_Len,   Len)

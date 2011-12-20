@@ -29,8 +29,8 @@
 
 namespace concrete {
 
-class Fork: public Continuation {
-	{{{ DeclarePointer("Fork", "Continuation", has_construct=False, has_destroy=False) }}}
+class ConcreteModule_Fork: public Continuation {
+	{{{ DeclarePointer("ConcreteModule_Fork", "Continuation", has_construct=False, has_destroy=False) }}}
 
 protected:
 	enum State { Open, Opening, ReceivingContent, Done };

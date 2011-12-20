@@ -26,4 +26,6 @@ void ConcreteModuleInit(const DictObject &modules)
 	modules.set_item(StringObject::New("concrete"), ModuleObject::New(dict));
 }
 
+{{{ InternalFunction("ConcreteModule_Test") }}}
+
 } // namespace

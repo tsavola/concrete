@@ -18,8 +18,8 @@
 
 namespace concrete {
 
-class Print: public NestedContinuation {
-	{{{ DeclarePointer("Print", "NestedContinuation", has_construct=False, has_destroy=False) }}}
+class BuiltinsModule_Print: public NestedContinuation {
+	{{{ DeclarePointer("BuiltinsModule_Print", "NestedContinuation", has_construct=False, has_destroy=False) }}}
 
 protected:
 	struct Data: NestedContinuation::Data {

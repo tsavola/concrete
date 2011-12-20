@@ -156,7 +156,7 @@ void StringObjectTypeInit(const TypeObject &type, const char *name)
 	type.set(&PortableObjectProtocol::add,  add);
 }
 
-static Object StringRepr(const TupleObject &args, const DictObject &kwargs)
+{{{ ImplementInternalFunction("StringType_Repr") }}}
 {
 	auto self = args.get_item(0).require<StringObject>();
 
@@ -192,17 +192,17 @@ static Object StringRepr(const TupleObject &args, const DictObject &kwargs)
 	return StringObject::New(value);
 }
 
-static Object StringStr(const TupleObject &args, const DictObject &kwargs)
+{{{ ImplementInternalFunction("StringType_Str") }}}
 {
 	return args.get_item(0);
 }
 
-static Object StringLen(const TupleObject &args, const DictObject &kwargs)
+{{{ ImplementInternalFunction("StringType_Len") }}}
 {
 	return LongObject::New(args.get_item(0).require<StringObject>().length());
 }
 
-static Object StringAdd(const TupleObject &args, const DictObject &kwargs)
+{{{ ImplementInternalFunction("StringType_Add") }}}
 {
 	auto s1 = args.get_item(0).require<StringObject>();
 	auto s2 = args.get_item(1).require<StringObject>();
@@ -228,8 +228,3 @@ static Object StringAdd(const TupleObject &args, const DictObject &kwargs)
 }
 
 } // namespace
-
-CONCRETE_INTERNAL_FUNCTION(StringType_Repr, StringRepr)
-CONCRETE_INTERNAL_FUNCTION(StringType_Str,  StringStr)
-CONCRETE_INTERNAL_FUNCTION(StringType_Len,  StringLen)
-CONCRETE_INTERNAL_FUNCTION(StringType_Add,  StringAdd)

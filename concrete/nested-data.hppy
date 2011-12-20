@@ -27,8 +27,4 @@ struct NestedContinuation::Data: Noncopyable {
 
 } // namespace
 
-#define CONCRETE_INTERNAL_NESTED_CALL(Name, DeclaratorFunction)               \
-	CONCRETE_INTERNAL_CONTINUATION_PARAMS(                                \
-		Name, concrete::NestedCallContinuation, DeclaratorFunction)   \
-
 #endif
