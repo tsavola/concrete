@@ -316,6 +316,9 @@ LibraryURLOpener::State LibraryURLOpener::received_content()
 {
 	m_socket.reset();
 
+	if (m_response_length < 0)
+		m_response_length = m_response_buffer->consumable_size();
+
 	return ReceivedContent;
 }
 
