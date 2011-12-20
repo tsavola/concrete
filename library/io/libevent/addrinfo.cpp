@@ -38,7 +38,7 @@ EvdnsAddrInfo::~EvdnsAddrInfo() throw ()
 
 struct addrinfo *EvdnsAddrInfo::resolved()
 {
-	uint8_t buf;
+	char buf;
 
 	if (m_pipe.read.read(&buf, 1) < 0)
 		return NULL;
