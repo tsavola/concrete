@@ -80,8 +80,7 @@ LibraryURLOpener::LibraryURLOpener(const StringObject &url, Buffer *response, Bu
 	m_request_sent(0),
 	m_response_buffer(response),
 	m_response_status(0),
-	m_response_length(-1),
-	m_response_received(0)
+	m_response_length(-1)
 {
 }
 
@@ -286,27 +285,27 @@ LibraryURLOpener::State LibraryURLOpener::receiving_content()
 	assert(size > 0);
 
 	if (m_response_length > 0) {
-		size_t remaining = m_response_length - m_response_received;
-		assert(remaining > 0);
-		if (remaining < size)
-			size = remaining;
-	}
+		long remaining = m_response_length - m_response_buffer->consumable_size();
 
-	size_t mark = m_response_buffer->consumable_size();
+		if (remaining <= 0)
+			return received_content();
+
+		if (size_t(remaining) < size)
+			size = size_t(remaining);
+	}
 
 	if (m_socket->read(*m_response_buffer, size)) {
 		if (m_response_length > 0) {
-			if (m_response_received < size_t(m_response_length))
+			if (m_response_buffer->consumable_size() < size_t(m_response_length))
 				throw RuntimeError("EOF while receiving content");
 		} else {
-			m_response_length = m_response_received;
+			m_response_length = m_response_buffer->consumable_size();
 		}
 
 		return received_content();
 	}
 
-	m_response_received += m_response_buffer->consumable_size() - mark;
-	if (m_response_length > 0 && m_response_received == size_t(m_response_length))
+	if (m_response_length >= 0 && m_response_buffer->consumable_size() == size_t(m_response_length))
 		return received_content();
 
 	m_socket->suspend_until_readable();

@@ -102,7 +102,6 @@ protected:
 	Buffer                   *m_response_buffer;
 	unsigned int              m_response_status;
 	long                      m_response_length;
-	size_t                    m_response_received;
 };
 
 } // namespace
