@@ -10,16 +10,10 @@
 #ifndef CONCRETE_MODULES_CONCRETE_URLOPEN_HPP
 #define CONCRETE_MODULES_CONCRETE_URLOPEN_HPP
 
-#include <cstring>
-
-#include <concrete/context.hpp>
 #include <concrete/continuation.hpp>
-#include <concrete/execution.hpp>
 #include <concrete/io/buffer.hpp>
 #include <concrete/io/url.hpp>
 #include <concrete/objects/dict.hpp>
-#include <concrete/objects/long.hpp>
-#include <concrete/objects/module.hpp>
 #include <concrete/objects/string.hpp>
 #include <concrete/objects/tuple.hpp>
 #include <concrete/portable.hpp>
@@ -30,8 +24,8 @@
 
 namespace concrete {
 
-class ConcreteModule_URLOpen: public Continuation {
-	{{{ DeclarePointer("ConcreteModule_URLOpen", "Continuation", has_construct=False, has_destroy=False) }}}
+class AbstractURLOpen: public Continuation {
+	{{{ DeclarePointer("AbstractURLOpen", "Continuation", has_construct=False, has_destroy=False) }}}
 
 protected:
 	enum State { Open, Opening, ReceivingContent, Done };
@@ -61,6 +55,8 @@ protected:
 	} CONCRETE_PACKED;
 
 public:
+	virtual ~AbstractURLOpen() {}
+
 	bool initiate(Object &result, const TupleObject &args, const DictObject &kwargs) const
 	{
 		data()->url = args.get_item(0).require<StringObject>();
@@ -92,27 +88,14 @@ public:
 		return leave_state(state);
 	}
 
-private:
+protected:
 	bool leave_state(State state) const
 	{
 		data()->state = state;
 		return state == Done;
 	}
 
-	State open(Object &result) const
-	{
-		Trace("urlopen open");
-
-		auto url = data()->url->require<StringObject>();
-
-		auto response = PortableResource<Buffer>::New(size_t(ResponseBufferSize));
-		data()->response = response;
-
-		auto opener = PortableResource<URLOpener>::New(url, *response);
-		data()->opener = opener;
-
-		return opening(result);
-	}
+	virtual State open(Object &result) const = 0;
 
 	State opening(Object &result) const
 	{
@@ -152,7 +135,31 @@ private:
 		return ReceivingContent;
 	}
 
-	State done(Object &result) const
+	virtual State done(Object &result) const = 0;
+};
+
+class ConcreteModule_URLOpen: public AbstractURLOpen {
+	{{{ DeclarePointer("ConcreteModule_URLOpen", "AbstractURLOpen", has_construct=False, has_destroy=False) }}}
+
+protected:
+	struct Data: AbstractURLOpen::Data {} CONCRETE_PACKED;
+
+	virtual State open(Object &result) const
+	{
+		Trace("urlopen open");
+
+		auto url = data()->url->require<StringObject>();
+
+		auto response = PortableResource<Buffer>::New(size_t(ResponseBufferSize));
+		data()->response = response;
+
+		auto opener = PortableResource<URLOpener>::New(url, *response);
+		data()->opener = opener;
+
+		return opening(result);
+	}
+
+	virtual State done(Object &result) const
 	{
 		Trace("urlopen done");
 

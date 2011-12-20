@@ -10,68 +10,43 @@
 #ifndef CONCRETE_MODULES_CONCRETE_FORK_HPP
 #define CONCRETE_MODULES_CONCRETE_FORK_HPP
 
-#include <cstring>
-
-#include <concrete/context.hpp>
-#include <concrete/continuation.hpp>
-#include <concrete/execution.hpp>
 #include <concrete/io/buffer.hpp>
 #include <concrete/io/url.hpp>
 #include <concrete/objects/bool.hpp>
-#include <concrete/objects/dict.hpp>
-#include <concrete/objects/module.hpp>
-#include <concrete/objects/tuple.hpp>
 #include <concrete/portable.hpp>
 #include <concrete/resource.hpp>
-#include <concrete/util/assert.hpp>
-#include <concrete/util/noncopyable.hpp>
 #include <concrete/util/trace.hpp>
+
+#include "urlopen.hpp"
 
 namespace concrete {
 
-class ConcreteModule_Fork: public Continuation {
-	{{{ DeclarePointer("ConcreteModule_Fork", "Continuation", has_construct=False, has_destroy=False) }}}
+class ConcreteModule_Fork: public AbstractURLOpen {
+	{{{ DeclarePointer("ConcreteModule_Fork", "AbstractURLOpen", has_construct=False, has_destroy=False) }}}
 
 protected:
-	enum State { Open, Opening, ReceivingContent, Done };
-	enum { ResponseBufferSize = 4096 };
-
-	struct Data: Noncopyable {
+	struct Data: AbstractURLOpen::Data {
 		~Data() throw ()
 		{
-			reset();
+			request.destroy();
 		}
 
 		void reset() throw ()
 		{
 			request.destroy();
-			response.destroy();
-			opener.destroy();
+			AbstractURLOpen::Data::reset();
 		}
 
 		bool is_lost() const throw ()
 		{
-			return request.is_lost() || response.is_lost() || opener.is_lost();
+			return request.is_lost() || AbstractURLOpen::Data::is_lost();
 		}
 
-		Portable<Object>            url;
-		Portable<uint8_t>           state;
-		PortableResource<Buffer>    request;
-		PortableResource<Buffer>    response;
-		PortableResource<URLOpener> opener;
-		Portable<bool>              forked;
+		PortableResource<Buffer> request;
+		Portable<bool>           forked;
 	} CONCRETE_PACKED;
 
 public:
-	bool initiate(Object &result, const TupleObject &args, const DictObject &kwargs) const
-	{
-		data()->url = args.get_item(0).require<StringObject>();
-
-		// postpone actual work to resume() so that everything is set
-		// up by Execution::initiate_call
-		return leave_state(Open);
-	}
-
 	bool resume(Object &result) const
 	{
 		if (data()->forked) {
@@ -79,34 +54,11 @@ public:
 			return true;
 		}
 
-		if (data()->is_lost()) {
-			Trace("fork resources lost");
-
-			data()->reset();
-			return leave_state(open(result));
-		}
-
-		State state = State(*data()->state);
-
-		switch (state) {
-		case Open:             state = open(result);              break;
-		case Opening:          state = opening(result);           break;
-		case ReceivingContent: state = receiving_content(result); break;
-		case Done:             assert(false);
-		default:               throw IntegrityError(address());
-		}
-
-		return leave_state(state);
+		return AbstractURLOpen::resume(result);
 	}
 
-private:
-	bool leave_state(State state) const
-	{
-		data()->state = state;
-		return state == Done;
-	}
-
-	State open(Object &result) const
+protected:
+	virtual State open(Object &result) const
 	{
 		Trace("fork open");
 
@@ -135,51 +87,12 @@ private:
 		return opening(result);
 	}
 
-	State opening(Object &result) const
+	virtual State done(Object &result) const
 	{
-		Trace("fork opening");
-
-		if (data()->opener->headers_received())
-			return receive_content(result);
-
-		data()->opener->suspend_until_headers_received();
-
-		return Opening;
-	}
-
-	State receive_content(Object &result) const
-	{
-		Trace("fork receive content");
+		Trace("fork done");
 
 		if (data()->opener->response_status() != 200)
 			throw RuntimeError("HTTP response error");
-
-		auto length = data()->opener->response_length();
-
-		if (length < 0)
-			throw RuntimeError("HTTP response length not specified");
-
-		if (length > ResponseBufferSize)
-			throw RuntimeError("HTTP response too long");
-
-		return receiving_content(result);
-	}
-
-	State receiving_content(Object &result) const
-	{
-		Trace("fork receiving content");
-
-		if (data()->opener->content_received())
-			return done(result);
-
-		data()->opener->suspend_until_content_received();
-
-		return ReceivingContent;
-	}
-
-	State done(Object &result) const
-	{
-		Trace("fork done");
 
 		result = BoolObject::True();
 

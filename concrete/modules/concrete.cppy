@@ -29,6 +29,7 @@ void ConcreteModuleInit(const DictObject &modules)
 	modules.set_item(StringObject::New("concrete"), ModuleObject::New(dict));
 }
 
+{{{ ImplementPointer("AbstractURLOpen") }}}
 {{{ ImplementInternalContinuation("ConcreteModule_Fork") }}}
 {{{ ImplementInternalContinuation("ConcreteModule_URLOpen") }}}
 {{{ InternalFunction("ConcreteModule_Test") }}}
