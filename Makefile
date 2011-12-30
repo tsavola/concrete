@@ -14,7 +14,7 @@ TESTS		:= example python
 
 build: library-shared
 
-concrete-reloc: concrete/prepare
+concrete-reloc concrete-static: concrete/prepare
 library-shared: concrete-reloc
 example: library-shared
 
