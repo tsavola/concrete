@@ -66,16 +66,23 @@ public:
 	enum { InitialAllocationAddress = sizeof (Header) };
 
 	struct Snapshot {
+		Snapshot(const void *base, size_t size): base(base), size(size) {}
+
 		const void *base;
 		size_t      size;
 	};
 
 	struct Allocation {
+		Allocation(unsigned int address, void *data): address(address), data(data) {}
+
 		unsigned int  address;
 		void         *data;
 	};
 
 	struct Accession {
+		Accession(): version(0), data(NULL) {}
+		Accession(unsigned int version, void *data): version(version), data(data) {}
+
 		unsigned int  version;
 		void         *data;
 	};

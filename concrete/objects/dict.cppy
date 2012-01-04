@@ -38,7 +38,17 @@ DictObject::Data::Data(const TypeObject &type):
 DictObject::Data::~Data() throw ()
 {
 	for (unsigned int i = std::min(uint32_t(size), uint32_t(capacity())); i-- > 0; )
-		items[i].~Item();
+		items()[i].~Item();
+}
+
+const DictObject::Data::Item *DictObject::Data::items() const throw ()
+{
+	return reinterpret_cast<const Item *> (reinterpret_cast<const char *> (this) + sizeof (Data));
+}
+
+DictObject::Data::Item *DictObject::Data::items() throw ()
+{
+	return reinterpret_cast<Item *> (reinterpret_cast<char *> (this) + sizeof (Data));
 }
 
 unsigned int DictObject::Data::capacity() const throw ()
@@ -51,7 +61,7 @@ unsigned int DictObject::Data::find_item(const Object &key) const
 	unsigned int i;
 
 	for (i = 0; i < size; i++)
-		if (key.cast<StringObject>().equals(items[i].key->cast<StringObject>()))
+		if (key.cast<StringObject>().equals(items()[i].key->cast<StringObject>()))
 			break;
 
 	return i;
@@ -84,14 +94,14 @@ void DictObject::set_item(const Object &key, const Object &value) const
 	auto i = data()->find_item(key);
 
 	if (i < data()->size) {
-		data()->items[i].value = value;
+		data()->items()[i].value = value;
 		return;
 	}
 
 	if (i == data()->capacity())
 		throw RuntimeError("dict capacity exceeded");
 
-	new (&data()->items[i]) Data::Item(key, value);
+	new (&data()->items()[i]) Data::Item(key, value);
 	data()->size = i + 1;
 }
 
@@ -115,14 +125,14 @@ bool DictObject::get_item(const Object &key, Object &value) const
 	if (i == data()->size)
 		return false;
 
-	value = data()->items[i].value;
+	value = data()->items()[i].value;
 	return true;
 }
 
 void DictObject::copy_to(const DictObject &target) const
 {
 	for (unsigned int i = 0; i < size(); i++)
-		target.set_item(data()->items[i].key, data()->items[i].value);
+		target.set_item(data()->items()[i].key, data()->items()[i].value);
 }
 
 unsigned int DictObject::capacity() const

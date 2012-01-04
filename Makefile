@@ -3,7 +3,7 @@ PYTHON		?= python3.1
 -include config.mk
 
 CPPFLAGS	+= -I. -I$(O)/src -Iboost
-CFLAGS		+= -g -Wall -Wextra -Wno-unused
+CFLAGS		+= -g -Wall -Wextra -Wno-unused-parameter
 CXXFLAGS	+= -std=gnu++0x
 
 LIBRARIES	:= concrete library

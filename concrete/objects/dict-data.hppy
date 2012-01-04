@@ -29,11 +29,12 @@ struct DictObject::Data: Object::Data {
 	explicit Data(const TypeObject &type);
 	~Data() throw ();
 
+	const Item *items() const throw ();
+	Item *items() throw ();
 	unsigned int capacity() const throw ();
 	unsigned int find_item(const Object &key) const;
 
 	Portable<uint32_t> size;
-	Item               items[0];
 } CONCRETE_PACKED;
 
 } // namespace

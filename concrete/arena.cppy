@@ -109,10 +109,7 @@ Arena::~Arena() throw ()
 
 Arena::Snapshot Arena::snapshot() const throw ()
 {
-	return Snapshot {
-		m_base,
-		m_size,
-	};
+	return Snapshot(m_base, m_size);
 }
 
 Arena::Allocation Arena::allocate(size_t data_size)
@@ -144,10 +141,7 @@ Arena::Allocation Arena::allocate(size_t data_size)
 	unsigned int data_address = header_address + sizeof (Header);
 	void *data_ptr = ptr + sizeof (Header);
 
-	return Allocation {
-		data_address,
-		data_ptr,
-	};
+	return Allocation(data_address, data_ptr);
 }
 
 void Arena::free(unsigned int data_address, void *data) throw ()
@@ -218,10 +212,7 @@ Arena::Accession Arena::nonthrowing_access(unsigned int address, size_t minimum_
 		return defer_access_error(address);
 	}
 
-	return Accession {
-		m_version,
-		data,
-	};
+	return Accession(m_version, data);
 }
 
 Arena::Accession Arena::defer_access_error(unsigned int address) throw ()
@@ -231,10 +222,7 @@ Arena::Accession Arena::defer_access_error(unsigned int address) throw ()
 		m_access_error_address = address;
 	}
 
-	return Accession {
-		0,
-		NULL,
-	};
+	return Accession();
 }
 
 void Arena::check_access_error()
