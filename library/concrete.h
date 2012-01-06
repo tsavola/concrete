@@ -1,3 +1,12 @@
+/*
+ * Copyright (c) 2011, 2012  Timo Savola
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ */
+
 #ifndef CONCRETE_H_INCLUDED
 #define CONCRETE_H_INCLUDED
 
@@ -29,6 +38,14 @@ struct ConcreteError {
 	const char             *message;
 };
 
+
+enum ConcreteEventCondition {
+	CONCRETE_EVENT_FILE_READABLE = 1,
+	CONCRETE_EVENT_FILE_WRITABLE = 2,
+};
+
+typedef bool (*ConcreteEventFunction)(int fd, void *data);
+
 typedef struct ConcreteContext ConcreteContext;
 typedef struct ConcreteError   ConcreteError;
 
@@ -49,6 +66,13 @@ CONCRETE_API bool concrete_execute(ConcreteContext *context,
 CONCRETE_API void concrete_snapshot(ConcreteContext  *context,
                                     const void      **base_ptr,
                                     size_t           *size_ptr);
+
+CONCRETE_API void concrete_event_wait(ConcreteContext       *context,
+                                      int                    fd,
+                                      unsigned int           conditions,
+                                      ConcreteEventFunction  function,
+                                      void                  *data,
+                                      ConcreteError         *error);
 
 CONCRETE_API void concrete_destroy(ConcreteContext *context);
 

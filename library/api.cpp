@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011  Timo Savola
+ * Copyright (c) 2011, 2012  Timo Savola
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -95,6 +95,14 @@ static void executable(Context *context, bool *result)
 	*result = context->executable();
 }
 
+static void event_wait(LibeventLoop *event_loop, int fd, unsigned int conditions, ConcreteEventFunction function, void *data)
+{
+	EventTrigger trigger(fd, conditions);
+	std::unique_ptr<ConcreteEventCallback> callback(new ConcreteEventCallback(*event_loop, trigger, function, data));
+	event_loop->wait(trigger, callback.get());
+	callback.release();
+}
+
 static void destroy(ConcreteContext *wrap)
 {
 	delete wrap;
@@ -103,6 +111,16 @@ static void destroy(ConcreteContext *wrap)
 } // namespace
 
 using namespace concrete;
+
+void ConcreteEventCallback::resume() throw ()
+{
+	std::unique_ptr<ConcreteEventCallback> deleter(this);
+
+	if (m_function(m_trigger.fd, m_data)) {
+		m_event_loop.wait(m_trigger, this);
+		deleter.release();
+	}
+}
 
 ConcreteContext *concrete_create(ConcreteError *error)
 {
@@ -169,6 +187,19 @@ void concrete_snapshot(ConcreteContext *wrap, const void **base_ptr, size_t *siz
 	auto snapshot = wrap->context->arena().snapshot();
 	*base_ptr = snapshot.base;
 	*size_ptr = snapshot.size;
+}
+
+void concrete_event_wait(ConcreteContext *wrap, int fd, unsigned int conditions, ConcreteEventFunction function, void *data, ConcreteError *error)
+{
+	assert(wrap);
+	assert(fd >= 0);
+	assert(conditions);
+	assert(function);
+	assert(error);
+
+	Trace("concrete_event_wait(wrap=%p, fd=%d, conditions=%u, function=%p, data=%p, error=%p)", wrap, fd, conditions, reinterpret_cast<void *> (function), data, error);
+
+	nonthrowing_call(error, event_wait, wrap->event_loop.get(), fd, conditions, function, data);
 }
 
 void concrete_destroy(ConcreteContext *wrap)
