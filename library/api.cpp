@@ -180,7 +180,6 @@ bool concrete_execute(ConcreteContext *wrap, ConcreteError *error)
 void concrete_snapshot(ConcreteContext *wrap, const void **base_ptr, size_t *size_ptr)
 {
 	assert(wrap);
-	assert(!wrap->context->is_active());
 
 	Trace("concrete_snapshot(wrap=%p, base_ptr=%p, size_ptr=%lu)", wrap, base_ptr, size_ptr);
 
