@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011  Timo Savola
+ * Copyright (c) 2011, 2012  Timo Savola
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,11 +24,10 @@
 
 namespace concrete {
 
-class ContextCallback: public EventCallback {
-	friend class EventCallback;
-
+class ContextEventCallback: public EventCallback {
 public:
-	ContextCallback(Context &context, const Execution &execution) throw ();
+	ContextEventCallback(Context &context, const Execution &execution) throw ();
+	virtual void resume() throw ();
 
 private:
 	Context         &m_context;
@@ -117,7 +116,7 @@ Portable<Execution> &Context::execution() throw ()
 
 void Context::suspend_until(const EventTrigger &trigger)
 {
-	std::unique_ptr<ContextCallback> callback(new ContextCallback(*this, data()->current));
+	std::unique_ptr<ContextEventCallback> callback(new ContextEventCallback(*this, data()->current));
 	m_event_loop.wait(trigger, callback.get());
 	callback.release();
 
@@ -183,20 +182,20 @@ ScopedContext::~ScopedContext() throw ()
 	m_context.m_active = false;
 }
 
-ContextCallback::ContextCallback(Context &context, const Execution &execution) throw ():
+ContextEventCallback::ContextEventCallback(Context &context, const Execution &execution) throw ():
 	m_context(context),
 	m_execution(execution)
 {
 }
 
-void EventCallback::resume() throw ()
+void ContextEventCallback::resume() throw ()
 {
-	auto callback = static_cast<ContextCallback *> (this);
+	Trace("resumed");
 
-	callback->m_context.data()->waiting.remove(callback->m_execution);
-	callback->m_context.data()->runnable.append(callback->m_execution);
+	m_context.data()->waiting.remove(m_execution);
+	m_context.data()->runnable.append(m_execution);
 
-	delete callback;
+	delete this;
 }
 
 } // namespace

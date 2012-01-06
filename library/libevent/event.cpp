@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011  Timo Savola
+ * Copyright (c) 2011, 2012  Timo Savola
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -55,7 +55,7 @@ void LibeventLoop::poll()
 
 void LibeventLoop::callback(int fd, short events, void *arg) throw ()
 {
-	Trace("resumed");
+	Trace("event: fd=%d", fd);
 
 	reinterpret_cast<EventCallback *> (arg)->resume();
 }
