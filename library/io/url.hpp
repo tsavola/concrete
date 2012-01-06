@@ -26,7 +26,9 @@ class URL {
 public:
 	enum { MaxLength = 4096 };
 
-	explicit URL(const char *url);
+	explicit URL(const char *url) { reset(url); }
+
+	void reset(const char *url);
 
 	const std::string &host() const throw () { return m_host; }
 	const std::string &port() const throw () { return m_port; }
@@ -72,6 +74,8 @@ public:
 	virtual long response_length() const { return m_response_length; }
 
 protected:
+	State redirect();
+
 	void suspend_until(State objective);
 
 	State resolve();
@@ -91,7 +95,7 @@ protected:
 	bool parse_headers();
 	void parse_header(const char *line, size_t length);
 
-	const URL                 m_url;
+	URL                       m_url;
 	State                     m_state;
 	std::unique_ptr<AddrInfo> m_addrinfo;
 	std::unique_ptr<Socket>   m_socket;
@@ -102,6 +106,8 @@ protected:
 	Buffer                   *m_response_buffer;
 	unsigned int              m_response_status;
 	long                      m_response_length;
+	std::string               m_response_location;
+	unsigned int              m_redirections;
 };
 
 } // namespace

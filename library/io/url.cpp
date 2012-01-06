@@ -21,10 +21,11 @@
 
 #include <concrete/exception.hpp>
 #include <concrete/util/assert.hpp>
+#include <concrete/util/trace.hpp>
 
 namespace concrete {
 
-URL::URL(const char *url)
+void URL::reset(const char *url)
 {
 	size_t len = std::strlen(url);
 	if (len > MaxLength)
@@ -65,6 +66,8 @@ URL::URL(const char *url)
 		m_path = "/";
 	else
 		m_path = path;
+
+	Trace("url reset: host=\"%s\" port=\"%s\" path=\"%s\"", m_host, m_port, m_path);
 }
 
 URLOpener *URLOpener::New(const StringObject &url, Buffer *response, Buffer *request)
@@ -80,8 +83,32 @@ LibraryURLOpener::LibraryURLOpener(const StringObject &url, Buffer *response, Bu
 	m_request_sent(0),
 	m_response_buffer(response),
 	m_response_status(0),
-	m_response_length(-1)
+	m_response_length(-1),
+	m_redirections(0)
 {
+}
+
+LibraryURLOpener::State LibraryURLOpener::redirect()
+{
+	m_socket.reset();
+
+	if (m_redirections >= 10)
+		throw RuntimeError("Too many HTTP redirections");
+
+	m_url.reset(m_response_location.c_str());
+
+	m_response_location.clear();
+	m_redirections++;
+
+	m_request_content = NULL;
+	m_request_length = 0;
+	m_request_sent = 0;
+
+	m_response_buffer->drain();
+	m_response_status = 0;
+	m_response_length = -1;
+
+	return Resolve;
 }
 
 bool LibraryURLOpener::content_consumable()
@@ -175,12 +202,14 @@ LibraryURLOpener::State LibraryURLOpener::send_headers()
 	if (m_request_content == NULL) {
 		s = (boost::format("GET %1% HTTP/1.1\r\n"
 		                   "Host: %2%\r\n"
+		                   "Connection: close\r\n"
 		                   "\r\n")
 		     % m_url.path()
 		     % m_url.host()).str();
 	} else {
 		s = (boost::format("POST %1% HTTP/1.1\r\n"
 		                   "Host: %2%\r\n"
+		                   "Connection: close\r\n"
 		                   "Content-Length: %3%\r\n"
 		                   "\r\n")
 		     % m_url.path()
@@ -252,6 +281,9 @@ LibraryURLOpener::State LibraryURLOpener::receiving_headers()
 	bool eof = m_socket->read(*m_response_buffer);
 
 	if (parse_headers()) {
+		if (!m_response_location.empty())
+			return redirect();
+
 		if (m_response_buffer->consumable_size() == 0) {
 			return ReceivedHeaders;
 		} else {
@@ -396,6 +428,12 @@ void LibraryURLOpener::parse_header(const char *line, size_t length)
 			throw RuntimeError("Duplicate Content-Length response header");
 
 		m_response_length = value;
+		return;
+	}
+
+	if (match_header(line, length, "location:")) {
+		const char *value = header_value(line);
+		m_response_location = std::string(value, (line + length) - value);
 		return;
 	}
 
