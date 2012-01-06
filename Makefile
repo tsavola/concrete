@@ -36,6 +36,8 @@ todo::
 		-e "s,^(.*:[[:digit:]]+:).*[[:space:]]*//,\1," \
 		-e "s,[[:space:]]*/?\*+,," \
 		-e "s,[[:space:]]*\*+/[[:space:]]*,,"
+	$(QUIET) git diff --name-only $$(git log --since="$$(date +%Y)-01-01" --pretty=format:%H | tail -n 1)^ | \
+		grep -v ^Makefile$ | xargs grep -in copyright 2>/dev/null | grep -v "$$(date +%Y)" || true
 
 GIT_VERSION	= $(shell git describe --dirty --tags --always)
 GIT_BRANCH	= $(shell git rev-parse --symbolic-full-name --abbrev-ref HEAD)
