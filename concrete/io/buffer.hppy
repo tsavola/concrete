@@ -37,6 +37,8 @@ public:
 	const char *consumable_data() const throw ();
 	void consumed_length(size_t length) throw ();
 
+	void drain() throw () { consumed_length(consumable_size()); }
+
 	void shift() throw ();
 
 private:
