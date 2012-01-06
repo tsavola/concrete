@@ -14,6 +14,8 @@ __all__ = [
 	"IntegrityError",
 	"AllocationError",
 	"CodeError",
+	"EVENT_FILE_READABLE",
+	"EVENT_FILE_WRITABLE",
 ]
 
 import marshal
@@ -27,6 +29,8 @@ class ErrorStruct(Structure):
 		("type",    c_uint),
 		("message", c_char_p),
 	]
+
+EventFunction = CFUNCTYPE(c_bool, c_int, c_void_p)
 
 libc.malloc.argtypes = [c_size_t]
 libc.malloc.restype = POINTER(c_char)
@@ -46,6 +50,9 @@ libconcrete.concrete_execute.restype = c_bool
 libconcrete.concrete_snapshot.argtypes = [c_void_p, POINTER(c_void_p), POINTER(c_size_t)]
 libconcrete.concrete_snapshot.restype = None
 
+libconcrete.concrete_event_wait.argtypes = [c_void_p, c_int, c_uint, EventFunction, c_void_p, POINTER(ErrorStruct)]
+libconcrete.concrete_event_wait.restype = None
+
 libconcrete.concrete_destroy.argtypes = [c_void_p]
 libconcrete.concrete_destroy.restype = None
 
@@ -54,6 +61,9 @@ ERROR_SYSTEM     = 1
 ERROR_INTEGRITY  = 2
 ERROR_ALLOCATION = 3
 ERROR_CODE       = 4
+
+EVENT_FILE_READABLE = 1
+EVENT_FILE_WRITABLE = 2
 
 class Error(Exception): pass
 class SystemError(Error): pass
@@ -64,6 +74,9 @@ class CodeError(Error): pass
 class Context(object):
 	def __init__(self, snapshot=None):
 		self.__error = ErrorStruct()
+
+		self.__function_refs = {}
+		self.__function_keys = 0
 
 		if snapshot is None:
 			self.__context = libconcrete.concrete_create(self.__error)
@@ -124,6 +137,29 @@ class Context(object):
 		size = size_ptr[0]
 
 		return base[:size]
+
+	def event_wait(self, fd, conditions, callback):
+		assert self.__context
+
+		key = self.__function_keys
+		self.__function_keys += 1
+
+		def wrapper(*args):
+			if callback(self, *args):
+				return True
+			else:
+				del self.__function_refs[key]
+				return False
+
+		function = EventFunction(wrapper)
+		self.__function_refs[key] = function
+
+		try:
+			libconcrete.concrete_event_wait(self.__context, fd, conditions, function, None, self.__error)
+			self.__check_error()
+		except:
+			del self.__function_refs[key]
+			raise
 
 	def destroy(self):
 		if self.__context:
