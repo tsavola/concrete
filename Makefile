@@ -1,4 +1,4 @@
-PYTHON		?= python3.1
+PYTHON		?= python3
 
 -include config.mk
 
