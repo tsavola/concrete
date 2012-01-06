@@ -83,11 +83,14 @@ static void load(Context *context, void *data, size_t size)
 
 static void execute(Context *context, LibeventLoop *event_loop)
 {
-	do {
-		if (!context->execute() && context->executable())
-			event_loop->poll();
+	while (true) {
+		bool runnable = context->execute();
 
-	} while (context->executable());
+		if (!context->executable())
+			break;
+
+		event_loop->poll(runnable);
+	}
 }
 
 static void executable(Context *context, bool *result)

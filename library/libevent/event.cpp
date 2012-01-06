@@ -47,9 +47,14 @@ void LibeventLoop::wait(const EventTrigger &trigger, EventCallback *arg)
 	Trace("suspended");
 }
 
-void LibeventLoop::poll()
+void LibeventLoop::poll(bool nonblocking)
 {
-	if (event_base_loop(m_base, EVLOOP_ONCE) < 0)
+	int flags = EVLOOP_ONCE;
+
+	if (nonblocking)
+		flags |= EVLOOP_NONBLOCK;
+
+	if (event_base_loop(m_base, flags) < 0)
 		throw std::runtime_error("event_base_loop()");
 }
 
