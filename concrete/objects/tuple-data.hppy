@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011  Timo Savola
+ * Copyright (c) 2011, 2012  Timo Savola
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,13 +18,12 @@
 namespace concrete {
 
 struct TupleObject::Data: Object::Data {
-	Portable<Object> items[0];
-
 	explicit Data(const TypeObject &type);
 	~Data() throw ();
 
 	unsigned int size() const throw ();
 
+	Portable<Object> items[0];
 } CONCRETE_PACKED;
 
 } // namespace
