@@ -9,9 +9,6 @@
 
 #include "arena.hpp"
 
-#include <cstdlib>
-#include <cstring>
-
 #include <concrete/context.hpp>
 #include <concrete/util/assert.hpp>
 #include <concrete/util/backtrace.hpp>
@@ -81,84 +78,62 @@ size_t Arena::AllocationSize(const void *data) throw ()
 	return AllocationHeader(data)->size;
 }
 
-size_t Arena::AlignedSize(size_t size) throw ()
-{
-	return (size + sizeof (uint32_t) - 1) & ~size_t(sizeof (uint32_t) - 1);
-}
-
 Arena::Arena() throw ():
-	m_base(NULL),
-	m_size(0),
+	m_allocator(Arena::SizeLimit),
 	m_version(1),
 	m_access_error_address(0)
 {
 }
 
 Arena::Arena(void *base, size_t size):
-	m_base(base),
-	m_size(size),
+	m_allocator(base, size, Arena::SizeLimit),
 	m_version(1),
 	m_access_error_address(0)
 {
 }
 
-Arena::~Arena() throw ()
-{
-	std::free(m_base);
-}
-
 Arena::Snapshot Arena::snapshot() const throw ()
 {
-	return Snapshot(m_base, m_size);
+	return Snapshot(m_allocator.arena_base, m_allocator.arena_size);
 }
 
-Arena::Allocation Arena::allocate(size_t data_size)
+Arena::Allocation Arena::allocate(size_t size)
 {
 	check_access_error();
 
-	size_t full_size = sizeof (Header) + AlignedSize(data_size);
-	if (full_size < data_size)
-		throw AllocationError(data_size);
+	void *old_arena_base = m_allocator.arena_base;
 
-	size_t old_size = m_size;
-	unsigned int header_address = old_size;
-	size_t new_size = old_size + full_size;
+	size_t full_size = sizeof (Header) + size;
+	if (full_size < size)
+		throw AllocationError(size);
 
-	void *new_base = std::realloc(m_base, new_size);
-	if (new_base == NULL)
-		throw AllocationError(data_size);
+	auto alloc = m_allocator.allocate(full_size);
+	if (alloc.data == NULL)
+		throw AllocationError(size);
 
-	if (new_base != m_base)
+	if (m_allocator.arena_base != old_arena_base)
 		update_version();
 
-	m_base = new_base;
-	m_size = new_size;
+	new (alloc.data) Header(size);
 
-	char *ptr = reinterpret_cast<char *> (m_base) + header_address;
-	std::memset(ptr, 0, full_size);
-	new (ptr) Header(data_size);
+	alloc.address += sizeof (Header);
+	alloc.data = reinterpret_cast<void *> (reinterpret_cast<char *> (alloc.data) + sizeof (Header));
 
-	unsigned int data_address = header_address + sizeof (Header);
-	void *data_ptr = ptr + sizeof (Header);
-
-	return Allocation(data_address, data_ptr);
+	return alloc;
 }
 
-void Arena::free(unsigned int data_address, void *data) throw ()
+void Arena::free(unsigned int address, void *data) throw ()
 {
-	unsigned int header_address = data_address - sizeof (Header);
-	void *ptr = reinterpret_cast<void *> (reinterpret_cast<char *> (data) - sizeof (Header));
+	void *old_arena_base = m_allocator.arena_base;
 
-	size_t full_size = sizeof (Header) + AlignedSize(AllocationSize(data));
+	size_t  alloc_addr = address - sizeof (Header);
+	void   *alloc_data = reinterpret_cast<void *> (reinterpret_cast<char *> (data) - sizeof (Header));
+	size_t  alloc_size = AllocationSize(data) + sizeof (Header);
 
-	if (header_address + full_size == m_size) {
-		m_base = std::realloc(m_base, header_address);
-		m_size = header_address;
+	m_allocator.free(alloc_addr, alloc_data, alloc_size);
 
+	if (m_allocator.arena_base != old_arena_base)
 		update_version();
-	} else {
-		std::memset(ptr, 0x55, full_size);
-	}
 }
 
 void Arena::update_version() throw ()
@@ -194,20 +169,22 @@ Arena::Accession Arena::nonthrowing_access(unsigned int address, size_t minimum_
 	}
 #endif
 
-	if (m_size < minimum_size || address > m_size - minimum_size) {
+	size_t arena_size = m_allocator.arena_size;
+
+	if (arena_size < minimum_size || address > arena_size - minimum_size) {
 		Trace("address %1% minimum size %2% out of range", address, minimum_size);
 		return defer_access_error(address);
 	}
 
-	void *data = reinterpret_cast<char *> (m_base) + address;
+	void *data = reinterpret_cast<char *> (m_allocator.arena_base) + address;
 
 	size_t data_size = AllocationSize(data);
-	size_t aligned_size = AlignedSize(data_size);
+	size_t aligned_size = Allocator::AlignedSize(data_size);
 
 	if (aligned_size < data_size)
 		return defer_access_error(address);
 
-	if (m_size < aligned_size || address > m_size - aligned_size) {
+	if (arena_size < aligned_size || address > arena_size - aligned_size) {
 		Trace("address %1% actual size %2% out of range", address, minimum_size);
 		return defer_access_error(address);
 	}

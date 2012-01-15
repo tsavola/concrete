@@ -1,0 +1,58 @@
+/*
+ * Copyright (c) 2012  Timo Savola
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ */
+
+#ifndef CONCRETE_ALLOCATION_HPP
+#define CONCRETE_ALLOCATION_HPP
+
+#include <cstddef>
+#include <cstdint>
+
+#include <concrete/util/noncopyable.hpp>
+
+namespace concrete {
+
+class Allocator: Noncopyable {
+public:
+	enum { Alignment = sizeof (uint32_t) };
+
+	struct Allocation {
+		Allocation() throw ():
+			address(0), data(NULL) {}
+
+		Allocation(unsigned int address, void *data) throw ():
+			address(address), data(data) {}
+
+		unsigned int  address;
+		void         *data;
+	};
+
+	static size_t AlignedSize(size_t size) throw ()
+	{
+		return (size + Alignment - 1) & ~size_t(Alignment - 1);
+	}
+
+	explicit Allocator(size_t size_limit):
+		arena_base(NULL), arena_size(0), size_limit(size_limit) {}
+
+	Allocator(void *base, size_t size, size_t size_limit):
+		arena_base(base), arena_size(size), size_limit(size_limit) {}
+
+	~Allocator() throw ();
+
+	Allocation allocate(size_t size) throw ();
+	void free(unsigned int address, void *data, size_t size) throw ();
+
+	void         *arena_base;
+	size_t        arena_size;
+	const size_t  size_limit;
+};
+
+} // namespace
+
+#endif

@@ -1,0 +1,61 @@
+/*
+ * Copyright (c) 2012  Timo Savola
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ */
+
+#include "allocation.hpp"
+
+#include <cstdlib>
+#include <cstring>
+
+#include <concrete/portable.hpp>
+#include <concrete/util/packed.hpp>
+
+namespace concrete {
+
+Allocator::~Allocator() throw ()
+{
+	std::free(arena_base);
+}
+
+Allocator::Allocation Allocator::allocate(size_t object_size) throw ()
+{
+	size_t alloc_addr = arena_size;
+
+	size_t alloc_size = AlignedSize(object_size);
+	if (alloc_size < object_size)
+		return Allocation();
+
+	size_t new_arena_size = arena_size + alloc_size;
+	if (new_arena_size < arena_size || new_arena_size > size_limit)
+		return Allocation();
+
+	void *new_arena_base = std::realloc(arena_base, new_arena_size);
+	if (new_arena_base == NULL)
+		return Allocation();
+
+	arena_base = new_arena_base;
+	arena_size = new_arena_size;
+
+	void *alloc_data = reinterpret_cast<char *> (arena_base) + alloc_addr;
+
+	return Allocation(alloc_addr, alloc_data);
+}
+
+void Allocator::free(unsigned int alloc_addr, void *alloc_data, size_t object_size) throw ()
+{
+	size_t alloc_size = AlignedSize(object_size);
+
+	if (alloc_addr + alloc_size == arena_size) {
+		arena_size = alloc_addr;
+		arena_base = std::realloc(arena_base, alloc_addr);
+	} else {
+		std::memset(alloc_data, 0, alloc_size);
+	}
+}
+
+} // namespace

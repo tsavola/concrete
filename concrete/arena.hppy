@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <exception>
 
+#include <concrete/allocation.hpp>
 #include <concrete/portable.hpp>
 #include <concrete/util/noncopyable.hpp>
 #include <concrete/util/packed.hpp>
@@ -64,6 +65,7 @@ private:
 
 public:
 	enum { InitialAllocationAddress = sizeof (Header) };
+	enum { SizeLimit = 64 * 1024 * 1024 };
 
 	struct Snapshot {
 		Snapshot(const void *base, size_t size): base(base), size(size) {}
@@ -72,12 +74,7 @@ public:
 		size_t      size;
 	};
 
-	struct Allocation {
-		Allocation(unsigned int address, void *data): address(address), data(data) {}
-
-		unsigned int  address;
-		void         *data;
-	};
+	typedef Allocator::Allocation Allocation;
 
 	struct Accession {
 		Accession(): version(0), data(NULL) {}
@@ -89,11 +86,9 @@ public:
 
 	static Arena &Active() throw ();
 	static size_t AllocationSize(const void *data) throw ();
-	static size_t AlignedSize(size_t size) throw ();
 
 	Arena() throw ();
 	Arena(void *base, size_t size);
-	~Arena() throw ();
 
 	Snapshot snapshot() const throw ();
 
@@ -114,10 +109,9 @@ private:
 
 	void update_version() throw ();
 
-	void         *m_base;
-	size_t        m_size;
-	unsigned int  m_version;
-	unsigned int  m_access_error_address;
+	Allocator    m_allocator;
+	unsigned int m_version;
+	unsigned int m_access_error_address;
 };
 
 class AllocationError: std::exception {
