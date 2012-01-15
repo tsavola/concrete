@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011  Timo Savola
+ * Copyright (c) 2011, 2012  Timo Savola
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,9 +21,34 @@ struct TypeObject::Data: Object::Data {
 	explicit Data(const TypeObject &type) throw ();
 	Data(const TypeObject &type, const StringObject &name) throw ();
 
+	template <typename Visitor> void visit(Visitor &v) const;
+
 	Portable<Object>       name;
 	PortableObjectProtocol protocol;
 } CONCRETE_PACKED;
+
+template <typename Visitor>
+void TypeObject::Data::visit(Visitor &v) const
+{
+	Object::Data::visit(v);
+
+	v(name);
+
+	v(protocol.repr);
+	v(protocol.str);
+	v(protocol.lt);
+	v(protocol.le);
+	v(protocol.eq);
+	v(protocol.ne);
+	v(protocol.gt);
+	v(protocol.ge);
+	v(protocol.nonzero);
+
+	v(protocol.len);
+	v(protocol.contains);
+
+	v(protocol.add);
+}
 
 } // namespace
 

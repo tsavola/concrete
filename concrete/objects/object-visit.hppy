@@ -1,0 +1,52 @@
+/*
+ * Copyright (c) 2012  Timo Savola
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ */
+
+#ifndef CONCRETE_OBJECTS_OBJECT_VISIT_HPP
+#define CONCRETE_OBJECTS_OBJECT_VISIT_HPP
+
+#include "object-data.hpp"
+
+#include <concrete/context-data.hpp>
+#include <concrete/util/assert.hpp>
+
+{{{
+    for o in GetObjects() if o.has_type and o.has_data:
+        echo("#include <concrete/objects/{o.short}-data.hpp>")
+}}}
+
+namespace concrete {
+
+template <typename Visitor>
+void Object::visit(Visitor &v) const
+{
+	auto context = Context::Active().data();
+
+	auto d = data();
+	auto t = d->type();
+
+	{{{
+	    for o in GetObjects() if o.has_type:
+	        echo("if (t == context->{o.short}_type)")
+	        echo("  static_cast<{o.name}::Data *> (d)->visit(v);")
+	        echo("else")
+	}}} {
+		assert(false);
+	}
+}
+
+{{{
+    for o in GetObjects() if o.has_type and o.has_data and o.name != "Object":
+        echo("template <typename Visitor>")
+        echo("void {o.name}::visit(Visitor &v) const")
+        echo("  {{ return data()->visit(v); }}")
+}}}
+
+} // namespace
+
+#endif

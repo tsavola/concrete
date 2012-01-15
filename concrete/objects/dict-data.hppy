@@ -29,6 +29,8 @@ struct DictObject::Data: Object::Data {
 	explicit Data(const TypeObject &type);
 	~Data() throw ();
 
+	template <typename Visitor> void visit(Visitor &v) const;
+
 	const Item *items() const throw ();
 	Item *items() throw ();
 	unsigned int capacity() const throw ();
@@ -36,6 +38,21 @@ struct DictObject::Data: Object::Data {
 
 	Portable<uint32_t> size;
 } CONCRETE_PACKED;
+
+template <typename Visitor>
+void DictObject::Data::visit(Visitor &v) const
+{
+	Object::Data::visit(v);
+
+	auto s = *size;
+
+	for (uint32_t i = 0; i < s; i++) {
+		auto &item = items()[i];
+
+		v(item.key);
+		v(item.value);
+	}
+}
 
 } // namespace
 

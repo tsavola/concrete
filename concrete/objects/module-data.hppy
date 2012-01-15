@@ -20,8 +20,18 @@ namespace concrete {
 struct ModuleObject::Data: Object::Data {
 	Data(const TypeObject &type, const DictObject &dict);
 
+	template <typename Visitor> void visit(Visitor &v) const;
+
 	const Portable<DictObject> dict;
 } CONCRETE_PACKED;
+
+template <typename Visitor>
+void ModuleObject::Data::visit(Visitor &v) const
+{
+	Object::Data::visit(v);
+
+	v(dict);
+}
 
 } // namespace
 

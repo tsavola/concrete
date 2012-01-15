@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011  Timo Savola
+ * Copyright (c) 2011, 2012  Timo Savola
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -33,6 +33,8 @@ class ExecutionFrame: public Pointer {
 
 	Object result();
 
+	template <typename Visitor> void visit(Visitor &v) const;
+
 protected:
 	enum { MaxBlocks = 20 };
 
@@ -48,6 +50,8 @@ protected:
 		~Data() throw ();
 
 		unsigned int stack_size() const throw ();
+
+		template <typename Visitor> void visit(Visitor &v) const;
 
 		const Portable<ExecutionFrame> parent;
 		const Portable<CodeObject>     code;
@@ -88,10 +92,14 @@ class Execution: public ListNode<Execution> {
 	bool execute();
 	ExecutionFrame new_frame(const CodeObject &code, const DictObject &dict);
 
+	template <typename Visitor> void visit(Visitor &v) const;
+
 protected:
 	struct Data: ListNode<Execution>::Data {
 		Data(const ExecutionFrame &frame) throw ();
 		~Data() throw ();
+
+		template <typename Visitor> void visit(Visitor &v) const;
 
 		Portable<ExecutionFrame> initial;
 		Portable<ExecutionFrame> current;

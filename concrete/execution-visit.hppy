@@ -1,0 +1,58 @@
+/*
+ * Copyright (c) 2011, 2012  Timo Savola
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ */
+
+#ifndef CONCRETE_EXECUTION_VISIT_HPP
+#define CONCRETE_EXECUTION_VISIT_HPP
+
+#include "execution.hpp"
+
+#include <concrete/objects/object-visit.hpp>
+
+namespace concrete {
+
+template <typename Visitor>
+void ExecutionFrame::visit(Visitor &v) const
+{
+	data()->visit(v);
+}
+
+template <typename Visitor>
+void ExecutionFrame::Data::visit(Visitor &v) const
+{
+	v(code);
+	v(dict);
+
+	for (unsigned int i = stack_pointer; i-- > 0; )
+		v(stack_objects[i]);
+
+	v(call_callable);
+
+	if (*call_continuation)
+		v(call_continuation);
+
+	if (*parent)
+		v(parent);
+}
+
+template <typename Visitor>
+void Execution::visit(Visitor &v) const
+{
+	data()->visit(v);
+}
+
+template <typename Visitor>
+void Execution::Data::visit(Visitor &v) const
+{
+	// initial is visited through current's parent chain
+	v(current);
+}
+
+} // namespace
+
+#endif

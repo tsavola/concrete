@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011  Timo Savola
+ * Copyright (c) 2011, 2012  Timo Savola
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,12 +25,25 @@ struct CodeObject::Data: Object::Data {
 	        const TupleObject &names,
 	        const TupleObject &varnames);
 
+	template <typename Visitor> void visit(Visitor &v) const;
+
 	Portable<uint32_t>    stacksize;
 	Portable<BytesObject> bytecode;
 	Portable<TupleObject> consts;
 	Portable<TupleObject> names;
 	Portable<TupleObject> varnames;
 } CONCRETE_PACKED;
+
+template <typename Visitor>
+void CodeObject::Data::visit(Visitor &v) const
+{
+	Object::Data::visit(v);
+
+	v(bytecode);
+	v(consts);
+	v(names);
+	v(varnames);
+}
 
 } // namespace
 

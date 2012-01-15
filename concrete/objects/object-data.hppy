@@ -32,6 +32,8 @@ struct Object::Data: Noncopyable {
 
 	TypeObject type() const throw ();
 
+	template <typename Visitor> void visit(Visitor &v) const;
+
 private:
 	explicit Data(const Pointer &type) throw ();
 
@@ -43,6 +45,12 @@ private:
 	Portable<int32_t> m_refcount;
 	Portable<Pointer> m_type_pointer;
 } CONCRETE_PACKED;
+
+template <typename Visitor>
+void Object::Data::visit(Visitor &v) const
+{
+	v(type());
+}
 
 } // namespace
 

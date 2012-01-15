@@ -44,6 +44,7 @@ class Object(Pointer):
 
 		if self.has_type:
 			echo("static TypeObject Type();")
+			echo("template <typename Visitor> void visit(Visitor &v) const;")
 
 	def implement(self, type_method=True, data_method=True):
 		super().implement(data_method=data_method)

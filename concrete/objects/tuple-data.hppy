@@ -23,8 +23,21 @@ struct TupleObject::Data: Object::Data {
 
 	unsigned int size() const throw ();
 
+	template <typename Visitor> void visit(Visitor &v) const;
+
 	Portable<Object> items[0];
 } CONCRETE_PACKED;
+
+template <typename Visitor>
+void TupleObject::Data::visit(Visitor &v) const
+{
+	Object::Data::visit(v);
+
+	auto s = size();
+
+	for (unsigned int i = 0; i < s; i++)
+		v(items[i]);
+}
 
 } // namespace
 

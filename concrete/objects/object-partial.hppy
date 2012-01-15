@@ -50,6 +50,8 @@ public:
 	StringObject repr() const;
 	StringObject str() const;
 
+	template <typename Visitor> void visit(Visitor &v) const;
+
 protected:
 	struct Data;
 
