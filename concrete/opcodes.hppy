@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011  Timo Savola
+ * Copyright (c) 2011, 2012  Timo Savola
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -12,7 +12,21 @@
 
 namespace concrete {
 
-enum Opcode {
+{{{
+    @producer
+    def SetOpcodes(**kwargs):
+        global opcodes
+        opcodes = kwargs
+        for name, value in opcodes.items():
+            echo("{name} = {value},")
+
+    @consumer
+    def Opcodes():
+        global opcodes
+        return opcodes
+}}}
+
+enum Opcode { {{{ SetOpcodes(
 	OpPopTop              = 1,
 	OpRotTwo              = 2,
 	OpRotThree            = 3,
@@ -49,7 +63,7 @@ enum Opcode {
 
 	OpCallFunction        = 131,
 	OpMakeFunction        = 132,
-};
+) }}} };
 
 enum CompareOp {
 	CompareLT, CompareLE,

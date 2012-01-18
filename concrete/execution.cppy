@@ -335,7 +335,14 @@ void Execution::execute_op()
 {
 	unsigned int op = frame().load_bytecode<uint8_t>();
 
-	Trace("opcode %3u", op);
+	switch (op) {
+	{{{ for name in Opcodes():
+	        echo('case {name}: Trace("execute %3u {name}", op); break;') }}}
+
+	default:
+		Trace("execute %3u (unknown)", op);
+		break;
+	}
 
 	switch (op) {
 	case OpPopTop:              op_pop_top(); return;
