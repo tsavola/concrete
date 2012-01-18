@@ -9,12 +9,18 @@
 
 #include "arena.hpp"
 
+#ifdef CONCRETE_ARENA_DUMP
+# include <fstream>
+#endif
+
 #include <concrete/context.hpp>
 #include <concrete/util/assert.hpp>
 #include <concrete/util/backtrace.hpp>
 #include <concrete/util/trace.hpp>
 
 namespace concrete {
+
+static void dump(const Arena &);
 
 ArenaAccess::ArenaAccess(const ArenaAccess &other) throw ():
 	m_version(other.m_version),
@@ -126,11 +132,12 @@ void Arena::free(unsigned int address, void *data) throw ()
 {
 	void *old_arena_base = m_allocator.arena_base;
 
-	size_t  alloc_addr = address - sizeof (Header);
-	void   *alloc_data = reinterpret_cast<void *> (reinterpret_cast<char *> (data) - sizeof (Header));
-	size_t  alloc_size = AllocationSize(data) + sizeof (Header);
+	unsigned int alloc_addr = address - sizeof (Header);
+	void *alloc_data = reinterpret_cast<void *> (reinterpret_cast<char *> (data) - sizeof (Header));
+	size_t alloc_size = sizeof (Header) + AllocationSize(data);
 
-	m_allocator.free(alloc_addr, alloc_data, alloc_size);
+	if (!m_allocator.free(alloc_addr, alloc_data, alloc_size))
+		defer_access_error(address);
 
 	if (m_allocator.arena_base != old_arena_base)
 		update_version();
@@ -157,13 +164,13 @@ Arena::Accession Arena::access(unsigned int address, size_t minimum_size)
 
 Arena::Accession Arena::nonthrowing_access(unsigned int address, size_t minimum_size) throw ()
 {
-	if (address < sizeof (Header)) {
+	if (address < InitialAllocationAddress) {
 		Trace("address %1% access (minimum size %2%)", address, minimum_size);
 		return defer_access_error(address);
 	}
 
 #ifndef NDEBUG
-	if (address & (sizeof (uint32_t) - 1)) {
+	if (address & (Allocator::Alignment - 1)) {
 		Trace("address %1% alignment error", address);
 		return defer_access_error(address);
 	}
@@ -172,20 +179,15 @@ Arena::Accession Arena::nonthrowing_access(unsigned int address, size_t minimum_
 	size_t arena_size = m_allocator.arena_size;
 
 	if (arena_size < minimum_size || address > arena_size - minimum_size) {
-		Trace("address %1% minimum size %2% out of range", address, minimum_size);
+		Trace("address %1% minimum size %2% out of range (arena size %3%)", address, minimum_size, arena_size);
 		return defer_access_error(address);
 	}
 
 	void *data = reinterpret_cast<char *> (m_allocator.arena_base) + address;
-
 	size_t data_size = AllocationSize(data);
-	size_t aligned_size = Allocator::AlignedSize(data_size);
 
-	if (aligned_size < data_size)
-		return defer_access_error(address);
-
-	if (arena_size < aligned_size || address > arena_size - aligned_size) {
-		Trace("address %1% actual size %2% out of range", address, minimum_size);
+	if (arena_size < data_size || address > arena_size - data_size) {
+		Trace("address %1% actual size %2% out of range (arena size %4%)", address, data_size, arena_size);
 		return defer_access_error(address);
 	}
 
@@ -194,6 +196,8 @@ Arena::Accession Arena::nonthrowing_access(unsigned int address, size_t minimum_
 
 Arena::Accession Arena::defer_access_error(unsigned int address) throw ()
 {
+	dump(*this);
+
 	if (m_access_error_address == 0) {
 		Backtrace();
 		m_access_error_address = address;
@@ -233,5 +237,29 @@ const char *IntegrityError::what() const throw ()
 {
 	return "Arena integrity violation";
 }
+
+#ifdef CONCRETE_ARENA_DUMP
+void dump(const Arena &arena)
+{
+	static bool dumped;
+
+	if (dumped) {
+		Trace("not dumping arena again");
+		return;
+	}
+
+	Trace("dumping arena");
+
+	auto snapshot = arena.snapshot();
+
+	std::fstream file(CONCRETE_ARENA_DUMP, std::ios::out | std::ios::binary | std::ios::trunc);
+	file.write(reinterpret_cast<const char *> (snapshot.base), snapshot.size);
+	file.close();
+
+	dumped = true;
+}
+#else
+void dump(const Arena &) {}
+#endif
 
 } // namespace

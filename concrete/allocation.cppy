@@ -11,9 +11,12 @@
 
 #include <cstdlib>
 #include <cstring>
+#include <stdexcept>
 
 #include <concrete/portable.hpp>
+#include <concrete/util/assert.hpp>
 #include <concrete/util/packed.hpp>
+#include <concrete/util/trace.hpp>
 
 namespace concrete {
 
@@ -22,40 +25,162 @@ Allocator::~Allocator() throw ()
 	std::free(arena_base);
 }
 
+bool Allocator::init() throw ()
+{
+	if (arena_size == 0) {
+		assert(size_limit >= InitialAddress);
+
+		arena_base = reinterpret_cast<char *> (std::malloc(InitialAddress));
+		if (arena_base == NULL)
+			return false;
+
+		std::memset(arena_base, 0, InitialAddress);
+
+		arena_size = InitialAddress;
+	}
+
+	return true;
+}
+
 Allocator::Allocation Allocator::allocate(size_t object_size) throw ()
 {
-	size_t alloc_addr = arena_size;
-
-	size_t alloc_size = AlignedSize(object_size);
-	if (alloc_size < object_size)
+	if (!init()) {
+		Trace("allocator init error");
 		return Allocation();
+	}
 
-	size_t new_arena_size = arena_size + alloc_size;
-	if (new_arena_size < arena_size || new_arena_size > size_limit)
+	uint32_t alloc_size = AlignedSize(object_size);
+	if (alloc_size < object_size) {
+		Trace("allocator size error");
 		return Allocation();
+	}
 
-	void *new_arena_base = std::realloc(arena_base, new_arena_size);
-	if (new_arena_base == NULL)
+	try {
+		uint32_t alloc_addr = find_free_node(alloc_size);
+		if (alloc_addr) {
+			char *alloc_data = arena_base + alloc_addr;
+			std::memset(alloc_data, 0, alloc_size);
+
+			return Allocation(alloc_addr, alloc_data);
+		}
+	} catch (bool) {
+		Trace("allocator find-free-node error");
 		return Allocation();
+	}
+
+	uint32_t alloc_addr = arena_size;
+
+	uint32_t new_arena_size = arena_size + alloc_size;
+	if (new_arena_size < arena_size || new_arena_size > size_limit) {
+		Trace("allocator size-limit error");
+		return Allocation();
+	}
+
+	char *new_arena_base = reinterpret_cast<char *> (std::realloc(arena_base, new_arena_size));
+	if (new_arena_base == NULL) {
+		Trace("allocator system error");
+		return Allocation();
+	}
+
+	char *alloc_data = new_arena_base + alloc_addr;
+	std::memset(alloc_data, 0, alloc_size);
 
 	arena_base = new_arena_base;
 	arena_size = new_arena_size;
 
-	void *alloc_data = reinterpret_cast<char *> (arena_base) + alloc_addr;
+	// Trace("allocator: allocate address %u size %u", alloc_addr, alloc_size);
 
 	return Allocation(alloc_addr, alloc_data);
 }
 
-void Allocator::free(unsigned int alloc_addr, void *alloc_data, size_t object_size) throw ()
+bool Allocator::free(unsigned int alloc_addr, void *alloc_data, size_t object_size) throw ()
 {
-	size_t alloc_size = AlignedSize(object_size);
+	uint32_t alloc_size = AlignedSize(object_size);
+
+	// Trace("allocator: free address %u size %u", alloc_addr, alloc_size);
 
 	if (alloc_addr + alloc_size == arena_size) {
 		arena_size = alloc_addr;
-		arena_base = std::realloc(arena_base, alloc_addr);
+		arena_base = reinterpret_cast<char *> (std::realloc(arena_base, alloc_addr));
 	} else {
 		std::memset(alloc_data, 0, alloc_size);
+
+		try {
+			insert_free_node(alloc_addr, alloc_size);
+		} catch (bool) {
+			Trace("allocator insert-free-node error");
+			return false;
+		}
 	}
+
+	return true;
+}
+
+void Allocator::insert_free_node(uint32_t node_addr, uint32_t node_size)
+{
+	FreeNode &node = arena_ref<FreeNode>(node_addr);
+	node.size = node_size;
+
+	FreeNode *prev = NULL;
+	uint32_t next_addr = *arena_ref<FreeNodeLink>(0);
+
+	while (next_addr && node_addr > next_addr) {
+		prev = &arena_ref<FreeNode>(next_addr);
+		next_addr = prev->next;
+	}
+
+	node.next = next_addr;
+
+	if (prev)
+		prev->next = node_addr;
+	else
+		arena_ref<FreeNodeLink>(0) = node_addr;
+}
+
+uint32_t Allocator::find_free_node(uint32_t size)
+{
+	uint32_t node_addr = arena_ref<FreeNodeLink>(0);
+	if (node_addr == 0)
+		return 0;
+
+	FreeNode *prev = NULL;
+	FreeNode *node = &arena_ref<FreeNode>(node_addr);
+
+	while (node->size < size) {
+		node_addr = node->next;
+		if (node_addr == 0)
+			return 0;
+
+		prev = node;
+		node = &arena_ref<FreeNode>(node_addr);
+	}
+
+	if (node->size == size) {
+		if (prev)
+			prev->next = node->next;
+		else
+			arena_ref<FreeNodeLink>(0) = node->next;
+
+		return node_addr;
+	} else {
+		node->size = node->size - size;
+
+		assert(node->size >= sizeof (FreeNode));
+
+		return node_addr + node->size;
+	}
+}
+
+template <typename T>
+T &Allocator::arena_ref(uint32_t address)
+{
+	uint32_t end = address + sizeof (T);
+	if (end > arena_size || end <= address) {
+		Trace("allocator reference out of arena at %u (size %ld)", address, long(end) - long(address));
+		throw false;
+	}
+
+	return *reinterpret_cast<T *> (arena_base + address);
 }
 
 } // namespace

@@ -13,13 +13,23 @@
 #include <cstddef>
 #include <cstdint>
 
+#include <concrete/portable.hpp>
 #include <concrete/util/noncopyable.hpp>
+#include <concrete/util/packed.hpp>
 
 namespace concrete {
 
 class Allocator: Noncopyable {
+	typedef Portable<uint32_t> FreeNodeLink;
+
+	struct FreeNode {
+		Portable<uint32_t> size;
+		FreeNodeLink       next;
+	} CONCRETE_PACKED;
+
 public:
-	enum { Alignment = sizeof (uint32_t) };
+	enum { Alignment = 8 };
+	enum { InitialAddress = sizeof (FreeNodeLink) };
 
 	struct Allocation {
 		Allocation() throw ():
@@ -32,25 +42,34 @@ public:
 		void         *data;
 	};
 
-	static size_t AlignedSize(size_t size) throw ()
+	static uint32_t AlignedSize(size_t size) throw ()
 	{
-		return (size + Alignment - 1) & ~size_t(Alignment - 1);
+		return uint32_t(size + Alignment - 1) & ~uint32_t(Alignment - 1);
 	}
 
-	explicit Allocator(size_t size_limit):
+	explicit Allocator(size_t size_limit) throw ():
 		arena_base(NULL), arena_size(0), size_limit(size_limit) {}
 
-	Allocator(void *base, size_t size, size_t size_limit):
-		arena_base(base), arena_size(size), size_limit(size_limit) {}
+	Allocator(void *base, size_t size, size_t size_limit) throw ():
+		arena_base(reinterpret_cast<char *> (base)), arena_size(size), size_limit(size_limit) {}
 
 	~Allocator() throw ();
 
 	Allocation allocate(size_t size) throw ();
-	void free(unsigned int address, void *data, size_t size) throw ();
+	bool free(unsigned int address, void *data, size_t size) throw ();
 
-	void         *arena_base;
-	size_t        arena_size;
-	const size_t  size_limit;
+private:
+	bool init() throw ();
+
+	void insert_free_node(uint32_t address, uint32_t size);
+	uint32_t find_free_node(uint32_t size);
+
+	template <typename T> T &arena_ref(uint32_t address);
+
+public:
+	char           *arena_base;
+	uint32_t        arena_size;
+	const uint32_t  size_limit;
 };
 
 } // namespace
