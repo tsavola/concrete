@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011  Timo Savola
+ * Copyright (c) 2011, 2012  Timo Savola
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -36,18 +36,22 @@ void TraceData(const void *void_data, size_t size) throw ()
 	BOOST_STATIC_ASSERT(Allocator::Alignment >= sizeof (word_data[0]));
 	unsigned int word_count = Allocator::AlignedSize(size) / sizeof (word_data[0]);
 
+	std::string line;
+
 	for (unsigned int i = 0; i < word_count; i++) {
 		if ((i & 7) == 0)
-			std::cout << boost::format("%5u:") % i;
+			line += boost::str(boost::format("%5u:") % i);
 
-		std::cout << boost::format(" %08lx") % PortByteorder(word_data[i]);
+		line += boost::str(boost::format(" %08lx") % PortByteorder(word_data[i]));
 
-		if ((i & 7) == 7)
-			std::cout << std::endl;
+		if ((i & 7) == 7) {
+			TraceOutput(line);
+			line = "";
+		}
 	}
 
 	if (word_count & 7)
-		std::cout << std::endl;
+		TraceOutput(line);
 }
 
 void TraceData(const Pointer &pointer) throw ()

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011  Timo Savola
+ * Copyright (c) 2011, 2012  Timo Savola
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -11,7 +11,7 @@
 #define CONCRETE_UTIL_TRACE_HPP
 
 #ifdef CONCRETE_TRACE
-# include <iostream>
+# include <string>
 # include <boost/format.hpp>
 #endif
 
@@ -21,6 +21,8 @@ class Pointer;
 class DataBase;
 
 #ifdef CONCRETE_TRACE
+
+void TraceOutput(const std::string &line);
 
 template <typename Format>
 inline Format TraceFormat(Format format)
@@ -38,7 +40,7 @@ template <typename... Args>
 void Trace(const char *format, Args... args) throw ()
 {
 	try {
-		std::cerr << "TRACE: " << TraceFormat(boost::format(format), args...) << std::endl;
+		TraceOutput(boost::str(TraceFormat(boost::format(format), args...)));
 	} catch (...) {}
 }
 
