@@ -46,8 +46,9 @@ GIT_URL		= $(shell git config remote.$(GIT_REMOTE).url)
 
 doc:: concrete/prepare
 	$(call echo,Doxygen,doc/html)
-	$(QUIET) sed < doc/Doxyfile > doc/Doxyfile.version \
-		-r "s/^(PROJECT_NUMBER[[:space:]]*=[[:space:]]*)$$/\1git-$(GIT_VERSION)/"
+	$(QUIET) sed < doc/Doxyfile > doc/Doxyfile.version -r \
+		-e "s/^(PROJECT_NUMBER[[:space:]]*=[[:space:]]*)$$/\1git-$(GIT_VERSION)/" \
+		-e "s,<OUTPUT>,$(O),g"
 	$(QUIET) doxygen doc/Doxyfile.version
 
 doc-github:: doc
