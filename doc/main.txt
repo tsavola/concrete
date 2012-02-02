@@ -2,6 +2,7 @@
 @mainpage
 
 - <a href="https://raw.github.com/tsavola/concrete/master/library/concrete.h">Library API</a>
+- <a href="https://raw.github.com/tsavola/concrete/master/python/concrete/__init__.py">Python API</a>
 - <a href="namespaceconcrete.html">Internal API</a>
 - <a href="https://github.com/tsavola/concrete" target="_top">Source code</a>
 - <a href="http://tsavola.blogspot.com/search/label/Concrete" target="_top">Blog posts</a>
