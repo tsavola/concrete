@@ -15,7 +15,8 @@ namespace concrete {
 
 void TraceOutput(const std::string &line)
 {
-	std::string s = line;
+	std::string s = "TRACE: ";
+	s += line;
 	s += "\n";
 	std::cout << s;
 }
