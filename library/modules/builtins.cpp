@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2012  Timo Savola
+ * Copyright (c) 2012  Timo Savola
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -7,18 +7,20 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#ifndef CONCRETE_MODULES_BUILTINS_HPP
-#define CONCRETE_MODULES_BUILTINS_HPP
+#include "concrete/modules/builtins.hpp"
 
-#include <concrete/objects/dict.hpp>
+#include <iostream>
 
 namespace concrete {
 
-DictObject BuiltinsModuleInit(const DictObject &modules);
+void BuiltinsPrintOutput(const std::string &s)
+{
+	std::cout << s;
+}
 
-void BuiltinsPrintOutput(const std::string &s);
-void BuiltinsPrintFlush();
+void BuiltinsPrintFlush()
+{
+	std::cout << std::flush;
+}
 
 } // namespace
-
-#endif
