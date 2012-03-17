@@ -60,7 +60,7 @@ doc-github:: doc
 		cd doc/html && \
 		rm -rf .git && \
 		git init && \
-		git add . && \
+		git add "*.html" "*.css" "*.png" && \
 		git commit -m $(GIT_VERSION) && \
 		git push -f $(GIT_URL) $(GIT_BRANCH):gh-pages && \
 		rm -rf .git \
