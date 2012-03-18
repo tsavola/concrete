@@ -51,7 +51,7 @@ ExecutionFrame::Data::~Data() throw ()
 		Trace("call release leave: callable=%u", call_callable->address());
 	}
 
-	for (unsigned int i = stack_pointer; i-- > 0; )
+	for (unsigned int i = std::min(*stack_pointer, uint32_t(stack_size())); i-- > 0; )
 		stack_objects[i].~Portable<Object>();
 }
 
@@ -139,8 +139,10 @@ Object ExecutionFrame::peek() const
 	unsigned int i = data()->stack_pointer;
 	if (i == 0)
 		throw RuntimeError("empty stack");
+	if (i > data()->stack_size())
+		throw IntegrityError(address());
 
-	return data()->stack_objects[--i];
+	return data()->stack_objects[i - 1];
 }
 
 Object ExecutionFrame::pop()
@@ -148,6 +150,8 @@ Object ExecutionFrame::pop()
 	unsigned int i = data()->stack_pointer;
 	if (i == 0)
 		throw RuntimeError("stack underflow");
+	if (i > data()->stack_size())
+		throw IntegrityError(address());
 
 	data()->stack_pointer = --i;
 	Object object(data()->stack_objects[i]);
@@ -175,6 +179,8 @@ const ExecutionFrame::Block &ExecutionFrame::peek_block() const
 	unsigned int i = data()->block_pointer;
 	if (i == 0)
 		throw RuntimeError("no active block");
+	if (i > MaxBlocks)
+		throw IntegrityError(address());
 
 	return data()->blocks[--i];
 }
@@ -184,6 +190,8 @@ void ExecutionFrame::pop_block()
 	unsigned int i = data()->block_pointer;
 	if (i == 0)
 		throw RuntimeError("no block to pop");
+	if (i > MaxBlocks)
+		throw IntegrityError(address());
 
 	data()->block_pointer = --i;
 }
