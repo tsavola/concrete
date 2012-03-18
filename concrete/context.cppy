@@ -16,7 +16,7 @@
 #include <concrete/event.hpp>
 #include <concrete/execution.hpp>
 #include <concrete/modules/builtins.hpp>
-#include <concrete/modules/concrete.hpp>
+#include <concrete/modules/tap.hpp>
 #include <concrete/util/assert.hpp>
 #include <concrete/util/packed.hpp>
 #include <concrete/util/thread.hpp>
@@ -75,7 +75,7 @@ Context::Context(EventLoop &loop):
 	auto modules = DictObject::New();
 
 	auto builtins = BuiltinsModuleInit(modules);
-	ConcreteModuleInit(modules);
+	TapModuleInit(modules);
 
 	data()->builtins = builtins;
 	data()->modules = modules;

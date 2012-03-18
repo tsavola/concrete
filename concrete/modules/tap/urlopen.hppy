@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011  Timo Savola
+ * Copyright (c) 2011, 2012  Timo Savola
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -7,8 +7,8 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#ifndef CONCRETE_MODULES_CONCRETE_URLOPEN_HPP
-#define CONCRETE_MODULES_CONCRETE_URLOPEN_HPP
+#ifndef CONCRETE_MODULES_TAP_URLOPEN_HPP
+#define CONCRETE_MODULES_TAP_URLOPEN_HPP
 
 #include <concrete/continuation.hpp>
 #include <concrete/io/buffer.hpp>
@@ -138,8 +138,8 @@ protected:
 	virtual State done(Object &result) const = 0;
 };
 
-class ConcreteModule_URLOpen: public AbstractURLOpen {
-	{{{ DeclarePointer("ConcreteModule_URLOpen", "AbstractURLOpen", has_construct=False, has_destroy=False) }}}
+class TapModule_URLOpen: public AbstractURLOpen {
+	{{{ DeclarePointer("TapModule_URLOpen", "AbstractURLOpen", has_construct=False, has_destroy=False) }}}
 
 protected:
 	struct Data: AbstractURLOpen::Data {} CONCRETE_PACKED;
