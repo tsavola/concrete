@@ -22,7 +22,7 @@ class BytesObject: public ExtendedObject {
 
 	static BytesObject New(const uint8_t *data, size_t size);
 
-	size_t size() const { return extension_size(); }
+	size_t size() const;
 	const uint8_t *c_data() const;
 };
 

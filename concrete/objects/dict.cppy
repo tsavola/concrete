@@ -25,31 +25,25 @@ namespace concrete {
 
 {{{ ImplementObject("DictObject", data_method=False, destroy_method=False) }}}
 
-DictObject::Data::Item::Item(const Object &key, const Object &value):
-	key(key),
-	value(value)
-{
-}
-
 DictObject::Data::~Data() throw ()
 {
 	for (unsigned int i = std::min(uint32_t(size), uint32_t(capacity())); i-- > 0; )
 		items()[i].~Item();
 }
 
+unsigned int DictObject::Data::capacity() const throw ()
+{
+	return extension_size<Item>();
+}
+
 const DictObject::Data::Item *DictObject::Data::items() const throw ()
 {
-	return reinterpret_cast<const Item *> (reinterpret_cast<const char *> (this) + sizeof (Data));
+	return extension_data<Data, Item>();
 }
 
 DictObject::Data::Item *DictObject::Data::items() throw ()
 {
-	return reinterpret_cast<Item *> (reinterpret_cast<char *> (this) + sizeof (Data));
-}
-
-unsigned int DictObject::Data::capacity() const throw ()
-{
-	return *extension_size / sizeof (Item);
+	return extension_data<Data, Item>();
 }
 
 unsigned int DictObject::Data::find_item(const Object &key) const
@@ -63,25 +57,20 @@ unsigned int DictObject::Data::find_item(const Object &key) const
 	return i;
 }
 
-DictObject DictObject::NewEmpty()
-{
-	return NewWithCapacity(0);
-}
-
-DictObject DictObject::New()
-{
-	return NewWithCapacity(16);
-}
-
 DictObject DictObject::NewWithCapacity(unsigned int capacity)
 {
 	size_t ext_size = sizeof (Data::Item) * capacity;
 	return NewCustomSizeObject<DictObject>(sizeof (Data) + ext_size, ext_size);
 }
 
-void DictObject::Destroy(Arena &arena, unsigned int address, Data *data) throw ()
+void DictObject::Destroy(unsigned int address, Data *data) throw ()
 {
-	DestroyExtendedData(arena, address, data, sizeof (Data));
+	DestroyExtendedData(address, data);
+}
+
+unsigned int DictObject::capacity() const
+{
+	return data()->capacity();
 }
 
 unsigned int DictObject::size() const
@@ -135,11 +124,6 @@ void DictObject::copy_to(const DictObject &target) const
 {
 	for (unsigned int i = 0; i < size(); i++)
 		target.set_item(data()->items()[i].key, data()->items()[i].value);
-}
-
-unsigned int DictObject::capacity() const
-{
-	return data()->capacity();
 }
 
 DictObject::Data *DictObject::data() const

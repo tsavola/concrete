@@ -20,27 +20,34 @@ class ExtendedObject: public Object {
 	{{{ DeclareObject("ExtendedObject", has_type=False) }}}
 
 protected:
-	struct Extension {
-		Extension(void *data, size_t size): data(data), size(size) {}
+	template <typename DataType>
+	static void DestroyExtendedData(unsigned int address, DataType *data) throw ()
+	{
+		Object::DestroyExtendedData(address, data, ExtensionSize(data));
+	}
 
-		void   *data;
-		size_t  size;
-	};
+	template <typename ExtensionType>
+	size_t extension_size() const
+	{
+		return ExtensionSize(data()) / sizeof (ExtensionType);
+	}
 
-	static void DestroyExtendedData(Arena        &arena,
-	                                unsigned int  address,
-	                                Data         *data,
-	                                size_t        base_size) throw ();
-
-	size_t extension_size() const;
-	void *extension_data(size_t base_size) const { return extension(base_size).data; }
-	Extension extension(size_t base_size) const;
+	template <typename DataType, typename ExtensionType>
+	ExtensionType *extension_data() const
+	{
+		return extended_data_cast<DataType>()->extension_data<DataType, ExtensionType>();
+	}
 
 	template <typename DataType>
 	DataType *extended_data_cast() const
-		{ return static_cast<DataType *> (extended_data(sizeof (DataType))); }
+	{
+		auto data = data_cast<DataType>();
+		extend_data_access<DataType>(ExtensionSize(data));
+		return data;
+	}
 
-	Data *extended_data(size_t base_size) const;
+private:
+	static size_t ExtensionSize(const Data *data) throw ();
 };
 
 void ExtendedObjectTypeInit(const TypeObject &type, const char *name);

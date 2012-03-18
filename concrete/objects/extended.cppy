@@ -9,43 +9,15 @@
 
 #include "extended-data.hpp"
 
-#include <cstddef>
-
 #include <concrete/objects/type.hpp>
 
 namespace concrete {
 
 {{{ ImplementObject("ExtendedObject") }}}
 
-void ExtendedObject::DestroyExtendedData(Arena        &arena,
-                                         unsigned int  address,
-                                         Data         *data,
-                                         size_t        base_size) throw ()
+size_t ExtendedObject::ExtensionSize(const Data *data) throw ()
 {
-	size_t size = base_size + *data->extension_size;
-
-	if (arena.nonthrowing_extend_access(address, size))
-		DestroyData(arena, address, data, size);
-}
-
-size_t ExtendedObject::extension_size() const
-{
-	return data()->extension_size;
-}
-
-ExtendedObject::Extension ExtendedObject::extension(size_t base_size) const
-{
-	auto base_data = extended_data(base_size);
-	auto ext_data = reinterpret_cast<void *> (reinterpret_cast<char *> (base_data) + base_size);
-	return Extension(ext_data, *base_data->extension_size);
-}
-
-ExtendedObject::Data *ExtendedObject::extended_data(size_t base_size) const
-{
-	Arena &arena = Arena::Active();
-	auto data = static_cast<Data *> (arena.access(address(), base_size));
-	arena.extend_access(address(), base_size + *data->extension_size);
-	return data;
+	return *data->m_extension_size;
 }
 
 void ExtendedObjectTypeInit(const TypeObject &type, const char *name)

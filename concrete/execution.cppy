@@ -55,9 +55,9 @@ ExecutionFrame::Data::~Data() throw ()
 		stack_objects[i].~Portable<Object>();
 }
 
-size_t ExecutionFrame::Data::size() const throw ()
+size_t ExecutionFrame::Data::extension_size() const throw ()
 {
-	return sizeof (Data) + sizeof (Portable<Object>) * stack_size();
+	return sizeof (Portable<Object>) * stack_size();
 }
 
 unsigned int ExecutionFrame::Data::stack_size() const throw ()
@@ -200,13 +200,13 @@ void ExecutionFrame::destroy() throw ()
 {
 	Data *data = nonthrowing_data_cast<Data>();
 	if (data)
-		DestroyPointer(*this, data, data->size());
+		DestroyExtendedPointer(*this, data, data->extension_size());
 }
 
 ExecutionFrame::Data *ExecutionFrame::data() const
 {
 	Data *data = data_cast<Data>();
-	Arena::Active().extend_access(address(), data->size());
+	extend_data_access<Data>(data->extension_size());
 	return data;
 }
 

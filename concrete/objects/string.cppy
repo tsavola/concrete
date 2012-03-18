@@ -27,17 +27,16 @@ namespace concrete {
 StringObject::Data::Data(const TypeObject &type, uint32_t ext_size, const char *data_):
 	ExtendedObject::Data(type, ext_size)
 {
-	std::memcpy(data, data_, size());
+	std::memcpy(data(), data_, size());
 	init();
 }
 
 void StringObject::Data::init()
 {
-	auto data_size = size();
 	size_t string_length = 0;
 
-	for (size_t i = 0; i < data_size; string_length++) {
-		uint8_t byte = data[i++];
+	for (size_t i = 0; i < size(); string_length++) {
+		uint8_t byte = data()[i++];
 
 		if ((byte & 0x80) != 0) {
 			int skip;
@@ -53,11 +52,11 @@ void StringObject::Data::init()
 				throw RuntimeError("invalid UTF-8 string");
 
 			next = i + skip;
-			if (next > data_size)
+			if (next > size())
 				throw RuntimeError("invalid UTF-8 string");
 
 			for (; i < next; i++) {
-				byte = data[i];
+				byte = data()[i];
 
 				if ((byte & 0xc0) != 0x80)
 					throw RuntimeError("invalid UTF-8 string");
@@ -65,14 +64,9 @@ void StringObject::Data::init()
 		}
 	}
 
-	data[data_size] = '\0';
+	data()[size()] = '\0';
 
 	length = string_length;
-}
-
-size_t StringObject::Data::size() const throw ()
-{
-	return *extension_size - 1;
 }
 
 StringObject StringObject::New(const char *data, size_t size)
@@ -95,9 +89,9 @@ StringObject StringObject::NewUninitialized(size_t size)
 	return NewCustomSizeObject<StringObject>(sizeof (Data) + size + 1, size + 1);
 }
 
-void StringObject::Destroy(Arena &arena, unsigned int address, Data *data) throw ()
+void StringObject::Destroy(unsigned int address, Data *data) throw ()
 {
-	DestroyExtendedData(arena, address, data, sizeof (Data));
+	DestroyExtendedData(address, data);
 }
 
 void StringObject::init_uninitialized()
@@ -113,7 +107,7 @@ bool StringObject::equals(const StringObject &other) const
 	auto a = data();
 	auto b = other.data();
 
-	return a->size() == b->size() && std::memcmp(a->data, b->data, a->size()) == 0;
+	return a->size() == b->size() && std::memcmp(a->data(), b->data(), a->size()) == 0;
 }
 
 size_t StringObject::size() const
@@ -128,13 +122,13 @@ size_t StringObject::length() const
 
 char *StringObject::c_str() const
 {
-	data()->data[data()->size()] = '\0';
-	return data()->data;
+	data()->data()[data()->size()] = '\0';
+	return data()->data();
 }
 
 std::string StringObject::string() const
 {
-	return std::string(data()->data, data()->size());
+	return std::string(data()->data(), data()->size());
 }
 
 StringObject::Data *StringObject::data() const

@@ -44,7 +44,7 @@ class Object(Pointer):
 
 		if self.has_type:
 			echo("private:")
-			echo("static void Destroy(Arena &arena, unsigned int address, Data *data) throw ();")
+			echo("static void Destroy(unsigned int address, Data *data) throw ();")
 
 			echo("public:")
 			echo("static TypeObject Type();")
@@ -58,8 +58,8 @@ class Object(Pointer):
 			echo("  {{ return Context::Active().data()->{self.short}_type; }}")
 
 		if self.has_type and destroy_method:
-			echo("void {self.name}::Destroy(Arena &arena, unsigned int address, Data *data) throw ()")
-			echo("  {{ DestroyData(arena, address, data, sizeof (Data)); }}")
+			echo("void {self.name}::Destroy(unsigned int address, Data *data) throw ()")
+			echo("  {{ DestroyData(address, data); }}")
 
 @producer
 def RegisterObject(name, parent_name=None, **options):

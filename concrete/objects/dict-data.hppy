@@ -20,7 +20,7 @@ namespace concrete {
 
 struct DictObject::Data: ExtendedObject::Data {
 	struct Item: Noncopyable {
-		Item(const Object &key, const Object &value);
+		Item(const Object &key, const Object &value): key(key), value(value) {}
 
 		Portable<Object> key;
 		Portable<Object> value;

@@ -20,10 +20,25 @@
 namespace concrete {
 
 struct ExtendedObject::Data: Object::Data {
-	Data(const TypeObject &type, uint32_t extension_size):
-		Object::Data(type), extension_size(extension_size) {}
+	friend class ExtendedObject;
 
-	const Portable<uint32_t> extension_size;
+	Data(const TypeObject &type, uint32_t extension_size):
+		Object::Data(type), m_extension_size(extension_size) {}
+
+	template <typename ExtensionType>
+	size_t extension_size() const throw ()
+		{ return *m_extension_size / sizeof (ExtensionType); }
+
+	template <typename DataType, typename ExtensionType>
+	ExtensionType *extension_data() throw ()
+		{ return reinterpret_cast<ExtensionType *> (reinterpret_cast<char *> (this) + sizeof (DataType)); }
+
+	template <typename DataType, typename ExtensionType>
+	const ExtensionType *extension_data() const throw ()
+		{ return reinterpret_cast<const ExtensionType *> (reinterpret_cast<const char *> (this) + sizeof (DataType)); }
+
+private:
+	const Portable<uint32_t> m_extension_size;
 } CONCRETE_PACKED;
 
 } // namespace

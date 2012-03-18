@@ -68,8 +68,8 @@ private:
 
 	static const Pointer &Referenced(const Pointer &object) throw ();
 
+	static void DestroyAny(unsigned int address, Data *data) throw ();
 	static void Destroy(unsigned int address, Data *data) throw ();
-	static void Destroy(Arena &arena, unsigned int address, Data *data) throw ();
 
 	struct NoRefInit {};
 	Object(const Pointer &pointer, NoRefInit) throw (): Pointer(pointer) {}

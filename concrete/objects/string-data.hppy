@@ -24,10 +24,13 @@ struct StringObject::Data: ExtendedObject::Data {
 	Data(const TypeObject &type, uint32_t ext_size): ExtendedObject::Data(type, ext_size) {}
 
 	void init();
-	size_t size() const throw ();
+
+	size_t size() const throw () { return extension_size<char>() - 1; }
+
+	char *data() throw () { return extension_data<Data, char>(); }
+	const char *data() const throw () { return extension_data<Data, char>(); }
 
 	Portable<uint32_t> length;
-	char data[0];
 } CONCRETE_PACKED;
 
 } // namespace

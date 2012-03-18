@@ -17,8 +17,10 @@ namespace concrete {
 class DictObject: public ExtendedObject {
 	{{{ DeclareObject("DictObject", "ExtendedObject") }}}
 
-	static DictObject NewEmpty();
-	static DictObject New();
+	enum { DefaultCapacity = 16 };
+
+	static DictObject NewEmpty() { return NewWithCapacity(0); }
+	static DictObject New() { return NewWithCapacity(DefaultCapacity); }
 	static DictObject NewWithCapacity(unsigned int capacity);
 
 	unsigned int size() const;

@@ -18,9 +18,6 @@ namespace concrete {
 
 struct BytesObject::Data: ExtendedObject::Data {
 	Data(const TypeObject &type, uint32_t size, const uint8_t *data);
-
-private:
-	uint8_t data[0];
 } CONCRETE_PACKED;
 
 } // namespace

@@ -18,14 +18,17 @@
 namespace concrete {
 
 struct TupleObject::Data: ExtendedObject::Data {
+	typedef Portable<Object> ItemType;
+
 	Data(const TypeObject &type, uint32_t ext_size);
 	~Data() throw ();
 
-	unsigned int size() const throw ();
+	unsigned int size() const throw () { return extension_size<ItemType>(); }
+
+	ItemType *items() throw () { return extension_data<Data, ItemType>(); }
+	const ItemType *items() const throw () { return extension_data<Data, ItemType>(); }
 
 	template <typename Visitor> void visit(Visitor &v) const;
-
-	Portable<Object> items[0];
 } CONCRETE_PACKED;
 
 template <typename Visitor>
@@ -36,7 +39,7 @@ void TupleObject::Data::visit(Visitor &v) const
 	auto s = size();
 
 	for (unsigned int i = 0; i < s; i++)
-		v(items[i]);
+		v(items()[i]);
 }
 
 } // namespace

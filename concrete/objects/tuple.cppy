@@ -23,18 +23,13 @@ TupleObject::Data::Data(const TypeObject &type, uint32_t ext_size):
 	ExtendedObject::Data(type, ext_size)
 {
 	for (unsigned int i = 0; i < size(); i++)
-		new (&items[i]) Portable<Object>();
+		new (&items()[i]) Portable<Object>();
 }
 
 TupleObject::Data::~Data() throw ()
 {
 	for (unsigned int i = size(); i-- > 0; )
-		items[i].~Portable<Object>();
-}
-
-unsigned int TupleObject::Data::size() const throw ()
-{
-	return *extension_size / sizeof (Portable<Object>);
+		items()[i].~Portable<Object>();
 }
 
 TupleObject TupleObject::New()
@@ -48,15 +43,15 @@ TupleObject TupleObject::NewWithSize(unsigned int size)
 	return NewCustomSizeObject<TupleObject>(sizeof (Data) + ext_size, ext_size);
 }
 
-void TupleObject::Destroy(Arena &arena, unsigned int address, Data *data) throw ()
+void TupleObject::Destroy(unsigned int address, Data *data) throw ()
 {
-	DestroyExtendedData(arena, address, data, sizeof (Data));
+	DestroyExtendedData(address, data);
 }
 
 void TupleObject::init_item(unsigned int index, const Object &item)
 {
 	assert(index < data()->size());
-	data()->items[index] = item;
+	data()->items()[index] = item;
 }
 
 unsigned int TupleObject::size() const
@@ -68,7 +63,8 @@ Object TupleObject::get_item(unsigned int index) const
 {
 	if (index >= data()->size())
 		throw RuntimeError("tuple index out of bounds");
-	return data()->items[index];
+
+	return data()->items()[index];
 }
 
 TupleObject::Data *TupleObject::data() const

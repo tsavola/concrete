@@ -60,23 +60,20 @@ public:
 	unsigned int address() const throw () { return m_address; }
 
 protected:
-	template <typename PointerType, typename... Args>
-	static PointerType NewPointer(Args... args);
+	template <typename PointerType, typename... Args> static PointerType NewPointer(Args... args);
+	template <typename PointerType, typename... Args> static PointerType NewCustomSizePointer(size_t size, Args... args);
 
-	template <typename PointerType, typename... Args>
-	static PointerType NewCustomSizePointer(size_t size, Args... args);
+	template <typename PointerType> static void DestroyPointer(PointerType &pointer) throw ();
+	template <typename DataType> static void DestroyData(unsigned int address, DataType *data) throw ();
 
-	template <typename PointerType>
-	static void DestroyPointer(PointerType &pointer) throw ();
+	template <typename PointerType> static void DestroyExtendedPointer(PointerType &pointer, typename PointerType::Data *data, size_t extension_size) throw ();
+	template <typename DataType> static void DestroyExtendedData(unsigned int address, DataType *data, size_t extension_size) throw ();
 
-	template <typename PointerType>
-	static void DestroyPointer(PointerType &pointer, size_t size) throw ();
+	template <typename DataType> static DataType *DataCast(unsigned int address);
+	template <typename DataType> static DataType *NonthrowingDataCast(unsigned int address) throw ();
 
-	template <typename PointerType>
-	static void DestroyPointer(PointerType &pointer, void *data, size_t size) throw ();
-
-	template <typename DataType>
-	static void DestroyData(Arena &arena, unsigned int address, DataType *data, size_t size) throw ();
+	template <typename DataType> static void ExtendDataAccess(unsigned int address, size_t extension_size);
+	template <typename DataType> static bool NonthrowingExtendDataAccess(unsigned int address, size_t extension_size) throw ();
 
 	explicit Pointer(unsigned int address) throw (): m_address(address) {}
 
@@ -85,7 +82,12 @@ protected:
 	template <typename DataType> DataType *data_cast() const;
 	template <typename DataType> DataType *nonthrowing_data_cast() const throw ();
 
+	template <typename DataType> void extend_data_access(size_t extension_size) const;
+	template <typename DataType> bool nonthrowing_extend_data_access(size_t extension_size) const throw ();
+
 private:
+	template <typename DataType> static void DestroyData(unsigned int address, DataType *data, size_t size) throw ();
+
 	unsigned int m_address;
 };
 

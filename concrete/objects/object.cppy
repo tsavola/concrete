@@ -51,7 +51,7 @@ void Object::Data::unref(unsigned int address) throw ()
 	m_refcount = refcount;
 	assert(refcount >= 0);
 	if (refcount == 0)
-		Destroy(address, this);
+		DestroyAny(address, this);
 }
 
 TypeObject Object::Data::type() const throw ()
@@ -95,7 +95,7 @@ Object Object::New()
 
 Object::Data *Object::NonthrowingData(unsigned int address) throw ()
 {
-	return static_cast<Data *> (Arena::Active().nonthrowing_access(address, sizeof (Data)));
+	return NonthrowingDataCast<Data>(address);
 }
 
 const Pointer &Object::Referenced(const Pointer &object) throw ()
@@ -107,31 +107,27 @@ const Pointer &Object::Referenced(const Pointer &object) throw ()
 	return object;
 }
 
-void Object::Destroy(unsigned int address, Data *data) throw ()
+void Object::DestroyAny(unsigned int address, Data *data) throw ()
 {
-	Context &context = Context::Active();
-	Arena &arena = context.arena();
+	auto context_data = Context::Active().nonthrowing_data();
+	if (context_data) {
+		auto type = data->type();
 
-	auto context_data = context.nonthrowing_data();
-	if (context_data == NULL)
-		return;
-
-	auto type = data->type();
-
-	{{{
-	    for o in GetObjects() if o.has_type:
-	        echo("if (type == context_data->{o.short}_type) {{")
-	        echo("  if (arena.nonthrowing_extend_access(address, sizeof ({o.name}::Data)))")
-	        echo("    {o.name}::Destroy(arena, address, static_cast<{o.name}::Data *> (data));")
-	        echo("}} else")
-	}}} {
-		assert(false);
+		{{{
+		    for o in GetObjects() if o.has_type:
+		        echo("if (type == context_data->{o.short}_type) {{")
+		        echo("  if (NonthrowingExtendDataAccess<{o.name}::Data>(address, 0))")
+		        echo("    {o.name}::Destroy(address, static_cast<{o.name}::Data *> (data));")
+		        echo("}} else")
+		}}} {
+			assert(false);
+		}
 	}
 }
 
-void Object::Destroy(Arena &arena, unsigned int address, Data *data) throw ()
+void Object::Destroy(unsigned int address, Data *data) throw ()
 {
-	DestroyData(arena, address, data, sizeof (Data));
+	DestroyData(address, data);
 }
 
 Object::Object() throw ():
