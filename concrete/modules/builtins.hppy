@@ -10,6 +10,8 @@
 #ifndef CONCRETE_MODULES_BUILTINS_HPP
 #define CONCRETE_MODULES_BUILTINS_HPP
 
+#include <string>
+
 #include <concrete/objects/dict.hpp>
 
 namespace concrete {
