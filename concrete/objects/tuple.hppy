@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011  Timo Savola
+ * Copyright (c) 2011, 2012  Timo Savola
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -10,12 +10,12 @@
 #ifndef CONCRETE_OBJECTS_TUPLE_HPP
 #define CONCRETE_OBJECTS_TUPLE_HPP
 
-#include <concrete/objects/object.hpp>
+#include <concrete/objects/extended.hpp>
 
 namespace concrete {
 
-class TupleObject: public Object {
-	{{{ DeclareObject("TupleObject") }}}
+class TupleObject: public ExtendedObject {
+	{{{ DeclareObject("TupleObject", "ExtendedObject") }}}
 
 	static TupleObject New();
 	template <typename Item, typename... Tail> static TupleObject New(Item, Tail...);

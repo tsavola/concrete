@@ -12,15 +12,14 @@
 
 #include "bytes.hpp"
 
-#include <concrete/objects/object-data.hpp>
+#include <concrete/objects/extended-data.hpp>
 
 namespace concrete {
 
-struct BytesObject::Data: Object::Data {
-	Data(const TypeObject &type, const uint8_t *data);
+struct BytesObject::Data: ExtendedObject::Data {
+	Data(const TypeObject &type, uint32_t size, const uint8_t *data);
 
-	size_t size() const throw ();
-
+private:
 	uint8_t data[0];
 } CONCRETE_PACKED;
 

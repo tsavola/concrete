@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011  Timo Savola
+ * Copyright (c) 2011, 2012  Timo Savola
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,7 +17,7 @@
 
 namespace concrete {
 
-{{{ ImplementObject("NoneObject") }}}
+{{{ ImplementObject("NoneObject", destroy_method=False) }}}
 
 NoneObject::Data::Data(const Pointer &type_placeholder) throw ():
 	Object::Data(type_placeholder)
@@ -29,6 +29,11 @@ NoneObject NoneObject::NewBuiltin()
 	auto allocated = Arena::Active().allocate(sizeof (Data));
 	new (allocated.data) Data(Pointer(allocated.address));
 	return NoneObject(allocated.address);
+}
+
+void NoneObject::Destroy(Arena &arena, unsigned int address, Data *data) throw ()
+{
+	assert(false);
 }
 
 void NoneObject::init_builtin(const Portable<TypeObject> &type)

@@ -15,12 +15,6 @@ class Arena(object):
 
 	class Node(object):
 
-		_alignment = 8
-
-		@classmethod
-		def _aligned_size(cls, size):
-			return (size + cls._alignment - 1) & ~(cls._alignment - 1)
-
 		def __init__(self, arena, address):
 			self.arena   = arena
 			self.address = address
@@ -37,28 +31,24 @@ class Arena(object):
 		def _data(self, offset, size):
 			return self.arena._data(self.address + offset, size)
 
-	class Allocation(Node):
+		@property
+		def end(self):
+			return self.address + self.size
+
+	class Allocated(Node):
+
+		def __init__(self, arena, address, size):
+			super(Arena.Allocated, self).__init__(arena, address)
+			self.size = size
 
 		def __str__(self):
-			return "Allocation at %u size %u %r" % (self.data_address, self.data_size, self.data)
-
-		@property
-		def size(self):
-			return self._aligned_size(4 + self.data_size)
-
-		@property
-		def data_address(self):
-			return self.address + 4
-
-		@property
-		def data_size(self):
-			return self._uint32(0)
+			return "Allocated space at %u: %r" % (self.address, self.data)
 
 		@property
 		def data(self):
-			return self._data(4, self.data_size)
+			return self._data(0, self.size)
 
-	class FreeNode(Node):
+	class Free(Node):
 
 		def __str__(self):
 			return "Free space from %u to %u" % (self.address, self.address + self.size)
@@ -76,7 +66,7 @@ class Arena(object):
 		def next_address(self):
 			return self._uint32(4)
 
-	_initial_address = 4
+	_initial_address = 8
 
 	def __init__(self, data):
 		self.data = data
@@ -85,16 +75,16 @@ class Arena(object):
 		self.allocations = {}
 		self.free_nodes  = {}
 
-		if len(self.data) < self._initial_address:
+		if self.size < self._initial_address:
 			return
 
 		last_node = None
 		next_addr = self._uint32(0)
 
 		while next_addr:
-			self.__init_allocations(last_node, next_addr)
+			self.__init_allocated(last_node, next_addr)
 
-			node = self.FreeNode(self, next_addr)
+			node = self.Free(self, next_addr)
 			self.free_nodes[node.address] = node
 
 			last_node = node
@@ -102,16 +92,15 @@ class Arena(object):
 
 			assert not next_addr or last_node.address < next_addr
 
-		self.__init_allocations(last_node, len(self.data))
+		self.__init_allocated(last_node, self.size)
 
-	def __init_allocations(self, prev_node, end):
-		address = prev_node.address + prev_node.size if prev_node else self._initial_address
+	def __init_allocated(self, prev_node, end):
+		address = prev_node.end if prev_node else self._initial_address
+		self.allocations[address] = self.Allocated(self, address, end - address)
 
-		while address < end:
-			node = self.Allocation(self, address)
-			self.allocations[node.address] = node
-
-			address = node.address + node.size
+	@property
+	def size(self):
+		return len(self.data)
 
 	@property
 	def nodes(self):

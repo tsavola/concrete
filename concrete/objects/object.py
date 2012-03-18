@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2011  Timo Savola
+# Copyright (c) 2011, 2012  Timo Savola
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -43,15 +43,23 @@ class Object(Pointer):
 		echo("friend class Object;")
 
 		if self.has_type:
+			echo("private:")
+			echo("static void Destroy(Arena &arena, unsigned int address, Data *data) throw ();")
+
+			echo("public:")
 			echo("static TypeObject Type();")
 			echo("template <typename Visitor> void visit(Visitor &v) const;")
 
-	def implement(self, type_method=True, data_method=True):
+	def implement(self, type_method=True, data_method=True, destroy_method=True):
 		super().implement(data_method=data_method)
 
 		if self.has_type and type_method:
 			echo("TypeObject {self.name}::Type()")
 			echo("  {{ return Context::Active().data()->{self.short}_type; }}")
+
+		if self.has_type and destroy_method:
+			echo("void {self.name}::Destroy(Arena &arena, unsigned int address, Data *data) throw ()")
+			echo("  {{ DestroyData(arena, address, data, sizeof (Data)); }}")
 
 @producer
 def RegisterObject(name, parent_name=None, **options):

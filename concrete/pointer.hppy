@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011  Timo Savola
+ * Copyright (c) 2011, 2012  Timo Savola
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,7 +22,7 @@ class NoneObject;
 class Object;
 class TypeObject;
 
-class Pointer: public ArenaAccess {
+class Pointer {
 	friend class NoneObject;
 	friend class Object;
 	friend class TypeObject;
@@ -45,9 +45,9 @@ public:
 	};
 
 	Pointer() throw (): m_address(0) {}
-	Pointer(const Pointer &other) throw ();
+	Pointer(const Pointer &other) throw (): m_address(other.m_address) {}
 
-	void operator=(const Pointer &other) throw ();
+	void operator=(const Pointer &other) throw () { m_address = other.m_address; }
 
 	bool operator==(const Pointer &other) const throw () { return m_address == other.m_address; }
 	bool operator!=(const Pointer &other) const throw () { return m_address != other.m_address; }
@@ -68,6 +68,15 @@ protected:
 
 	template <typename PointerType>
 	static void DestroyPointer(PointerType &pointer) throw ();
+
+	template <typename PointerType>
+	static void DestroyPointer(PointerType &pointer, size_t size) throw ();
+
+	template <typename PointerType>
+	static void DestroyPointer(PointerType &pointer, void *data, size_t size) throw ();
+
+	template <typename DataType>
+	static void DestroyData(Arena &arena, unsigned int address, DataType *data, size_t size) throw ();
 
 	explicit Pointer(unsigned int address) throw (): m_address(address) {}
 

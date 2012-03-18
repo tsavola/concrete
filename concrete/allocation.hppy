@@ -29,7 +29,7 @@ class Allocator: Noncopyable {
 
 public:
 	enum { Alignment = 8 };
-	enum { InitialAddress = sizeof (FreeNodeLink) };
+	enum { InitialAddress = (sizeof (FreeNodeLink) + Alignment - 1) & ~(Alignment - 1) };
 
 	struct Allocation {
 		Allocation() throw ():

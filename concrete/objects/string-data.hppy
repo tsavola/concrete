@@ -14,14 +14,14 @@
 
 #include <cstdint>
 
-#include <concrete/objects/object-data.hpp>
+#include <concrete/objects/extended-data.hpp>
 #include <concrete/portable.hpp>
 
 namespace concrete {
 
-struct StringObject::Data: Object::Data {
-	Data(const TypeObject &type, const char *data);
-	explicit Data(const TypeObject &type);
+struct StringObject::Data: ExtendedObject::Data {
+	Data(const TypeObject &type, uint32_t ext_size, const char *data);
+	Data(const TypeObject &type, uint32_t ext_size): ExtendedObject::Data(type, ext_size) {}
 
 	void init();
 	size_t size() const throw ();

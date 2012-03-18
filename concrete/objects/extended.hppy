@@ -1,0 +1,50 @@
+/*
+ * Copyright (c) 2012  Timo Savola
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ */
+
+#ifndef CONCRETE_OBJECTS_EXTENDED_HPP
+#define CONCRETE_OBJECTS_EXTENDED_HPP
+
+#include <cstddef>
+
+#include <concrete/objects/object-partial.hpp>
+
+namespace concrete {
+
+class ExtendedObject: public Object {
+	{{{ DeclareObject("ExtendedObject", has_type=False) }}}
+
+protected:
+	struct Extension {
+		Extension(void *data, size_t size): data(data), size(size) {}
+
+		void   *data;
+		size_t  size;
+	};
+
+	static void DestroyExtendedData(Arena        &arena,
+	                                unsigned int  address,
+	                                Data         *data,
+	                                size_t        base_size) throw ();
+
+	size_t extension_size() const;
+	void *extension_data(size_t base_size) const { return extension(base_size).data; }
+	Extension extension(size_t base_size) const;
+
+	template <typename DataType>
+	DataType *extended_data_cast() const
+		{ return static_cast<DataType *> (extended_data(sizeof (DataType))); }
+
+	Data *extended_data(size_t base_size) const;
+};
+
+void ExtendedObjectTypeInit(const TypeObject &type, const char *name);
+
+} // namespace
+
+#endif

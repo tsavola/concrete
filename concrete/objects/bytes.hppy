@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011  Timo Savola
+ * Copyright (c) 2011, 2012  Timo Savola
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -13,16 +13,16 @@
 #include <cstddef>
 #include <cstdint>
 
-#include <concrete/objects/object.hpp>
+#include <concrete/objects/extended.hpp>
 
 namespace concrete {
 
-class BytesObject: public Object {
-	{{{ DeclareObject("BytesObject") }}}
+class BytesObject: public ExtendedObject {
+	{{{ DeclareObject("BytesObject", "ExtendedObject") }}}
 
 	static BytesObject New(const uint8_t *data, size_t size);
 
-	size_t size() const;
+	size_t size() const { return extension_size(); }
 	const uint8_t *c_data() const;
 };
 

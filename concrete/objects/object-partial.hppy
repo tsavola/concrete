@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011  Timo Savola
+ * Copyright (c) 2011, 2012  Timo Savola
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -64,11 +64,12 @@ protected:
 	explicit Object(unsigned int address) throw ();
 
 private:
-	static Data *NonthrowingData(const Pointer &object) throw ();
+	static Data *NonthrowingData(unsigned int address) throw ();
 
 	static const Pointer &Referenced(const Pointer &object) throw ();
 
 	static void Destroy(unsigned int address, Data *data) throw ();
+	static void Destroy(Arena &arena, unsigned int address, Data *data) throw ();
 
 	struct NoRefInit {};
 	Object(const Pointer &pointer, NoRefInit) throw (): Pointer(pointer) {}

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, 2011  Timo Savola
+ * Copyright (c) 2006, 2011, 2012  Timo Savola
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,18 +22,13 @@
 
 namespace concrete {
 
-{{{ ImplementObject("StringObject") }}}
+{{{ ImplementObject("StringObject", data_method=False, destroy_method=False) }}}
 
-StringObject::Data::Data(const TypeObject &type, const char *data_):
-	Object::Data(type)
+StringObject::Data::Data(const TypeObject &type, uint32_t ext_size, const char *data_):
+	ExtendedObject::Data(type, ext_size)
 {
 	std::memcpy(data, data_, size());
 	init();
-}
-
-StringObject::Data::Data(const TypeObject &type):
-	Object::Data(type)
-{
 }
 
 void StringObject::Data::init()
@@ -77,12 +72,12 @@ void StringObject::Data::init()
 
 size_t StringObject::Data::size() const throw ()
 {
-	return Arena::AllocationSize(this) - sizeof (Data) - 1;
+	return *extension_size - 1;
 }
 
 StringObject StringObject::New(const char *data, size_t size)
 {
-	return NewCustomSizeObject<StringObject>(sizeof (Data) + size + 1, data);
+	return NewCustomSizeObject<StringObject>(sizeof (Data) + size + 1, size + 1, data);
 }
 
 StringObject StringObject::New(const char *string)
@@ -97,7 +92,12 @@ StringObject StringObject::New(const std::string &string)
 
 StringObject StringObject::NewUninitialized(size_t size)
 {
-	return NewCustomSizeObject<StringObject>(sizeof (Data) + size + 1);
+	return NewCustomSizeObject<StringObject>(sizeof (Data) + size + 1, size + 1);
+}
+
+void StringObject::Destroy(Arena &arena, unsigned int address, Data *data) throw ()
+{
+	DestroyExtendedData(arena, address, data, sizeof (Data));
 }
 
 void StringObject::init_uninitialized()
@@ -137,9 +137,14 @@ std::string StringObject::string() const
 	return std::string(data()->data, data()->size());
 }
 
+StringObject::Data *StringObject::data() const
+{
+	return extended_data_cast<Data>();
+}
+
 void StringObjectTypeInit(const TypeObject &type, const char *name)
 {
-	ObjectTypeInit(type, name);
+	ExtendedObjectTypeInit(type, name);
 
 	auto repr = InternalObject::New(internal::StringType_Repr);
 	auto str  = InternalObject::New(internal::StringType_Str);

@@ -10,6 +10,7 @@
 #include "dict-data.hpp"
 
 #include <algorithm>
+#include <cstddef>
 
 #include <concrete/arena.hpp>
 #include <concrete/context-data.hpp>
@@ -22,16 +23,11 @@
 
 namespace concrete {
 
-{{{ ImplementObject("DictObject", data_method=False) }}}
+{{{ ImplementObject("DictObject", data_method=False, destroy_method=False) }}}
 
 DictObject::Data::Item::Item(const Object &key, const Object &value):
 	key(key),
 	value(value)
-{
-}
-
-DictObject::Data::Data(const TypeObject &type):
-	Object::Data(type)
 {
 }
 
@@ -53,7 +49,7 @@ DictObject::Data::Item *DictObject::Data::items() throw ()
 
 unsigned int DictObject::Data::capacity() const throw ()
 {
-	return (Arena::AllocationSize(this) - sizeof (Data)) / sizeof (Item);
+	return *extension_size / sizeof (Item);
 }
 
 unsigned int DictObject::Data::find_item(const Object &key) const
@@ -79,7 +75,13 @@ DictObject DictObject::New()
 
 DictObject DictObject::NewWithCapacity(unsigned int capacity)
 {
-	return NewCustomSizeObject<DictObject>(sizeof (Data) + sizeof (Data::Item) * capacity);
+	size_t ext_size = sizeof (Data::Item) * capacity;
+	return NewCustomSizeObject<DictObject>(sizeof (Data) + ext_size, ext_size);
+}
+
+void DictObject::Destroy(Arena &arena, unsigned int address, Data *data) throw ()
+{
+	DestroyExtendedData(arena, address, data, sizeof (Data));
 }
 
 unsigned int DictObject::size() const
@@ -142,7 +144,7 @@ unsigned int DictObject::capacity() const
 
 DictObject::Data *DictObject::data() const
 {
-	auto c = data_cast<Data>();
+	auto c = extended_data_cast<Data>();
 
 	if (*c->size > c->capacity())
 		throw IntegrityError(address());
@@ -152,7 +154,7 @@ DictObject::Data *DictObject::data() const
 
 void DictObjectTypeInit(const TypeObject &type, const char *name)
 {
-	ObjectTypeInit(type, name);
+	ExtendedObjectTypeInit(type, name);
 }
 
 } // namespace

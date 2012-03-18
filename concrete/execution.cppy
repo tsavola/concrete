@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011  Timo Savola
+ * Copyright (c) 2011, 2012  Timo Savola
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -55,16 +55,21 @@ ExecutionFrame::Data::~Data() throw ()
 		stack_objects[i].~Portable<Object>();
 }
 
+size_t ExecutionFrame::Data::size() const throw ()
+{
+	return sizeof (Data) + sizeof (Portable<Object>) * stack_size();
+}
+
 unsigned int ExecutionFrame::Data::stack_size() const throw ()
 {
-	return (Arena::AllocationSize(this) - sizeof (Data)) / sizeof (Portable<Object>);
+	return code->stacksize();
 }
 
 /*
  * Frame
  */
 
-{{{ ImplementPointer("ExecutionFrame") }}}
+{{{ ImplementPointer("ExecutionFrame", data_method=False, destroy_method=False) }}}
 
 ExecutionFrame ExecutionFrame::New(const ExecutionFrame &parent,
                                    const CodeObject &code,
@@ -181,6 +186,20 @@ void ExecutionFrame::pop_block()
 		throw RuntimeError("no block to pop");
 
 	data()->block_pointer = --i;
+}
+
+void ExecutionFrame::destroy() throw ()
+{
+	Data *data = nonthrowing_data_cast<Data>();
+	if (data)
+		DestroyPointer(*this, data, data->size());
+}
+
+ExecutionFrame::Data *ExecutionFrame::data() const
+{
+	Data *data = data_cast<Data>();
+	Arena::Active().extend_access(address(), data->size());
+	return data;
 }
 
 /*

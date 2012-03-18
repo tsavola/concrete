@@ -12,13 +12,13 @@
 
 #include "tuple.hpp"
 
-#include <concrete/objects/object-data.hpp>
+#include <concrete/objects/extended-data.hpp>
 #include <concrete/portable.hpp>
 
 namespace concrete {
 
-struct TupleObject::Data: Object::Data {
-	explicit Data(const TypeObject &type);
+struct TupleObject::Data: ExtendedObject::Data {
+	Data(const TypeObject &type, uint32_t ext_size);
 	~Data() throw ();
 
 	unsigned int size() const throw ();

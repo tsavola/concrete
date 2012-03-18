@@ -21,50 +21,8 @@
 
 namespace concrete {
 
-class ArenaAccess {
-public:
-	void operator=(const ArenaAccess &other) throw ();
-
-protected:
-	template <typename T, typename... Args>
-	static unsigned int NewData(Args... args);
-
-	template <typename T, typename... Args>
-	static unsigned int NewCustomSizeData(size_t size, Args... args);
-
-	template <typename T>
-	static void DestroyData(unsigned int address) throw ();
-
-	template <typename T>
-	static void DestroyData(unsigned int address, T *data) throw ();
-
-	template <typename T>
-	static T *DataCast(unsigned int address);
-
-	template <typename T>
-	static T *NonthrowingDataCast(unsigned int address) throw ();
-
-	ArenaAccess() throw (): m_version(0) {}
-	ArenaAccess(const ArenaAccess &other) throw ();
-
-	void *arena_access(unsigned int address, size_t minimum_size) const;
-	void *nonthrowing_arena_access(unsigned int address, size_t minimum_size) const throw ();
-
-private:
-	mutable unsigned int  m_version;
-	mutable void         *m_data;
-};
-
 class Arena: Noncopyable {
-private:
-	struct Header {
-		explicit Header(size_t size) throw (): size(size) {}
-
-		const Portable<uint32_t> size;
-	} CONCRETE_PACKED;
-
 public:
-	enum { InitialAllocationAddress = Allocator::InitialAddress + sizeof (Header) };
 	enum { SizeLimit = 64 * 1024 * 1024 };
 
 	struct Snapshot {
@@ -76,16 +34,7 @@ public:
 
 	typedef Allocator::Allocation Allocation;
 
-	struct Accession {
-		Accession(): version(0), data(NULL) {}
-		Accession(unsigned int version, void *data): version(version), data(data) {}
-
-		unsigned int  version;
-		void         *data;
-	};
-
 	static Arena &Active() throw ();
-	static size_t AllocationSize(const void *data) throw ();
 
 	Arena() throw ();
 	Arena(void *base, size_t size);
@@ -93,24 +42,19 @@ public:
 	Snapshot snapshot() const throw ();
 
 	Allocation allocate(size_t size);
-	void free(unsigned int address, void *data) throw ();
+	void free(unsigned int address, void *data, size_t size) throw ();
 
-	unsigned int version() const throw () { return m_version; }
+	void *access(unsigned int address, size_t size);
+	void *nonthrowing_access(unsigned int address, size_t size) throw ();
 
-	Accession access(unsigned int address, size_t minimum_size);
-	Accession nonthrowing_access(unsigned int address, size_t minimum_size) throw ();
+	void extend_access(unsigned int address, size_t size);
+	bool nonthrowing_extend_access(unsigned int address, size_t size) throw ();
 
-	Accession defer_access_error(unsigned int address) throw ();
+	void defer_access_error(unsigned int address) throw ();
 	void check_access_error();
 
 private:
-	static const Header *AllocationHeader(const void *data) throw ();
-	static Header *AllocationHeader(void *data) throw ();
-
-	void update_version() throw ();
-
 	Allocator    m_allocator;
-	unsigned int m_version;
 	unsigned int m_access_error_address;
 };
 
@@ -137,7 +81,5 @@ private:
 };
 
 } // namespace
-
-#include "arena-inline.hpp"
 
 #endif

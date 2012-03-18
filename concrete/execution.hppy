@@ -49,6 +49,7 @@ protected:
 		     const DictObject &dict) throw ();
 		~Data() throw ();
 
+		size_t size() const throw ();
 		unsigned int stack_size() const throw ();
 
 		template <typename Visitor> void visit(Visitor &v) const;

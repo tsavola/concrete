@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011  Timo Savola
+ * Copyright (c) 2011, 2012  Timo Savola
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,10 +17,10 @@
 
 namespace concrete {
 
-{{{ ImplementObject("TupleObject") }}}
+{{{ ImplementObject("TupleObject", data_method=False, destroy_method=False) }}}
 
-TupleObject::Data::Data(const TypeObject &type):
-	Object::Data(type)
+TupleObject::Data::Data(const TypeObject &type, uint32_t ext_size):
+	ExtendedObject::Data(type, ext_size)
 {
 	for (unsigned int i = 0; i < size(); i++)
 		new (&items[i]) Portable<Object>();
@@ -34,7 +34,7 @@ TupleObject::Data::~Data() throw ()
 
 unsigned int TupleObject::Data::size() const throw ()
 {
-	return (Arena::AllocationSize(this) - sizeof (Data)) / sizeof (Portable<Object>);
+	return *extension_size / sizeof (Portable<Object>);
 }
 
 TupleObject TupleObject::New()
@@ -44,7 +44,13 @@ TupleObject TupleObject::New()
 
 TupleObject TupleObject::NewWithSize(unsigned int size)
 {
-	return NewCustomSizeObject<TupleObject>(sizeof (Data) + sizeof (Portable<Object>) * size);
+	size_t ext_size = sizeof (Portable<Object>) * size;
+	return NewCustomSizeObject<TupleObject>(sizeof (Data) + ext_size, ext_size);
+}
+
+void TupleObject::Destroy(Arena &arena, unsigned int address, Data *data) throw ()
+{
+	DestroyExtendedData(arena, address, data, sizeof (Data));
 }
 
 void TupleObject::init_item(unsigned int index, const Object &item)
@@ -65,9 +71,14 @@ Object TupleObject::get_item(unsigned int index) const
 	return data()->items[index];
 }
 
+TupleObject::Data *TupleObject::data() const
+{
+	return extended_data_cast<Data>();
+}
+
 void TupleObjectTypeInit(const TypeObject &type, const char *name)
 {
-	ObjectTypeInit(type, name);
+	ExtendedObjectTypeInit(type, name);
 
 	Context::Active().data()->tuple_empty = TupleObject::NewWithSize(0);
 }

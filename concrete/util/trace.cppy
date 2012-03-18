@@ -23,11 +23,6 @@
 
 namespace concrete {
 
-void TraceData(const void *data) throw ()
-{
-	TraceData(data, Arena::AllocationSize(data));
-}
-
 void TraceData(const void *void_data, size_t size) throw ()
 {
 	assert(void_data);
@@ -54,9 +49,9 @@ void TraceData(const void *void_data, size_t size) throw ()
 		TraceOutput(line);
 }
 
-void TraceData(const Pointer &pointer) throw ()
+void TraceData(const Pointer &pointer, size_t size) throw ()
 {
-	TraceData(Arena::Active().nonthrowing_access(pointer.address(), 0).data);
+	TraceData(Arena::Active().nonthrowing_access(pointer.address(), 0), size);
 }
 
 } // namespace

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011  Timo Savola
+ * Copyright (c) 2011, 2012  Timo Savola
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -8,7 +8,7 @@
  */
 
 #include <concrete/arena.hpp>
-#include <concrete/util/trace.hpp>
+#include <concrete/util/assert.hpp>
 
 namespace concrete {
 
@@ -27,32 +27,62 @@ PointerType Pointer::RawAccess::Materialize(RawType address, PointerType *) thro
 template <typename PointerType, typename... Args>
 PointerType Pointer::NewPointer(Args... args)
 {
-	return PointerType(NewData<typename PointerType::Data>(args...));
+	return NewCustomSizePointer<PointerType>(sizeof (typename PointerType::Data), args...);
 }
 
 template <typename PointerType, typename... Args>
 PointerType Pointer::NewCustomSizePointer(size_t size, Args... args)
 {
-	return PointerType(NewCustomSizeData<typename PointerType::Data>(size, args...));
+	assert(size >= sizeof (typename PointerType::Data));
+
+	auto alloc = Arena::Active().allocate(size);
+	new (alloc.data) typename PointerType::Data(args...);
+
+	return PointerType(alloc.address);
 }
 
 template <typename PointerType>
 void Pointer::DestroyPointer(PointerType &pointer) throw ()
 {
-	DestroyData<typename PointerType::Data>(pointer.m_address);
+	DestroyPointer(pointer, sizeof (typename PointerType::Data));
+}
+
+template <typename PointerType>
+void Pointer::DestroyPointer(PointerType &pointer, size_t size) throw ()
+{
+	assert(size >= sizeof (typename PointerType::Data));
+
+	if (pointer.m_address) {
+		Arena &arena = Arena::Active();
+
+		void *data = arena.nonthrowing_access(pointer.m_address, size);
+		if (data)
+			DestroyData(arena, pointer.m_address, static_cast<typename PointerType::Data *> (data), size);
+
+		pointer.reset_address(0);
+	}
+}
+
+template <typename PointerType>
+void Pointer::DestroyPointer(PointerType &pointer, void *data, size_t size) throw ()
+{
+	assert(size >= sizeof (typename PointerType::Data));
+
+	Arena &arena = Arena::Active();
+
+	if (arena.nonthrowing_extend_access(pointer.m_address, size))
+		DestroyData(arena, pointer.m_address, static_cast<typename PointerType::Data *> (data), size);
+
 	pointer.reset_address(0);
 }
 
-inline Pointer::Pointer(const Pointer &other) throw ():
-	ArenaAccess(other),
-	m_address(other.m_address)
+template <typename DataType>
+void Pointer::DestroyData(Arena &arena, unsigned int address, DataType *data, size_t size) throw ()
 {
-}
+	assert(size >= sizeof (DataType));
 
-inline void Pointer::operator=(const Pointer &other) throw ()
-{
-	ArenaAccess::operator=(other);
-	m_address = other.m_address;
+	data->~DataType();
+	arena.free(address, data, size);
 }
 
 template <typename PointerType>
@@ -64,13 +94,14 @@ PointerType Pointer::cast() const throw ()
 template <typename DataType>
 DataType *Pointer::data_cast() const
 {
-	return static_cast<DataType *> (arena_access(m_address, sizeof (DataType)));
+	return static_cast<DataType *> (Arena::Active().access(m_address, sizeof (DataType)));
 }
 
 template <typename DataType>
 DataType *Pointer::nonthrowing_data_cast() const throw ()
 {
-	return static_cast<DataType *> (nonthrowing_arena_access(m_address, sizeof (DataType)));
+	return static_cast<DataType *> (
+		Arena::Active().nonthrowing_access(m_address, sizeof (DataType)));
 }
 
 } // namespace

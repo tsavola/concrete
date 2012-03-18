@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011  Timo Savola
+ * Copyright (c) 2011, 2012  Timo Savola
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -66,14 +66,14 @@ Object::RawAccess::RawType Object::RawAccess::InitRef() throw ()
 
 void Object::RawAccess::Ref(RawType address) throw ()
 {
-	auto data = NonthrowingDataCast<Data>(address);
+	auto data = NonthrowingData(address);
 	if (data)
 		data->ref();
 }
 
 void Object::RawAccess::Unref(RawType address) throw ()
 {
-	auto data = NonthrowingDataCast<Data>(address);
+	auto data = NonthrowingData(address);
 	if (data)
 		data->unref(address);
 }
@@ -93,6 +93,11 @@ Object Object::New()
 	return NewObject<Object>();
 }
 
+Object::Data *Object::NonthrowingData(unsigned int address) throw ()
+{
+	return static_cast<Data *> (Arena::Active().nonthrowing_access(address, sizeof (Data)));
+}
+
 const Pointer &Object::Referenced(const Pointer &object) throw ()
 {
 	auto data = object.nonthrowing_data_cast<Data>();
@@ -104,20 +109,29 @@ const Pointer &Object::Referenced(const Pointer &object) throw ()
 
 void Object::Destroy(unsigned int address, Data *data) throw ()
 {
-	auto context = Context::Active().nonthrowing_data();
-	if (context == NULL)
+	Context &context = Context::Active();
+	Arena &arena = context.arena();
+
+	auto context_data = context.nonthrowing_data();
+	if (context_data == NULL)
 		return;
 
 	auto type = data->type();
 
 	{{{
-	    for o in GetObjects() if o.has_type and o.name != "NoneObject":
-	        echo("if (type == context->{o.short}_type)")
-	        echo("  DestroyData(address, static_cast<{o.name}::Data *> (data));")
-	        echo("else")
+	    for o in GetObjects() if o.has_type:
+	        echo("if (type == context_data->{o.short}_type) {{")
+	        echo("  if (arena.nonthrowing_extend_access(address, sizeof ({o.name}::Data)))")
+	        echo("    {o.name}::Destroy(arena, address, static_cast<{o.name}::Data *> (data));")
+	        echo("}} else")
 	}}} {
 		assert(false);
 	}
+}
+
+void Object::Destroy(Arena &arena, unsigned int address, Data *data) throw ()
+{
+	DestroyData(arena, address, data, sizeof (Data));
 }
 
 Object::Object() throw ():

@@ -12,13 +12,13 @@
 
 #include "dict.hpp"
 
-#include <concrete/objects/object-data.hpp>
+#include <concrete/objects/extended-data.hpp>
 #include <concrete/util/noncopyable.hpp>
 #include <concrete/util/packed.hpp>
 
 namespace concrete {
 
-struct DictObject::Data: Object::Data {
+struct DictObject::Data: ExtendedObject::Data {
 	struct Item: Noncopyable {
 		Item(const Object &key, const Object &value);
 
@@ -26,7 +26,7 @@ struct DictObject::Data: Object::Data {
 		Portable<Object> value;
 	} CONCRETE_PACKED;
 
-	explicit Data(const TypeObject &type);
+	Data(const TypeObject &type, uint32_t ext_size): ExtendedObject::Data(type, ext_size) {}
 	~Data() throw ();
 
 	template <typename Visitor> void visit(Visitor &v) const;

@@ -12,6 +12,7 @@
 #include <cstdlib>
 #include <memory>
 
+#include <concrete/allocation.hpp>
 #include <concrete/event.hpp>
 #include <concrete/execution.hpp>
 #include <concrete/modules/builtins.hpp>
@@ -55,7 +56,7 @@ Context::Context(EventLoop &loop):
 	ScopedContext activate(*this);
 
 	auto context_address = m_arena.allocate(sizeof (Data)).address;
-	assert(context_address == Arena::InitialAllocationAddress);
+	assert(context_address == Allocator::InitialAddress);
 
 	auto none = NoneObject::NewBuiltin();
 	m_none_pointer = none;
@@ -156,13 +157,12 @@ bool Context::execute()
 
 Context::Data *Context::data()
 {
-	return static_cast<Data *> (arena_access(Arena::InitialAllocationAddress, sizeof (Data)));
+	return static_cast<Data *> (m_arena.access(Allocator::InitialAddress, sizeof (Data)));
 }
 
 const Context::Data *Context::nonthrowing_data() throw ()
 {
-	return static_cast<Data *> (
-		nonthrowing_arena_access(Arena::InitialAllocationAddress, sizeof (Data)));
+	return static_cast<Data *> (m_arena.nonthrowing_access(Allocator::InitialAddress, sizeof (Data)));
 }
 
 ScopedContext::ScopedContext(Context &context) throw ():

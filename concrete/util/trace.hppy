@@ -44,18 +44,18 @@ void Trace(const char *format, Args... args) throw ()
 	} catch (...) {}
 }
 
-void TraceData(const void *data) throw ();
 void TraceData(const void *data, size_t size) throw ();
-void TraceData(const Pointer &pointer) throw ();
+void TraceData(const Pointer &pointer, size_t size) throw ();
 
 #else
 
 template <typename... Args> inline void Trace(const char *, Args...) throw () {}
-inline void TraceData(const void *data) throw () {}
 inline void TraceData(const void *data, size_t size) throw () {}
-inline void TraceData(const Pointer &pointer) throw () {}
+inline void TraceData(const Pointer &pointer, size_t size) throw () {}
 
 #endif
+
+template <typename T> inline void TraceData(const T &x) throw () { TraceData(x, sizeof (T)); }
 
 } // namespace
 
