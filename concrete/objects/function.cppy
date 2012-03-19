@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011  Timo Savola
+ * Copyright (c) 2011, 2012  Timo Savola
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -58,6 +58,16 @@ FunctionObject::Data::Data(const TypeObject &type, const CodeObject &code) throw
 {
 }
 
+FunctionObject FunctionObject::New(const CodeObject &code)
+{
+	return NewObject<FunctionObject>(code);
+}
+
+CodeObject FunctionObject::code() const
+{
+	return data()->code;
+}
+
 Object FunctionObject::continuable_call(Continuation &cont,
                                         Continuation::Stage stage,
                                         const TupleObject *args,
@@ -65,11 +75,6 @@ Object FunctionObject::continuable_call(Continuation &cont,
 {
 	CodeObject code = data()->code;
 	return Continuation::Call<FunctionContinuation>(cont, stage, args, kwargs, code);
-}
-
-FunctionObject FunctionObject::New(const CodeObject &code)
-{
-	return NewObject<FunctionObject>(code);
 }
 
 void FunctionObjectTypeInit(const TypeObject &type, const char *name)

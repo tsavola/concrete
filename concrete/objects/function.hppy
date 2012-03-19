@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011  Timo Savola
+ * Copyright (c) 2011, 2012  Timo Savola
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,6 +21,8 @@ class FunctionObject: public CallableObject {
 	{{{ DeclareObject("FunctionObject", "CallableObject") }}}
 
 	static FunctionObject New(const CodeObject &code);
+
+	CodeObject code() const;
 
 	Object continuable_call(Continuation &cont,
 	                        Continuation::Stage stage,

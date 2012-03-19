@@ -11,7 +11,10 @@
 #include "tap/fork.hpp"
 #include "tap/urlopen.hpp"
 
+#include <concrete/context.hpp>
+#include <concrete/execution.hpp>
 #include <concrete/objects/dict.hpp>
+#include <concrete/objects/function.hpp>
 #include <concrete/objects/internal.hpp>
 #include <concrete/objects/module.hpp>
 #include <concrete/objects/string.hpp>
@@ -22,6 +25,7 @@ void TapModuleInit(const DictObject &modules)
 {
 	auto dict = DictObject::New();
 
+	dict.set_item(StringObject::New("execute"), InternalObject::New(internal::TapModule_Execute));
 	dict.set_item(StringObject::New("fork"),    InternalObject::New(internal::TapModule_Fork));
 	dict.set_item(StringObject::New("urlopen"), InternalObject::New(internal::TapModule_URLOpen));
 
@@ -29,6 +33,14 @@ void TapModuleInit(const DictObject &modules)
 }
 
 {{{ ImplementPointer("AbstractURLOpen") }}}
+
+{{{ ImplementInternalFunction("TapModule_Execute") }}}
+{
+	auto function = args.get_item(0).require<FunctionObject>();
+	Context::Active().add_execution(Execution::New(function.code()));
+	return Object();
+}
+
 {{{ ImplementInternalContinuation("TapModule_Fork") }}}
 {{{ ImplementInternalContinuation("TapModule_URLOpen") }}}
 
