@@ -11,8 +11,11 @@
 
 #include <cstring>
 
+#include <boost/format.hpp>
+
 #include <concrete/arena.hpp>
 #include <concrete/context-data.hpp>
+#include <concrete/objects/long.hpp>
 #include <concrete/objects/string.hpp>
 #include <concrete/objects/type.hpp>
 
@@ -49,6 +52,32 @@ const uint8_t *BytesObject::c_data() const
 void BytesObjectTypeInit(const TypeObject &type, const char *name)
 {
 	ExtendedObjectTypeInit(type, name);
+
+	auto repr = InternalObject::New(internal::BytesType_Repr);
+	auto str  = InternalObject::New(internal::BytesType_Str);
+	auto len  = InternalObject::New(internal::BytesType_Len);
+
+	type.set(&PortableObjectProtocol::repr, repr);
+	type.set(&PortableObjectProtocol::str,  str);
+	type.set(&PortableObjectProtocol::len,  len);
+}
+
+{{{ ImplementInternalFunction("BytesType_Repr") }}}
+{
+	auto self = args.get_item(0).require<BytesObject>();
+	return StringObject::New((boost::format("<%u bytes>") % self.size()).str());
+}
+
+{{{ ImplementInternalFunction("BytesType_Str") }}}
+{
+	auto self = args.get_item(0).require<BytesObject>();
+	return StringObject::New(reinterpret_cast<const char *> (self.c_data()), self.size());
+}
+
+{{{ ImplementInternalFunction("BytesType_Len") }}}
+{
+	auto self = args.get_item(0).require<BytesObject>();
+	return LongObject::New(self.size());
 }
 
 } // namespace
