@@ -50,6 +50,16 @@ Context &Context::Active() throw ()
 	return *active_context;
 }
 
+unsigned int Context::NonthrowingExecutionAddress() throw ()
+{
+	try {
+		if (active_context)
+			return active_context->data()->current->address();
+	} catch (...) {}
+
+	return 0;
+}
+
 Context::Context(EventLoop &loop):
 	m_event_loop(loop)
 {

@@ -18,10 +18,20 @@
 #include <concrete/allocation.hpp>
 #include <concrete/arena.hpp>
 #include <concrete/byteorder.hpp>
+#include <concrete/context.hpp>
 #include <concrete/pointer.hpp>
 #include <concrete/util/assert.hpp>
 
 namespace concrete {
+
+std::string TracePrefix()
+{
+	auto address = Context::NonthrowingExecutionAddress();
+	if (address)
+		return boost::str(boost::format("[%1%] ") % address);
+	else
+		return "";
+}
 
 void TraceData(const void *void_data, size_t size) throw ()
 {

@@ -36,6 +36,7 @@ public:
 	struct Data;
 
 	static Context &Active() throw ();
+	static unsigned int NonthrowingExecutionAddress() throw ();
 
 	explicit Context(EventLoop &loop);
 	Context(EventLoop &loop, void *base, size_t size);

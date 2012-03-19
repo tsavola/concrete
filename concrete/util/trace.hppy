@@ -22,6 +22,7 @@ class DataBase;
 
 #ifdef CONCRETE_TRACE
 
+std::string TracePrefix();
 void TraceOutput(const std::string &line);
 
 template <typename Format>
@@ -40,7 +41,7 @@ template <typename... Args>
 void Trace(const char *format, Args... args) throw ()
 {
 	try {
-		TraceOutput(boost::str(TraceFormat(boost::format(format), args...)));
+		TraceOutput(TracePrefix() + boost::str(TraceFormat(boost::format(format), args...)));
 	} catch (...) {}
 }
 
