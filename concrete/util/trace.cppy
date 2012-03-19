@@ -11,7 +11,12 @@
 
 #include "trace.hpp"
 
+#include <cstddef>
 #include <cstdint>
+
+#if _POSIX_C_SOURCE >= 199309L
+# include <sys/time.h>
+#endif
 
 #include <boost/static_assert.hpp>
 
@@ -26,11 +31,25 @@ namespace concrete {
 
 std::string TracePrefix()
 {
+	std::string prefix;
+
+#if _POSIX_C_SOURCE >= 199309L
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+
+	static double offset = 0;
+	double now = tv.tv_sec + tv.tv_usec * 0.000001;
+	if (offset == 0)
+		offset = now;
+
+	prefix += boost::str(boost::format("%.6f ") % (now - offset));
+#endif
+
 	auto address = Context::NonthrowingExecutionAddress();
 	if (address)
-		return boost::str(boost::format("[%1%] ") % address);
-	else
-		return "";
+		prefix += boost::str(boost::format("[%1%] ") % address);
+
+	return prefix;
 }
 
 void TraceData(const void *void_data, size_t size) throw ()
