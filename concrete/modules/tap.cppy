@@ -36,8 +36,7 @@ void TapModuleInit(const DictObject &modules)
 
 {{{ ImplementInternalFunction("TapModule_Execute") }}}
 {
-	auto function = args.get_item(0).require<FunctionObject>();
-	Context::Active().add_execution(Execution::New(function.code()));
+	Context::Active().add_execution(Execution::NewCall(args));
 	return Object();
 }
 

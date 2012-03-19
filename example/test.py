@@ -23,3 +23,6 @@ print("id(None) =", id(None))
 print(None, 1234.5 + passthrough(6.78), None)
 
 print("urlopen:" + str(tap.urlopen("http://tsavola.github.com/concrete/")))
+
+tap.execute(tap.urlopen, "http://tsavola.github.com/concrete/doxygen.png")
+tap.execute(tap.urlopen, "http://tsavola.github.com/concrete/graph_legend.html")

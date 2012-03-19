@@ -236,7 +236,33 @@ Execution::Data::~Data() throw ()
 
 Execution Execution::New(const CodeObject &code)
 {
-	return NewPointer<Execution>(ExecutionFrame::New(ExecutionFrame(), code, DictObject::New()));
+	return New(code, DictObject::New());
+}
+
+Execution Execution::New(const CodeObject &code, const DictObject &dict)
+{
+	return NewPointer<Execution>(ExecutionFrame::New(ExecutionFrame(), code, dict));
+}
+
+Execution Execution::NewCall(const TupleObject &args)
+{
+	int args_length = args.size();
+
+	const uint8_t bytecode[] = {
+		OpCallFunction,
+		uint8_t(args_length - 1),
+		0,
+		OpReturnValue,
+	};
+
+	auto code = CodeObject::New(3, BytesObject::New(bytecode, sizeof (bytecode)), TupleObject::New(), TupleObject::New(), TupleObject::New());
+
+	auto frame = ExecutionFrame::New(ExecutionFrame(), code, DictObject::NewEmpty());
+
+	for (int i = 0; i < args_length; i++)
+		frame.push(args.get_item(i));
+
+	return NewPointer<Execution>(frame);
 }
 
 bool Execution::execute()

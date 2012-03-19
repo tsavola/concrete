@@ -89,6 +89,8 @@ class Execution: public ListNode<Execution> {
 	{{{ DeclarePointer("Execution", "ListNode<Execution>") }}}
 
 	static Execution New(const CodeObject &code);
+	static Execution New(const CodeObject &code, const DictObject &dict);
+	static Execution NewCall(const TupleObject &args);
 
 	bool execute();
 	ExecutionFrame new_frame(const CodeObject &code, const DictObject &dict);
