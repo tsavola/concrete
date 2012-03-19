@@ -13,6 +13,7 @@
 #include <concrete/continuation.hpp>
 #include <concrete/io/buffer.hpp>
 #include <concrete/io/url.hpp>
+#include <concrete/objects/bytes.hpp>
 #include <concrete/objects/dict.hpp>
 #include <concrete/objects/string.hpp>
 #include <concrete/objects/tuple.hpp>
@@ -170,7 +171,7 @@ protected:
 		if (length >= 0 && size_t(length) < size)
 			size = size_t(length);
 
-		result = StringObject::New(response->consumable_data(), size);
+		result = BytesObject::New(reinterpret_cast<const uint8_t *> (response->consumable_data()), size);
 
 		return Done;
 	}
