@@ -28,6 +28,13 @@ class EventTrigger;
 class Execution;
 class ScopedContext;
 
+/**
+ * Python interpreter state.  Instances are isolated from one another, so one
+ * process can have multiple interpreters running--either in separate threads
+ * or interleaved in common threads.  A thread must not make nested calls to
+ * different Context instances because the active instance is passed around via
+ * thread-local data (without support for nesting).
+ */
 class Context: Noncopyable {
 	friend class EventCallback;
 	friend class ScopedContext;
@@ -35,32 +42,109 @@ class Context: Noncopyable {
 public:
 	struct Data;
 
+	/**
+	 * Get the active instance of the current thread.
+	 */
 	static Context &Active() throw ();
+
+	/**
+	 * @internal debugging helper.
+	 */
 	static unsigned int NonthrowingExecutionAddress() throw ();
 
+	/**
+	 * Create a new state.
+	 * @param loop is owned by the caller and must live over the lifetime
+	 *             of the created Context instance
+	 */
 	explicit Context(EventLoop &loop);
-	Context(EventLoop &loop, void *base, size_t size);
 
+	/**
+	 * Load state from a snapshot.
+	 * @param loop is owned by the caller and must live over the lifetime
+	 *             of the created Context instance
+	 * @param data will be copied
+	 * @param size of the data in bytes
+	 */
+	Context(EventLoop &loop, void *data, size_t size);
+
+	/**
+	 * Is this the active instance of the current thread?
+	 */
 	bool is_active() const throw () { return m_active; }
 
+	/**
+	 * Access the I/O event interface.
+	 */
 	EventLoop &event_loop() throw () { return m_event_loop; }
+
+	/**
+	 * Access the persistent memory.
+	 */
 	Arena &arena() throw () { return m_arena; }
+
+	/**
+	 * Access the transient resources.
+	 */
 	ResourceManager &resource_manager() throw () { return m_resource_manager; }
 
+	/**
+	 * Direct access to internal object vector.
+	 * @return borrowed short-term reference
+	 */
 	Data *data();
+
+	/**
+	 * Direct access to internal object vector.
+	 * @return borrowed short-term reference or NULL
+	 */
 	const Data *nonthrowing_data() throw ();
 
+	/**
+	 * Uncounted reference to the NoneObject instance.
+	 * @return borrowed short-term NoneObject reference
+	 */
 	const Pointer &none_pointer() const throw () { return m_none_pointer; }
 
+	/**
+	 * Look up an internal function or constant.
+	 */
 	Object load_builtin_name(const Object &name);
+
+	/**
+	 * Look up an internal module.
+	 */
 	Object import_builtin_module(const Object &name);
 
+	/**
+	 * Add a new executor.  It will be scheduled at some point.
+	 * @param execution reference is stolen
+	 */
 	void add_execution(const Execution &execution);
+
+	/**
+	 * Get the active executor of this interpreter.
+	 * @return borrowed short-term reference
+	 */
 	Portable<Execution> &execution() throw ();
 
+	/**
+	 * Suspend the active executor until an I/O event occurs.
+	 * @param trigger specifies the event which causes execution to resume
+	 */
 	void suspend_until(const EventTrigger &trigger);
 
+	/**
+	 * Are there any unfinished executors (and the interpreter is in normal
+	 * state)?
+	 */
 	bool executable() throw ();
+
+	/**
+	 * Schedule an executor.
+	 * @return true if there is more to execute immediately; otherwise the
+	 *         caller should wait for an I/O event first
+	 */
 	bool execute();
 
 private:
@@ -71,9 +155,21 @@ private:
 	bool             m_active;
 };
 
+/**
+ * Context activator.
+ */
 class ScopedContext: Noncopyable {
 public:
+	/**
+	 * Set the active Context instance of the current thread.
+	 * @param context is owned by the caller and must live over the lifetime
+	 *                of the created ScopedContext instance
+	 */
 	explicit ScopedContext(Context &context) throw ();
+
+	/**
+	 * Clear the active Context instance of the current thread.
+	 */
 	~ScopedContext() throw ();
 
 private:
