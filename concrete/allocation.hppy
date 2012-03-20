@@ -19,6 +19,9 @@
 
 namespace concrete {
 
+/**
+ * Arena memory allocator implementation.
+ */
 class Allocator: Noncopyable {
 	typedef Portable<uint32_t> FreeNodeLink;
 
@@ -28,9 +31,21 @@ class Allocator: Noncopyable {
 	} CONCRETE_PACKED;
 
 public:
+	/**
+	 * @var Alignment
+	 * Alignment for allocation start addresses in bytes.
+	 */
 	enum { Alignment = 8 };
+
+	/**
+	 * @var InitialAddress
+	 * Guaranteed Arena offset of the first allocation.
+	 */
 	enum { InitialAddress = (sizeof (FreeNodeLink) + Alignment - 1) & ~(Alignment - 1) };
 
+	/**
+	 * Memory block address specification.
+	 */
 	struct Allocation {
 		Allocation() throw ():
 			address(0), data(NULL) {}
@@ -38,24 +53,61 @@ public:
 		Allocation(unsigned int address, void *data) throw ():
 			address(address), data(data) {}
 
-		unsigned int  address;
-		void         *data;
+		/**
+		 * Memory block's address within the Arena.
+		 */
+		unsigned int address;
+
+		/**
+		 * Short-term memory block reference or NULL if allocation
+		 * failed.  Valid until the next memory allocation.
+		 */
+		void *data;
 	};
 
+	/**
+	 * @return size aligned according to Alignment
+	 */
 	static uint32_t AlignedSize(size_t size) throw ()
 	{
 		return uint32_t(size + Alignment - 1) & ~uint32_t(Alignment - 1);
 	}
 
+	/**
+	 * Start with an empty arena.
+	 * @param size_limit defines the maximum size of the arena
+	 */
 	explicit Allocator(size_t size_limit) throw ():
 		arena_base(NULL), arena_size(0), size_limit(size_limit) {}
 
-	Allocator(void *base, size_t size, size_t size_limit) throw ():
-		arena_base(reinterpret_cast<char *> (base)), arena_size(size), size_limit(size_limit) {}
+	/**
+	 * Start with a populated arena.  If the provided data is invalid,
+	 * future free() calls may fail.
+	 * @param data       of the arena; will be stolen
+	 * @param size       of the arena in bytes
+	 * @param size_limit defines the maximum size of the arena
+	 */
+	Allocator(void *data, size_t size, size_t size_limit) throw ():
+		arena_base(reinterpret_cast<char *> (data)), arena_size(size), size_limit(size_limit) {}
 
+	/**
+	 * Deallocate the arena.
+	 */
 	~Allocator() throw ();
 
+	/**
+	 * Allocate a block of memory.
+	 * @param size of the memory block
+	 */
 	Allocation allocate(size_t size) throw ();
+
+	/**
+	 * Free a block of memory.
+	 * @param address of the memory block within the arena
+	 * @param data    pointer to the memory block
+	 * @param size    of the memory block
+	 * @return false if the arena is corrupted
+	 */
 	bool free(unsigned int address, void *data, size_t size) throw ();
 
 private:

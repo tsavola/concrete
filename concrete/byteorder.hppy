@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011  Timo Savola
+ * Copyright (c) 2011, 2012  Timo Savola
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -9,6 +9,11 @@
 
 #ifndef CONCRETE_BYTEORDER_HPP
 #define CONCRETE_BYTEORDER_HPP
+
+/*
+ * CONCRETE_PORTABLE_BYTEORDER specifies if the host CPU byteorder is the same
+ * as the Arena byteorder.
+ */
 
 #ifndef CONCRETE_PORTABLE_BYTEORDER
 
@@ -46,7 +51,14 @@ namespace concrete {
 
 #if CONCRETE_PORTABLE_BYTEORDER
 
+/**
+ * Functor type for byteorder conversion.
+ */
 template <typename T, unsigned int N> struct PortableByteorder {
+	/**
+	 * Convert an integer to/from the Arena byteorder (if necessary on the
+	 * host platform).
+	 */
 	static T Adapt(T x) throw () { return x; }
 };
 
@@ -72,6 +84,10 @@ template <typename T> struct PortableByteorder<T, 8> {
 
 #endif
 
+/**
+ * Convert an integer to/from the Arena byteorder (if necessary on the host
+ * platform).
+ */
 template <typename T>
 T PortByteorder(T x) throw ()
 {

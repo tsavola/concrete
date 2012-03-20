@@ -21,36 +21,128 @@
 
 namespace concrete {
 
+/**
+ * Contiguous heap memory.
+ */
 class Arena: Noncopyable {
 public:
+	/**
+	 * @var SizeLimit
+	 * Maximum arena size in bytes.
+	 */
 	enum { SizeLimit = 64 * 1024 * 1024 };
 
+	/**
+	 * Memory snapshot parameters.
+	 */
 	struct Snapshot {
 		Snapshot(const void *base, size_t size): base(base), size(size) {}
 
+		/**
+		 * Start of the arena memory.
+		 */
 		const void *base;
-		size_t      size;
+
+		/**
+		 * Size of the arena memory in bytes.
+		 */
+		size_t size;
 	};
 
-	typedef Allocator::Allocation Allocation;
-
+	/**
+	 * Get the active instance of the current thread.
+	 */
 	static Arena &Active() throw ();
 
+	/**
+	 * Create an empty arena.
+	 */
 	Arena() throw ();
-	Arena(void *base, size_t size);
 
+	/**
+	 * Create an arena out of a snapshot.  The created Arena instance takes
+	 * ownership of the data, which must have been allocated so that it can
+	 * be passed to std::realloc().
+	 * @param data of the snapshot; will be stolen
+	 * @param size of the snapshot in bytes
+	 */
+	Arena(void *data, size_t size) throw ();
+
+	/**
+	 * Get direct short-term read-only access to the arena memory.
+	 */
 	Snapshot snapshot() const throw ();
 
-	Allocation allocate(size_t size);
+	/**
+	 * Allocate a block of memory.
+	 * @param size of the memory block
+	 * @throw AllocationError
+	 */
+	Allocator::Allocation allocate(size_t size);
+
+	/**
+	 * Free a block of memory.  The data pointer must have been retrieved
+	 * with a preceding access() or nonthrowing_access() call (without any
+	 * allocate() calls in between).
+	 * @param address of the memory block within the arena
+	 * @param data    pointer to the memory block
+	 * @param size    of the memory block
+	 */
 	void free(unsigned int address, void *data, size_t size) throw ();
 
+	/**
+	 * Get a pointer to an allocated memory block.  The pointer is valid
+	 * until the next allocate() call.
+	 * @param address of the memory block within the arena
+	 * @param size    of the memory block
+	 * @return borrowed short-term reference
+	 * @throw IntegrityError
+	 */
 	void *access(unsigned int address, size_t size);
+
+	/**
+	 * Get a pointer to an allocated memory block.  The pointer is valid
+	 * until the next allocate() call.
+	 * @param address of the memory block within the arena
+	 * @param size    of the memory block
+	 * @return borrowed short-term reference or NULL
+	 */
 	void *nonthrowing_access(unsigned int address, size_t size) throw ();
 
+	/**
+	 * Extend a memory reference obtained with a preceding access() call
+	 * (without any allocate() calls in between).  This simply
+	 * verifies the new range.
+	 * @param address which has been already validated
+	 * @param size    is old_size + extension_size
+	 * @throw IntegrityError
+	 */
 	void extend_access(unsigned int address, size_t size);
+
+	/**
+	 * Extend a memory reference obtained with a preceding
+	 * nonthrowing_access() call (without any allocate() calls in between).
+	 * This simply validates the new range.
+	 * @param address which has been already validated
+	 * @param size    is old_size + extension_size
+	 * @return success
+	 */
 	bool nonthrowing_extend_access(unsigned int address, size_t size) throw ();
 
+	/**
+	 * Cause the next allocate(), access(), extend_access() or
+	 * check_access_error() call to fail.  For code paths where you can't
+	 * throw an IntegrityError yourself.
+	 * @param address of the memory block where you detected an
+	 *                inconsistency
+	 */
 	void defer_access_error(unsigned int address) throw ();
+
+	/**
+	 * Throw an IntegrityError if a previous non-throwing code path has
+	 * detected one.
+	 * @throw IntegrityError
+	 */
 	void check_access_error();
 
 private:
@@ -58,22 +150,48 @@ private:
 	unsigned int m_access_error_address;
 };
 
-class AllocationError: std::exception {
+/**
+ * Out of memory.
+ */
+class AllocationError: public std::exception {
 public:
+	/**
+	 * @param size of the failed allocation
+	 */
 	explicit AllocationError(size_t size) throw ();
 
+	/**
+	 * @return string describing the error type
+	 */
 	virtual const char *what() const throw ();
+
+	/**
+	 * @return size of the failed allocation
+	 */
 	size_t size() const throw () { return m_size; }
 
 private:
 	const size_t m_size;
 };
 
+/**
+ * Arena corruption detected.
+ */
 class IntegrityError: public std::exception {
 public:
+	/**
+	 * @param address of the accessed memory block
+	 */
 	explicit IntegrityError(unsigned int address) throw ();
 
+	/**
+	 * @return string describing the error type
+	 */
 	virtual const char *what() const throw ();
+
+	/**
+	 * @return address of the accessed memory block
+	 */
 	unsigned int address() const throw () { return m_address; }
 
 private:

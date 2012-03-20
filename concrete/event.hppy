@@ -16,15 +16,33 @@ namespace concrete {
 
 class EventTrigger;
 
+/**
+ * I/O event callback interface.
+ */
 class EventCallback: Noncopyable {
 public:
 	virtual ~EventCallback() throw () {}
+
+	/**
+	 * Invoked when an I/O condition occurs or the EventLoop is terminated.
+	 * This method is responsible for deleting the EventCallback instance.
+	 */
 	virtual void resume() throw () = 0;
 };
 
+/**
+ * I/O event dispatch mechanism interface.
+ */
 class EventLoop: Noncopyable {
 public:
 	virtual ~EventLoop() throw () {}
+
+	/**
+	 * Subscribe to an I/O event.  (EventTrigger type declaration is
+	 * incomplete as it's platform-specific.)
+	 * @param trigger  defines the I/O condition
+	 * @param callback will be invoked when the event occurs
+	 */
 	virtual void wait(const EventTrigger &trigger, EventCallback *callback) = 0;
 };
 

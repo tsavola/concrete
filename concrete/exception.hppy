@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011  Timo Savola
+ * Copyright (c) 2011, 2012  Timo Savola
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,34 +19,71 @@ namespace concrete {
 
 class TypeObject;
 
+/**
+ * Recoverable error resulting from an action taken by Python code.
+ */
 class CodeException: public std::exception {
 public:
-	explicit CodeException(const Object &args) throw ();
+	/**
+	 * @param value represents the cause
+	 */
+	explicit CodeException(const Object &value) throw ();
+
+	/**
+	 * Copy.
+	 */
 	CodeException(const CodeException &other) throw (): m_repr(other.m_repr) {}
 
+	/**
+	 * Assign.
+	 */
 	void operator=(const CodeException &other) throw () { m_repr = other.m_repr; }
 
+	/**
+	 * @return string describing the cause of the error
+	 */
 	virtual const char *what() const throw () { return m_repr.c_str(); }
 
 protected:
-	CodeException(const StringObject &repr, int) throw ();
+	/**
+	 * @param representation of the cause
+	 */
+	CodeException(const StringObject &representation, int) throw ();
 
 private:
 	StringObject m_repr;
 };
 
+/**
+ * Inappropriate Python object type passed to an operation or function.
+ */
 class TypeError: public CodeException {
 public:
+	/**
+	 * @param type which didn't fit
+	 */
 	explicit TypeError(const TypeObject &type) throw ();
 };
 
+/**
+ * Key not found in a DictObject.
+ */
 class KeyError: public CodeException {
 public:
+	/**
+	 * @param key which wasn't there
+	 */
 	explicit KeyError(const Object &key) throw (): CodeException(key) {}
 };
 
+/**
+ * An invariant varied too much.  Generally not the fault of the Python coder.
+ */
 class RuntimeError: public CodeException {
 public:
+	/**
+	 * @param message describing the error
+	 */
 	explicit RuntimeError(const char *message) throw ();
 };
 

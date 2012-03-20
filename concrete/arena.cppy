@@ -33,7 +33,7 @@ Arena::Arena() throw ():
 {
 }
 
-Arena::Arena(void *base, size_t size):
+Arena::Arena(void *base, size_t size) throw ():
 	m_allocator(base, size, Arena::SizeLimit),
 	m_access_error_address(0)
 {
@@ -44,7 +44,7 @@ Arena::Snapshot Arena::snapshot() const throw ()
 	return Snapshot(m_allocator.arena_base, m_allocator.arena_size);
 }
 
-Arena::Allocation Arena::allocate(size_t size)
+Allocator::Allocation Arena::allocate(size_t size)
 {
 	check_access_error();
 
