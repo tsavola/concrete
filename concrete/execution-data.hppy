@@ -1,0 +1,63 @@
+/*
+ * Copyright (c) 2011, 2012  Timo Savola
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ */
+
+#ifndef CONCRETE_EXECUTION_DATA_HPP
+#define CONCRETE_EXECUTION_DATA_HPP
+
+#include "execution.hpp"
+
+#include <concrete/continuation.hpp>
+#include <concrete/portable.hpp>
+#include <concrete/util/noncopyable.hpp>
+#include <concrete/util/packed.hpp>
+
+namespace concrete {
+
+struct ExecutionFrame::Block {
+	Portable<uint16_t> position;
+	Portable<uint16_t> delta;
+} CONCRETE_PACKED;
+
+struct ExecutionFrame::Data: Noncopyable {
+	Data(const ExecutionFrame &parent,
+	     const CodeObject &code,
+	     const DictObject &dict) throw ();
+	~Data() throw ();
+
+	size_t extension_size() const throw ();
+	unsigned int stack_size() const throw ();
+
+	template <typename Visitor> void visit(Visitor &v) const;
+
+	const Portable<ExecutionFrame> parent;
+	const Portable<CodeObject>     code;
+	const Portable<DictObject>     dict;
+	Portable<uint32_t>             bytecode_position;
+	Portable<Object>               call_callable;
+	Portable<Continuation>         call_continuation;
+	Portable<bool>                 call_not_filter;
+	Portable<uint32_t>             block_pointer;
+	Block                          blocks[MaxBlocks];
+	Portable<uint32_t>             stack_pointer;
+	Portable<Object>               stack_objects[0]; // must be last
+} CONCRETE_PACKED;
+
+struct Execution::Data: ListNode<Execution>::Data {
+	explicit Data(const ExecutionFrame &frame) throw ();
+	~Data() throw ();
+
+	template <typename Visitor> void visit(Visitor &v) const;
+
+	Portable<ExecutionFrame> initial;
+	Portable<ExecutionFrame> current;
+} CONCRETE_PACKED;
+
+} // namespace
+
+#endif

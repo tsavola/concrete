@@ -10,7 +10,7 @@
 #ifndef CONCRETE_EXECUTION_VISIT_HPP
 #define CONCRETE_EXECUTION_VISIT_HPP
 
-#include "execution.hpp"
+#include "execution-data.hpp"
 
 #include <concrete/objects/object-visit.hpp>
 
@@ -46,10 +46,11 @@ void Execution::visit(Visitor &v) const
 	data()->visit(v);
 }
 
+// Visit the current frame, which escalates to parent frames and finally
+// reaches the initial frame.
 template <typename Visitor>
 void Execution::Data::visit(Visitor &v) const
 {
-	// initial is visited through current's parent chain
 	v(current);
 }
 

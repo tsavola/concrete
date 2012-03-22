@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2011  Timo Savola
+# Copyright (c) 2011, 2012  Timo Savola
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -21,20 +21,29 @@ class Pointer:
 	def declare(self):
 		echo("friend class Pointer;")
 
+		echo("/** Cast an Arena offset into a typed pointer. */")
 		echo("protected: explicit {self.name}(unsigned int address) throw ():")
 		echo("  {self.parent_name}(address) {{}}")
 
+		echo("/** Borrow another reference. */")
 		echo("public: {self.name}(const {self.name} &other) throw ():")
 		echo("  {self.parent_name}(other) {{}}")
 
 		if self.has_construct:
+			echo("/** Typed null pointer. */")
 			echo("public: {self.name}() throw () {{}}")
 
 		if self.has_destroy:
+			echo("/** Delete Data and nullify the pointer. */")
 			echo("public: void destroy() throw ();")
 
 		if self.has_data:
+			echo("/** @struct concrete::{self.name}::Data")
+			echo("    {self.name} state.  Stored in the Arena. */")
 			echo("protected: struct Data;")
+
+			echo("/** Direct short-term access to Arena memory.")
+			echo("    Valid until the next memory allocation. */")
 			echo("private: Data *data() const;")
 
 		echo("public:")

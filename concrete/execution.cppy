@@ -7,7 +7,7 @@
  * version 2.1 of the License, or (at your option) any later version.
  */
 
-#include "execution.hpp"
+#include "execution-data.hpp"
 
 #include <concrete/byteorder.hpp>
 #include <concrete/exception.hpp>
@@ -39,6 +39,8 @@ ExecutionFrame::Data::Data(const ExecutionFrame &parent,
 {
 }
 
+// Release the current continuation (if any), which causes the continuation to
+// destroy the nested frame.
 ExecutionFrame::Data::~Data() throw ()
 {
 	Continuation cont = call_continuation;
@@ -221,6 +223,8 @@ Execution::Data::Data(const ExecutionFrame &frame) throw ():
 	Trace("frame new initial %u", initial->address());
 }
 
+// Destroy the initial frame, which cascades to nested frames and finally
+// reaches the current frame.
 Execution::Data::~Data() throw ()
 {
 	Trace("frame destroy initial %u", initial->address());
@@ -593,7 +597,7 @@ void Execution::op_jump_forward(unsigned int delta)
 
 void Execution::op_jump_if_false_or_pop(unsigned int target)
 {
-	if (nonzero(frame().peek()))
+	if (Nonzero(frame().peek()))
 		pop();
 	else
 		frame().jump_absolute(target);
@@ -601,7 +605,7 @@ void Execution::op_jump_if_false_or_pop(unsigned int target)
 
 void Execution::op_jump_if_true_or_pop(unsigned int target)
 {
-	if (nonzero(frame().peek()))
+	if (Nonzero(frame().peek()))
 		frame().jump_absolute(target);
 	else
 		pop();
@@ -614,13 +618,13 @@ void Execution::op_jump_absolute(unsigned int target)
 
 void Execution::op_pop_jump_if_false(unsigned int target)
 {
-	if (!nonzero(pop()))
+	if (!Nonzero(pop()))
 		frame().jump_absolute(target);
 }
 
 void Execution::op_pop_jump_if_true(unsigned int target)
 {
-	if (nonzero(pop()))
+	if (Nonzero(pop()))
 		frame().jump_absolute(target);
 }
 
@@ -669,7 +673,7 @@ void Execution::op_make_function(uint16_t portable_argc)
 	push(FunctionObject::New(code));
 }
 
-bool Execution::nonzero(Object object)
+bool Execution::Nonzero(Object object)
 {
 	Object call = object.protocol()->nonzero;
 	if (!call) {
