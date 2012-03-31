@@ -22,6 +22,11 @@ class NoneObject;
 class Object;
 class TypeObject;
 
+/**
+ * Indirect pointer to arena memory.  Non-abstract subclasses must declare a
+ * nested Data struct which represents the memory allocation.  Data destructors
+ * must be non-throwing.
+ */
 class Pointer {
 	friend class NoneObject;
 	friend class Object;
@@ -44,45 +49,166 @@ public:
 		static PointerType Materialize(RawType address, PointerType *) throw ();
 	};
 
+	/**
+	 * Null pointer.
+	 */
 	Pointer() throw (): m_address(0) {}
+
+	/**
+	 * Another reference.
+	 */
 	Pointer(const Pointer &other) throw (): m_address(other.m_address) {}
 
+	/**
+	 * Replace the reference.
+	 */
 	void operator=(const Pointer &other) throw () { m_address = other.m_address; }
 
+	/**
+	 * Memory address comparison.
+	 */
 	bool operator==(const Pointer &other) const throw () { return m_address == other.m_address; }
+
+	/**
+	 * Memory address comparison.
+	 */
 	bool operator!=(const Pointer &other) const throw () { return m_address != other.m_address; }
 
+	/**
+	 * @return true if not a null pointer
+	 */
 	operator bool() const throw () { return m_address != 0; }
+
+	/**
+	 * @return true if a null pointer
+	 */
 	bool operator!() const throw () { return m_address == 0; }
 
+	/**
+	 * Get a typed reference.
+	 */
 	template <typename PointerType> PointerType cast() const throw ();
 
+	/**
+	 * @return offset in arena memory or 0 if null pointer
+	 */
 	unsigned int address() const throw () { return m_address; }
 
 protected:
+	/**
+	 * Create a PointerType instance.
+	 * @return ownership
+	 * @throw AllocationError
+	 * @throw ...
+	 */
 	template <typename PointerType, typename... Args> static PointerType NewPointer(Args... args);
+
+	/**
+	 * Create a PointerType instance.
+	 * @param size of the memory allocation for extended data types
+	 *             (including the Data struct size)
+	 * @return ownership
+	 * @throw AllocationError
+	 * @throw ...
+	 */
 	template <typename PointerType, typename... Args> static PointerType NewCustomSizePointer(size_t size, Args... args);
 
+	/**
+	 * Delete a PointerType instance.  The reference will be reset to
+	 * null.
+	 * @param pointer may be null
+	 */
 	template <typename PointerType> static void DestroyPointer(PointerType &pointer) throw ();
+
+	/**
+	 * Delete an instance.
+	 * @param address must not be 0
+	 * @param data    must be a valid direct pointer to arena memory
+	 *        corresponding to @c address
+	 */
 	template <typename DataType> static void DestroyData(unsigned int address, DataType *data) throw ();
 
+	/**
+	 * Delete a PointerType instance with extended data type.  The
+	 * reference will be reset to null.
+	 * @param pointer        may be null
+	 * @param data           must be a valid direct pointer to arena memory
+	 *        corresponding to @c pointer
+	 * @param extension_size doesn't include the Data struct size
+	 */
 	template <typename PointerType> static void DestroyExtendedPointer(PointerType &pointer, typename PointerType::Data *data, size_t extension_size) throw ();
+
+	/**
+	 * Delete an instance with extended data type.
+	 * @param address        must not be 0
+	 * @param data           must be a valid direct pointer to arena memory
+	 *        corresponding to @c address
+	 * @param extension_size doesn't include the DataType size
+	 */
 	template <typename DataType> static void DestroyExtendedData(unsigned int address, DataType *data, size_t extension_size) throw ();
 
+	/**
+	 * Direct typed arena memory access to a fixed-size block.
+	 * @return borrowed short-term reference
+	 * @throw IntegrityError
+	 */
 	template <typename DataType> static DataType *DataCast(unsigned int address);
+
+	/**
+	 * Direct typed arena memory access to a fixed-size block.
+	 * @return borrowed short-term reference or NULL
+	 */
 	template <typename DataType> static DataType *NonthrowingDataCast(unsigned int address) throw ();
 
+	/**
+	 * Extend an already aquired access to an arena memory block.
+	 * @param extension_size doesn't include the DataType size
+	 * @throw IntegrityError
+	 */
 	template <typename DataType> static void ExtendDataAccess(unsigned int address, size_t extension_size);
+
+	/**
+	 * Extend an already aquired access to an arena memory block.
+	 * @param extension_size doesn't include the DataType size
+	 * @return true on success
+	 */
 	template <typename DataType> static bool NonthrowingExtendDataAccess(unsigned int address, size_t extension_size) throw ();
 
+	/**
+	 * Reference to the memory block at an explicit arena offset.
+	 */
 	explicit Pointer(unsigned int address) throw (): m_address(address) {}
 
+	/**
+	 * Replace the reference.
+	 */
 	void reset_address(unsigned int address) throw () { m_address = address; }
 
+	/**
+	 * Direct typed arena memory access to the fixed-size block.
+	 * @return borrowed short-term reference
+	 * @throw IntegrityError
+	 */
 	template <typename DataType> DataType *data_cast() const;
+
+	/**
+	 * Direct typed arena memory access to the fixed-size block.
+	 * @return borrowed short-term reference or NULL
+	 */
 	template <typename DataType> DataType *nonthrowing_data_cast() const throw ();
 
+	/**
+	 * Extend previously aquired access to the arena memory block.
+	 * @param extension_size doesn't include the DataType size
+	 * @throw IntegrityError
+	 */
 	template <typename DataType> void extend_data_access(size_t extension_size) const;
+
+	/**
+	 * Extend previously aquired access to the arena memory block.
+	 * @param extension_size doesn't include the DataType size
+	 * @return true on success
+	 */
 	template <typename DataType> bool nonthrowing_extend_data_access(size_t extension_size) const throw ();
 
 private:

@@ -47,7 +47,10 @@ class Object(Pointer):
 			echo("static void Destroy(unsigned int address, Data *data) throw ();")
 
 			echo("public:")
+			echo("/** @return a reference to the TypeObject instance representing {self.name} */")
 			echo("static TypeObject Type();")
+
+			echo("/** Visit all object references referenced by this object. */")
 			echo("template <typename Visitor> void visit(Visitor &v) const;")
 
 	def implement(self, type_method=True, data_method=True, destroy_method=True):

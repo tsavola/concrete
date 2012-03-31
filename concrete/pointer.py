@@ -25,12 +25,12 @@ class Pointer:
 		echo("protected: explicit {self.name}(unsigned int address) throw ():")
 		echo("  {self.parent_name}(address) {{}}")
 
-		echo("/** Borrow another reference. */")
+		echo("/** Another reference. */")
 		echo("public: {self.name}(const {self.name} &other) throw ():")
 		echo("  {self.parent_name}(other) {{}}")
 
 		if self.has_construct:
-			echo("/** Typed null pointer. */")
+			echo("/** Type-specific null pointer. */")
 			echo("public: {self.name}() throw () {{}}")
 
 		if self.has_destroy:

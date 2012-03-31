@@ -26,6 +26,9 @@ namespace concrete {
         return opcodes
 }}}
 
+/**
+ * Python opcode numbers.
+ */
 enum Opcode { {{{ SetOpcodes(
 	OpPopTop              = 1,
 	OpRotTwo              = 2,
@@ -65,6 +68,9 @@ enum Opcode { {{{ SetOpcodes(
 	OpMakeFunction        = 132,
 ) }}} };
 
+/**
+ * Python comparison types.
+ */
 enum CompareOp {
 	CompareLT, CompareLE,
 	CompareEQ, CompareNE,

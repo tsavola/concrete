@@ -19,6 +19,10 @@ class StringObject;
 class TypeObject;
 struct PortableObjectProtocol;
 
+/**
+ * Reference-counted indirect arena memory pointer.  Represents the root of the
+ * Python object hierarchy.
+ */
 class Object: public Pointer {
 	{{{ RegisterObject("Object") }}}
 
@@ -29,38 +33,112 @@ class Object: public Pointer {
 public:
 	struct RawAccess;
 
+	/**
+	 * @return a reference to the TypeObject instance representing Object
+	 */
 	static TypeObject Type();
+
+	/**
+	 * Create an Object instance.
+	 * @return a reference
+	 */
 	static Object New();
 
+	/**
+	 * Generic NoneObject reference.
+	 */
 	Object() throw ();
+
+	/**
+	 * Another reference.
+	 */
 	Object(const Object &other) throw ();
+
+	/**
+	 * Drop the reference.  The object is deleted if this was the last
+	 * reference.
+	 */
 	~Object() throw ();
 
+	/**
+	 * Replace the reference.
+	 */
 	void operator=(const Object &other) throw ();
 
+	/**
+	 * @return true if this is not a NoneObject reference
+	 */
 	operator bool() const throw ();
+
+	/**
+	 * @return true if this is a NoneObject reference
+	 */
 	bool operator!() const throw () { return !operator bool(); }
 
+	/**
+	 * @return true if this is a reference to an ObjectType instance or a
+	 *         derivative
+	 */
 	template <typename ObjectType> bool check() const;
+
+	/**
+	 * Get a new typed reference.
+	 * @throw TypeError if this is not a reference to an ObjectType
+	 *                  instance or a derivative
+	 */
 	template <typename ObjectType> ObjectType require() const;
 
+	/**
+	 * @return a reference to the TypeObject instance representing the
+	 *         subtype
+	 */
 	TypeObject type() const;
+
+	/**
+	 * Direct access to built-in method vector.
+	 * @return borrowed short-term reference
+	 */
 	const PortableObjectProtocol *protocol() const;
 
+	/**
+	 * Invoke the built-in repr method of the subtype.
+	 */
 	StringObject repr() const;
+
+	/**
+	 * Invoke the built-in str method of the subtype.
+	 */
 	StringObject str() const;
 
+	/**
+	 * Visit all object references referenced by this object.
+	 */
 	template <typename Visitor> void visit(Visitor &v) const;
 
 protected:
 	struct Data;
 
-	template <typename ObjectType, typename... Args>
-	static ObjectType NewObject(Args... args);
+	/**
+	 * Create an ObjectType instance.
+	 * @return a reference
+	 * @throw AllocationError
+	 * @throw ...
+	 */
+	template <typename ObjectType, typename... Args> static ObjectType NewObject(Args... args);
 
-	template <typename ObjectType, typename... Args>
-	static ObjectType NewCustomSizeObject(size_t size, Args... args);
+	/**
+	 * Create an ObjectType instance.
+	 * @param size of the memory allocation for extended data types
+	 *             (including the Data struct size)
+	 * @return a reference
+	 * @throw AllocationError
+	 * @throw ...
+	 */
+	template <typename ObjectType, typename... Args> static ObjectType NewCustomSizeObject(size_t size, Args... args);
 
+	/**
+	 * Reference to the Object at an explicit arena offset.
+	 */
 	explicit Object(unsigned int address) throw ();
 
 private:
