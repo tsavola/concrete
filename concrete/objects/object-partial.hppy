@@ -19,10 +19,6 @@ class StringObject;
 class TypeObject;
 struct PortableObjectProtocol;
 
-/**
- * Reference-counted indirect arena memory pointer.  Represents the root of the
- * Python object hierarchy.
- */
 class Object: public Pointer {
 	{{{ RegisterObject("Object") }}}
 

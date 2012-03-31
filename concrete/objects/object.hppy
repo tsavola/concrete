@@ -22,6 +22,12 @@ namespace concrete {
 class NoneObject;
 class TypeObject;
 
+/**
+ * @class Object
+ * Reference-counted indirect arena memory pointer.  Represents the root of the
+ * Python object hierarchy.
+ */
+
 struct Object::RawAccess: Pointer::RawAccess {
 	static RawType InitRef() throw ();
 	static void Ref(RawType address) throw ();
