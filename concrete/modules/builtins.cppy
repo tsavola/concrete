@@ -28,11 +28,7 @@ DictObject BuiltinsModuleInit(const DictObject &modules)
 	dict.set_item(StringObject::New("True"),  BoolObject::True());
 	dict.set_item(StringObject::New("False"), BoolObject::False());
 
-	dict.set_item(StringObject::New("id"),    InternalObject::New(internal::BuiltinsModule_Id));
-	dict.set_item(StringObject::New("print"), InternalObject::New(internal::BuiltinsModule_Print));
-	dict.set_item(StringObject::New("repr"),  InternalObject::New(internal::BuiltinsModule_Repr));
-	dict.set_item(StringObject::New("str"),   InternalObject::New(internal::BuiltinsModule_Str));
-	dict.set_item(StringObject::New("len"),   InternalObject::New(internal::BuiltinsModule_Len));
+	{{{ SetModuleInternals("BuiltinsModule") }}}
 
 	modules.set_item(StringObject::New("builtins"), ModuleObject::New(dict));
 
