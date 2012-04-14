@@ -15,7 +15,7 @@
 #include <concrete/objects/callable.hpp>
 #include <concrete/objects/function.hpp>
 #include <concrete/objects/internal.hpp>
-#include <concrete/objects/long.hpp>
+#include <concrete/objects/int.hpp>
 #include <concrete/objects/module.hpp>
 #include <concrete/objects/none.hpp>
 #include <concrete/objects/object.hpp>
@@ -375,7 +375,7 @@ bool Execution::resume_call()
 
 	if (!cont) {
 		if (current.data()->call_not_filter)
-			result = BoolObject::FromBool(!result.require<LongObject>().value());
+			result = BoolObject::FromBool(!result.require<IntObject>().value());
 
 		current.push(result);
 
@@ -570,7 +570,7 @@ void Execution::op_compare_op(unsigned int opname)
 void Execution::op_import_name(unsigned int namei)
 {
 	auto from = pop();
-	auto level = pop().require<LongObject>();
+	auto level = pop().require<IntObject>();
 	auto name = code().names().get_item(namei);
 	auto module = Context::Active().import_builtin_module(name);
 
@@ -682,7 +682,7 @@ bool Execution::Nonzero(Object object)
 			return true;
 	}
 
-	return call.require<InternalObject>().immediate_call(object).require<LongObject>().value() != 0;
+	return call.require<InternalObject>().immediate_call(object).require<IntObject>().value() != 0;
 }
 
 } // namespace

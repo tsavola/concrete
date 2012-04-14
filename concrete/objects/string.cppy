@@ -17,7 +17,7 @@
 #include <concrete/context-data.hpp>
 #include <concrete/exception.hpp>
 #include <concrete/objects/internal.hpp>
-#include <concrete/objects/long.hpp>
+#include <concrete/objects/int.hpp>
 #include <concrete/objects/type.hpp>
 
 namespace concrete {
@@ -198,7 +198,7 @@ void StringObjectTypeInit(const TypeObject &type, const char *name)
 
 {{{ ImplementInternalFunction("StringType_Len") }}}
 {
-	return LongObject::New(args.get_item(0).require<StringObject>().length());
+	return IntObject::New(args.get_item(0).require<StringObject>().length());
 }
 
 {{{ ImplementInternalFunction("StringType_Add") }}}

@@ -14,7 +14,7 @@
 #include <concrete/objects/bool.hpp>
 #include <concrete/objects/dict.hpp>
 #include <concrete/objects/internal.hpp>
-#include <concrete/objects/long.hpp>
+#include <concrete/objects/int.hpp>
 #include <concrete/objects/module.hpp>
 #include <concrete/objects/string.hpp>
 
@@ -41,7 +41,7 @@ DictObject BuiltinsModuleInit(const DictObject &modules)
 
 {{{ ImplementInternalFunction("BuiltinsModule_Id") }}}
 {
-	return LongObject::New(args.get_item(0).address());
+	return IntObject::New(args.get_item(0).address());
 }
 
 {{{ ImplementInternalContinuation("BuiltinsModule_Print") }}}

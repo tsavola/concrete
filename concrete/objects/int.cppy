@@ -1,0 +1,105 @@
+/*
+ * Copyright (c) 2011, 2012  Timo Savola
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ */
+
+#include "int-data.hpp"
+
+#include <functional>
+
+#include <boost/format.hpp>
+
+#include <concrete/context-data.hpp>
+#include <concrete/objects/bool.hpp>
+#include <concrete/objects/internal.hpp>
+#include <concrete/objects/string.hpp>
+#include <concrete/objects/type.hpp>
+
+namespace concrete {
+
+{{{ ImplementObject("IntObject") }}}
+
+IntObject::Data::Data(const TypeObject &type, Value value):
+	Object::Data(type),
+	value(value)
+{
+}
+
+IntObject IntObject::New(Value value)
+{
+	return NewObject<IntObject>(value);
+}
+
+IntObject::Value IntObject::value() const
+{
+	return data()->value;
+}
+
+void IntObjectTypeInit(const TypeObject &type, const char *name)
+{
+	ObjectTypeInit(type, name);
+
+	auto repr    = InternalObject::New(internal::IntType_Repr);
+	auto str     = InternalObject::New(internal::IntType_Str);
+	auto lt      = InternalObject::New(internal::IntType_LT);
+	auto le      = InternalObject::New(internal::IntType_LE);
+	auto eq      = InternalObject::New(internal::IntType_EQ);
+	auto ne      = InternalObject::New(internal::IntType_NE);
+	auto gt      = InternalObject::New(internal::IntType_GT);
+	auto ge      = InternalObject::New(internal::IntType_GE);
+	auto nonzero = InternalObject::New(internal::IntType_Nonzero);
+
+	auto add     = InternalObject::New(internal::IntType_Add);
+
+	type.set(&PortableObjectProtocol::repr,    repr);
+	type.set(&PortableObjectProtocol::str,     str);
+	type.set(&PortableObjectProtocol::lt,      lt);
+	type.set(&PortableObjectProtocol::le,      le);
+	type.set(&PortableObjectProtocol::eq,      eq);
+	type.set(&PortableObjectProtocol::ne,      ne);
+	type.set(&PortableObjectProtocol::gt,      gt);
+	type.set(&PortableObjectProtocol::ge,      ge);
+	type.set(&PortableObjectProtocol::nonzero, nonzero);
+
+	type.set(&PortableObjectProtocol::add,     add);
+}
+
+{{{ ImplementInternalFunctions(["IntType_Repr", "IntType_Str"]) }}}
+{
+	return StringObject::New(
+		(boost::format("%ld") % args.get_item(0).require<IntObject>().value()).str());
+}
+
+{{{ ImplementInternalTemplateFunctions("typename Predicate", {
+      "IntType_LT": "std::less         <IntObject::Value>",
+      "IntType_LE": "std::less_equal   <IntObject::Value>",
+      "IntType_EQ": "std::equal_to     <IntObject::Value>",
+      "IntType_NE": "std::not_equal_to <IntObject::Value>",
+      "IntType_GT": "std::greater      <IntObject::Value>",
+      "IntType_GE": "std::greater_equal<IntObject::Value>" }) }}}
+{
+	return BoolObject::FromBool(Predicate()(
+		args.get_item(0).require<IntObject>().value(),
+		args.get_item(1).require<IntObject>().value()));
+}
+
+{{{ ImplementInternalFunction("IntType_Nonzero") }}}
+{
+	return BoolObject::FromBool(args.get_item(0).require<IntObject>().value() != 0);
+}
+
+{{{ ImplementInternalFunction("IntType_Add") }}}
+{
+	IntObject::Value value = 0;
+
+	for (unsigned int i = args.size(); i-- > 0; )
+		value += args.get_item(i).require<IntObject>().value();
+
+	return IntObject::New(value);
+}
+
+} // namespace

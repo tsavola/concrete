@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011  Timo Savola
+ * Copyright (c) 2011, 2012  Timo Savola
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -15,7 +15,7 @@
 #include <concrete/exception.hpp>
 #include <concrete/objects/bytes.hpp>
 #include <concrete/objects/code.hpp>
-#include <concrete/objects/long.hpp>
+#include <concrete/objects/int.hpp>
 #include <concrete/objects/string.hpp>
 #include <concrete/objects/tuple.hpp>
 #include <concrete/objects/type.hpp>
@@ -135,9 +135,9 @@ public:
 	}
 
 private:
-	LongObject load_int()
+	IntObject load_int()
 	{
-		return LongObject::New(load<int32_t>());
+		return IntObject::New(load<int32_t>());
 	}
 
 	FloatObject load_binary_float()

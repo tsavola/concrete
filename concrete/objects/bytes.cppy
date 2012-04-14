@@ -15,7 +15,7 @@
 
 #include <concrete/arena.hpp>
 #include <concrete/context-data.hpp>
-#include <concrete/objects/long.hpp>
+#include <concrete/objects/int.hpp>
 #include <concrete/objects/string.hpp>
 #include <concrete/objects/type.hpp>
 
@@ -77,7 +77,7 @@ void BytesObjectTypeInit(const TypeObject &type, const char *name)
 {{{ ImplementInternalFunction("BytesType_Len") }}}
 {
 	auto self = args.get_item(0).require<BytesObject>();
-	return LongObject::New(self.size());
+	return IntObject::New(self.size());
 }
 
 } // namespace
