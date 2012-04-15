@@ -13,9 +13,10 @@
 #include <concrete/nested-data.hpp>
 #include <concrete/objects/bool.hpp>
 #include <concrete/objects/dict.hpp>
-#include <concrete/objects/internal.hpp>
 #include <concrete/objects/int.hpp>
+#include <concrete/objects/internal.hpp>
 #include <concrete/objects/module.hpp>
+#include <concrete/objects/range.hpp>
 #include <concrete/objects/string.hpp>
 
 namespace concrete {
@@ -41,6 +42,27 @@ DictObject BuiltinsModuleInit(const DictObject &modules)
 }
 
 {{{ ImplementInternalContinuation("BuiltinsModule_Print") }}}
+
+{{{ ImplementInternalFunction("BuiltinsModule_Range") }}}
+{
+	IntObject::Value start = 0, stop, step = 1;
+
+	switch (args.size()) {
+	default:
+		step  = args.get_item(2).require<IntObject>().value();
+	case 2:
+		stop  = args.get_item(1).require<IntObject>().value();
+		start = args.get_item(0).require<IntObject>().value();
+		break;
+
+	case 1:
+		stop  = args.get_item(0).require<IntObject>().value();
+		break;
+
+	}
+
+	return RangeObject::New(start, stop, step);
+}
 
 {{{ ImplementInternalFunction("BuiltinsModule_Repr") }}}
 {

@@ -1,0 +1,62 @@
+/*
+ * Copyright (c) 2012  Timo Savola
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ */
+
+#include "range-data.hpp"
+
+#include <concrete/context-data.hpp>
+
+namespace concrete {
+
+{{{ ImplementObject("RangeObject") }}}
+
+RangeObject::Data::Data(const TypeObject &type,
+                        IntObject::Value start, IntObject::Value stop, IntObject::Value step):
+	Object::Data(type),
+	next(start), stop(stop), step(step)
+{
+}
+
+RangeObject RangeObject::New(IntObject::Value start, IntObject::Value stop, IntObject::Value step)
+{
+	return NewObject<RangeObject>(start, stop, step);
+}
+
+IntObject::Value RangeObject::next()
+{
+	auto i = *data()->next;
+	if (i < *data()->stop) {
+		data()->next = i + *data()->step;
+		return i;
+	} else {
+		throw StopIteration();
+	}
+}
+
+void RangeObjectTypeInit(const TypeObject &type, const char *name)
+{
+	ObjectTypeInit(type, name);
+
+	auto iter = InternalObject::New(internal::RangeType_Iter);
+	auto next = InternalObject::New(internal::RangeType_Next);
+
+	type.set(&PortableObjectProtocol::iter, iter);
+	type.set(&PortableObjectProtocol::next, next);
+}
+
+{{{ ImplementInternalFunction("RangeType_Iter") }}}
+{
+	return args.get_item(0);
+}
+
+{{{ ImplementInternalFunction("RangeType_Next") }}}
+{
+	return IntObject::New(args.get_item(0).require<RangeObject>().next());
+}
+
+} // namespace

@@ -42,6 +42,8 @@ struct PortableObjectProtocol: Noncopyable {
 	Portable<Object> nonzero;
 
 	Portable<Object> len;
+	Portable<Object> iter;
+	Portable<Object> next;
 	Portable<Object> contains;
 
 	Portable<Object> add;
