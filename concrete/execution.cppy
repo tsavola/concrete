@@ -318,39 +318,52 @@ Object Execution::pop()
 	return frame().pop();
 }
 
-void Execution::initiate_call(const Object &callable, bool not_filter)
+void Execution::initiate_call(const Object &callable,
+                              CallFilter filter,
+                              unsigned int filter_arg)
 {
-	initiate_call(callable, TupleObject::New(), not_filter);
+	initiate_call(callable, TupleObject::New(), filter, filter_arg);
 }
 
-void Execution::initiate_call(const Object &callable, const TupleObject &args, bool not_filter)
+void Execution::initiate_call(const Object &callable,
+                              const TupleObject &args,
+                              CallFilter filter,
+                              unsigned int filter_arg)
 {
-	initiate_call(callable, args, DictObject::NewEmpty(), not_filter);
+	initiate_call(callable, args, DictObject::NewEmpty(), filter, filter_arg);
 }
 
 void Execution::initiate_call(const Object &callable,
                               const TupleObject &args,
                               const DictObject &kwargs,
-                              bool not_filter)
+                              CallFilter filter,
+                              unsigned int filter_arg)
 {
 	ExecutionFrame current = frame();
 	Continuation cont;
+	Object result;
+	bool stop_iteration = false;
 
 	Trace("call init enter: callable=%u frame=%u",
 	      callable.address(), current.address());
 
-	auto result = callable.require<CallableObject>().initiate(cont, args, kwargs);
+	try {
+		result = callable.require<CallableObject>().initiate(cont, args, kwargs);
+	} catch (StopIteration) {
+		stop_iteration = true;
+	}
 
-	Trace("call init leave: callable=%u frame=%u done=%s return=%u",
+	Trace("call init leave: callable=%u frame=%u done=%s return=%u stop_iteration=%b",
 	      callable.address(), current.address(),
-	      (cont ? "false" : "true"), result.address());
+	      (cont ? "false" : "true"), result.address(), stop_iteration);
 
 	if (cont) {
 		current.data()->call_callable = callable;
 		current.data()->call_continuation = cont;
-		current.data()->call_not_filter = not_filter;
+		current.data()->call_filter = filter;
+		current.data()->call_filter_arg = filter_arg;
 	} else {
-		current.push(result);
+		finish_call(result, filter, filter_arg, stop_iteration);
 	}
 }
 
@@ -363,29 +376,49 @@ bool Execution::resume_call()
 		return false;
 
 	Object callable = current.data()->call_callable;
+	Object result;
+	bool stop_iteration = false;
 
 	Trace("call resume enter: callable=%u frame=%u",
 	      callable.address(), current.address());
 
-	auto result = callable.cast<CallableObject>().resume(cont);
-
-	Trace("call resume leave: callable=%u frame=%u done=%s return=%d",
-	      callable.address(), current.address(),
-	      (cont ? "false" : "true"), result.address());
-
-	if (!cont) {
-		if (current.data()->call_not_filter)
-			result = BoolObject::FromBool(!result.require<IntObject>().value());
-
-		current.push(result);
-
-		current.data()->call_callable = Object();
-		current.data()->call_not_filter = false;
+	try {
+		result = callable.cast<CallableObject>().resume(cont);
+	} catch (StopIteration) {
+		stop_iteration = true;
 	}
+
+	Trace("call resume leave: callable=%u frame=%u done=%s return=%d stop_iteration=%b",
+	      callable.address(), current.address(),
+	      (cont ? "false" : "true"), result.address(), stop_iteration);
 
 	current.data()->call_continuation = cont;
 
+	if (!cont) {
+		current.data()->call_callable = Object();
+
+		finish_call(result,
+		            *current.data()->call_filter,
+		            *current.data()->call_filter_arg,
+		            stop_iteration);
+	}
+
 	return true;
+}
+
+void Execution::finish_call(Object &result, uint16_t filter, uint16_t filter_arg, bool stop_iteration)
+{
+	if (stop_iteration) {
+		if (filter == ForIterFilter)
+			op_for_iter_stop(filter_arg);
+		else
+			throw StopIteration();
+	} else {
+		if (filter == InverseCompareFilter)
+			op_compare_op_invert(result);
+		else
+			push(result);
+	}
 }
 
 void Execution::execute_op()
@@ -405,6 +438,7 @@ void Execution::execute_op()
 	case OpPopTop:              op_pop_top(); return;
 	case OpNop:                 return;
 	case OpBinaryAdd:           op_binary_add(); return;
+	case OpGetIter:             op_get_iter(); return;
 	case OpPopBlock:            op_pop_block(); return;
 	case OpReturnValue:         op_return_value(); return;
 	}
@@ -413,6 +447,7 @@ void Execution::execute_op()
 
 	switch (op) {
 	case OpStoreName:           op_store_name(arg); return;
+	case OpForIter:             op_for_iter(arg); return;
 	case OpLoadConst:           op_load_const(arg); return;
 	case OpLoadName:            op_load_name(arg); return;
 	case OpLoadAttr:            op_load_attr(arg); return;
@@ -491,6 +526,12 @@ void Execution::op_binary_add()
 	initiate_call(a.protocol()->add, TupleObject::New(a, b));
 }
 
+void Execution::op_get_iter()
+{
+	auto iterable = pop();
+	initiate_call(iterable.protocol()->iter, TupleObject::New(iterable));
+}
+
 void Execution::op_pop_block()
 {
 	frame().pop_block();
@@ -510,6 +551,17 @@ void Execution::op_store_name(unsigned int namei)
 	auto name = code().names().get_item(namei);
 	auto value = pop();
 	dict().set_item(name, value);
+}
+
+void Execution::op_for_iter(unsigned int delta)
+{
+	auto iterator = peek();
+	initiate_call(iterator.protocol()->next, TupleObject::New(iterator), ForIterFilter, delta);
+}
+void Execution::op_for_iter_stop(unsigned int delta)
+{
+	pop();
+	frame().jump_forward(delta);
 }
 
 void Execution::op_load_const(unsigned int consti)
@@ -545,26 +597,29 @@ void Execution::op_compare_op(unsigned int opname)
 	auto left = pop();
 
 	Object callable;
-	bool not_filter = false;
+	CallFilter filter = NoFilter;
 
 	switch (opname) {
-	case CompareLT:        callable = left.protocol()->lt; break;
-	case CompareLE:        callable = left.protocol()->le; break;
-	case CompareEQ:        callable = left.protocol()->eq; break;
-	case CompareNE:        callable = left.protocol()->ne; break;
-	case CompareGT:        callable = left.protocol()->gt; break;
-	case CompareGE:        callable = left.protocol()->ge; break;
-	case CompareIn:        callable = left.protocol()->contains; break;
-	case CompareNotIn:     callable = left.protocol()->contains; not_filter = true; break;
+	case CompareLT:        callable = left.protocol()->lt;            break;
+	case CompareLE:        callable = left.protocol()->le;            break;
+	case CompareEQ:        callable = left.protocol()->eq;            break;
+	case CompareNE:        callable = left.protocol()->ne;            break;
+	case CompareGT:        callable = left.protocol()->gt;            break;
+	case CompareGE:        callable = left.protocol()->ge;            break;
+	case CompareNotIn:     filter   = InverseCompareFilter;
+	case CompareIn:        callable = left.protocol()->contains;      break;
 	case CompareIs:        push(BoolObject::FromBool(left == right)); return;
 	case CompareIsNot:     push(BoolObject::FromBool(left != right)); return;
 	case CompareException: throw RuntimeError("CompareException not implemented");
-
-	default:
-		throw RuntimeError("Unknown comparison");
+	default:               throw RuntimeError("Unknown comparison");
 	}
 
-	initiate_call(callable, TupleObject::New(left, right), not_filter);
+	initiate_call(callable, TupleObject::New(left, right), filter);
+}
+
+void Execution::op_compare_op_invert(const Object &result)
+{
+	push(BoolObject::FromBool(!result.require<IntObject>().value()));
 }
 
 void Execution::op_import_name(unsigned int namei)

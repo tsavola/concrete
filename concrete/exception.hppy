@@ -87,6 +87,14 @@ public:
 	explicit RuntimeError(const char *message) throw ();
 };
 
+/**
+ * Iterator has run its course.
+ */
+class StopIteration: public CodeException {
+public:
+	StopIteration() throw ();
+};
+
 } // namespace
 
 #endif

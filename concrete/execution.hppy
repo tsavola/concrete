@@ -151,7 +151,28 @@ class Execution: public ListNode<Execution> {
 	 */
 	template <typename Visitor> void visit(Visitor &v) const;
 
-protected:
+private:
+	/**
+	 * Modifies post-continuation behavior.
+	 */
+	enum CallFilter {
+		/**
+		 * Nothing special.
+		 */
+		NoFilter,
+
+		/**
+		 * Applies the not-operator to the call's result (IntObject)
+		 * before it's pushed on the stack.
+		 */
+		InverseCompareFilter,
+
+		/**
+		 * Implement the OpForIter logic.
+		 */
+		ForIterFilter,
+	};
+
 	/**
 	 * @return true if the Python object is not false
 	 */
@@ -174,39 +195,38 @@ protected:
 
 	/**
 	 * Start a Continuation.
-	 * @param callable
-	 * @param not_filter causes the not-operator to be applied to the
-	 *                   call's result before it's pushed on the stack
 	 */
-	void initiate_call(const Object &callable, bool not_filter = false);
+	void initiate_call(const Object &callable,
+	                   CallFilter filter = NoFilter,
+	                   unsigned int filter_arg = 0);
 
 	/**
 	 * Start a Continuation.
-	 * @param callable
-	 * @param args
-	 * @param not_filter causes the not-operator to be applied to the
-	 *                   call's result before it's pushed on the stack
 	 */
-	void initiate_call(const Object &callable, const TupleObject &args, bool not_filter = false);
+	void initiate_call(const Object &callable,
+	                   const TupleObject &args,
+	                   CallFilter filter = NoFilter,
+	                   unsigned int filter_arg = 0);
 
 	/**
 	 * Start a Continuation.
-	 * @param callable
-	 * @param args
-	 * @param kwargs
-	 * @param not_filter causes the not-operator to be applied to the
-	 *                   call's result before it's pushed on the stack
 	 */
 	void initiate_call(const Object &callable,
 	                   const TupleObject &args,
 	                   const DictObject &kwargs,
-	                   bool not_filter = false);
+	                   CallFilter filter = NoFilter,
+	                   unsigned int filter_arg = 0);
 
 	/**
 	 * Continue the current Continuation (if any).
 	 * @return false if there was no continuation
 	 */
 	bool resume_call();
+
+	/**
+	 * Push the result on the stack.
+	 */
+	void finish_call(Object &result, uint16_t filter, uint16_t filter_arg, bool stop_iteration);
 
 	/**
 	 * Add an object at the top of the current frame's stack.
@@ -235,13 +255,17 @@ protected:
 	void op_rot_four();
 	void op_dup_top();
 	void op_binary_add();
+	void op_get_iter();
 	void op_pop_block();
 	void op_return_value();
 	void op_store_name(unsigned int namei);
+	void op_for_iter(unsigned int delta);
+	void op_for_iter_stop(unsigned int delta);
 	void op_load_const(unsigned int consti);
 	void op_load_name(unsigned int namei);
 	void op_load_attr(unsigned int namei);
 	void op_compare_op(unsigned int opname);
+	void op_compare_op_invert(const Object &result);
 	void op_import_name(unsigned int namei);
 	void op_import_from(unsigned int namei);
 	void op_jump_forward(unsigned int delta);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011  Timo Savola
+ * Copyright (c) 2011, 2012  Timo Savola
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,16 +24,22 @@ CodeException::CodeException(const Object &args) throw ():
 CodeException::CodeException(const StringObject &repr, int) throw ():
 	m_repr(repr)
 {
-	Backtrace();
 }
 
 TypeError::TypeError(const TypeObject &type) throw ():
 	CodeException(type.name(), int())
 {
+	Backtrace();
 }
 
 RuntimeError::RuntimeError(const char *message) throw ():
-	CodeException(StringObject::New(message), 0)
+	CodeException(StringObject::New(message), int())
+{
+	Backtrace();
+}
+
+StopIteration::StopIteration() throw ():
+	CodeException(StringObject::New("Stop iteration"), int())
 {
 }
 

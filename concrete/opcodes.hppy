@@ -39,11 +39,14 @@ enum Opcode { {{{ SetOpcodes(
 
 	OpBinaryAdd           = 23,
 
+	OpGetIter             = 68,
+
 	OpReturnValue         = 83,
 
 	OpPopBlock            = 87,
 
 	OpStoreName           = 90,
+	OpForIter             = 93,
 
 	OpLoadConst           = 100,
 	OpLoadName            = 101,
