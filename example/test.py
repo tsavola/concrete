@@ -1,5 +1,8 @@
 import tap
 
+for i in range(2, 12, 3):
+	print(i)
+
 def func0():
 	return 5
 
